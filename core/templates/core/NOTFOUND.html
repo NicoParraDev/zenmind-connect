@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Página No Encontrada | ZenMindConnect 2.0</title>
+    <meta name="description" content="La página que buscas no existe en ZenMindConnect">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS ZenMind 2.0 -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_interactive.css' %}">
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <style>
+        .error-404-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--spacing-xl);
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+        }
+        
+        .error-404-content {
+            text-align: center;
+            max-width: 600px;
+            padding: var(--spacing-2xl);
+        }
+        
+        .error-404-icon {
+            font-size: 8rem;
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-lg);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-20px);
+            }
+        }
+        
+        .error-404-title {
+            font-size: var(--font-4xl);
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-md);
+            font-family: var(--font-heading);
+        }
+        
+        .error-404-subtitle {
+            font-size: var(--font-xl);
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-xl);
+            line-height: 1.6;
+        }
+        
+        .error-404-actions {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .error-404-actions .btn {
+            min-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    {% include 'core/navbar.html' %}
+    
+    <!-- Error 404 Content -->
+    <div class="error-404-container">
+        <div class="error-404-content">
+            <div class="error-404-icon" aria-hidden="true">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            
+            <h1 class="error-404-title">404</h1>
+            <p class="error-404-subtitle">
+                Lo sentimos, la página que buscas no existe o ha sido movida.
+            </p>
+            <p class="error-404-subtitle" style="font-size: var(--font-lg);">
+                Puede que el enlace esté roto o que la página haya sido eliminada.
+            </p>
+            
+            <div class="error-404-actions">
+                <a href="{% url 'index' %}" class="btn btn-primary btn-lg" aria-label="Volver al inicio">
+                    <i class="fas fa-home"></i> Volver al Inicio
+                </a>
+                <a href="{% url 'frontpage' %}" class="btn btn-outline btn-lg" aria-label="Ir al blog">
+                    <i class="fas fa-blog"></i> Ver Blog
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    {% include 'core/footer.html' %}
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'JS/zenmind_2.0_interactive.js' %}"></script>
+</body>
+</html>

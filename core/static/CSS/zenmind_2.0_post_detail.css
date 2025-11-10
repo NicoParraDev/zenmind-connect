@@ -1,0 +1,197 @@
+/* ============================================
+   ZENMIND CONNECT 2.0 - POST DETAIL
+   ============================================ */
+
+.post-detail-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: var(--text-white);
+    padding: var(--spacing-2xl) 0;
+    text-align: center;
+    margin-bottom: var(--spacing-2xl);
+}
+
+.post-detail-header h1 {
+    color: var(--text-white);
+    font-size: var(--font-4xl);
+    margin-bottom: var(--spacing-md);
+}
+
+.post-detail-meta {
+    display: flex;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    flex-wrap: wrap;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: var(--font-sm);
+}
+
+.post-detail-content {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+.post-detail-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-2xl);
+    box-shadow: var(--shadow-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.post-detail-info {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--bg-secondary);
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+}
+
+.post-detail-info strong {
+    color: var(--text-primary);
+}
+
+.post-detail-intro {
+    font-size: var(--font-lg);
+    font-weight: 500;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+    line-height: 1.6;
+}
+
+.post-detail-body {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-size: var(--font-base);
+    margin-bottom: var(--spacing-xl);
+}
+
+/* Comentarios */
+.comments-section {
+    margin-top: var(--spacing-2xl);
+}
+
+.comments-title {
+    font-size: var(--font-2xl);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--bg-secondary);
+}
+
+.comment-item {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-md);
+    border-left: 4px solid var(--primary-color);
+    transition: all var(--transition-base);
+}
+
+.comment-item:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-sm);
+    border-left-color: var(--secondary-color);
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: start;
+    margin-bottom: var(--spacing-sm);
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.comment-author {
+    font-weight: 600;
+    color: var(--text-primary);
+    font-size: var(--font-base);
+}
+
+.comment-meta {
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+.comment-body {
+    color: var(--text-secondary);
+    line-height: 1.6;
+    margin-bottom: var(--spacing-sm);
+}
+
+.comment-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-sm);
+}
+
+.comment-edit-form {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-lg);
+    margin-top: var(--spacing-md);
+    border: 2px solid var(--primary-color);
+}
+
+.comment-empty {
+    text-align: center;
+    padding: var(--spacing-xl);
+    color: var(--text-secondary);
+}
+
+.comment-empty i {
+    font-size: var(--font-4xl);
+    color: var(--text-light);
+    margin-bottom: var(--spacing-md);
+}
+
+/* Formulario de comentarios */
+.comment-form-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-md);
+    margin-top: var(--spacing-xl);
+}
+
+.comment-form-title {
+    font-size: var(--font-xl);
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+}
+
+.comment-form .form-group {
+    margin-bottom: var(--spacing-lg);
+}
+
+.comment-form-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .post-detail-header h1 {
+        font-size: var(--font-3xl);
+    }
+    
+    .post-detail-card {
+        padding: var(--spacing-md);
+    }
+    
+    .comment-form-actions {
+        flex-direction: column;
+    }
+    
+    .comment-form-actions .btn {
+        width: 100%;
+    }
+}
+

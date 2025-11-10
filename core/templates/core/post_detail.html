@@ -1,0 +1,401 @@
+{% load static %}
+{% load form_filters %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect 2.0 | {{ post.title }}</title>
+    <meta name="description" content="{{ post.intro|truncatewords:30 }}">
+    <meta name="keywords" content="bienestar mental, psicología, {{ post.hilo.nombreHilo|lower }}, blog, ZenMindConnect">
+    <meta name="author" content="{{ post.author.nombre }} {{ post.author.apellido }}">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://zenmindconnect.com/{{ post.slug }}/">
+    <meta property="og:title" content="{{ post.title }} | ZenMindConnect 2.0">
+    <meta property="og:description" content="{{ post.intro|truncatewords:30 }}">
+    <meta property="og:image" content="{% static 'IMG/logo_final.png' %}">
+    <meta property="article:published_time" content="{{ post.date_added|date:'c' }}">
+    <meta property="article:author" content="{{ post.author.nombre }} {{ post.author.apellido }}">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://zenmindconnect.com/{{ post.slug }}/">
+    <meta property="twitter:title" content="{{ post.title }} | ZenMindConnect 2.0">
+    <meta property="twitter:description" content="{{ post.intro|truncatewords:30 }}">
+    <meta property="twitter:image" content="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS ZenMind 2.0 -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_post_detail.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_forms.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- JSON-LD Structured Data (Schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": "{{ post.title|escapejs }}",
+        "description": "{{ post.intro|truncatewords:30|escapejs }}",
+        "image": "{% static 'IMG/logo_final.png' %}",
+        "datePublished": "{{ post.date_added|date:'c' }}",
+        "dateModified": "{{ post.date_added|date:'c' }}",
+        "author": {
+            "@type": "Person",
+            "name": "{{ post.author.nombre }} {{ post.author.apellido }}"
+        },
+        "publisher": {
+            "@type": "Organization",
+            "name": "ZenMindConnect",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "{% static 'IMG/logo_final.png' %}"
+            }
+        },
+        "mainEntityOfPage": {
+            "@type": "WebPage",
+            "@id": "https://zenmindconnect.com/{{ post.slug }}/"
+        },
+        "articleSection": "{{ post.hilo.nombreHilo }}"
+    }
+    </script>
+</head>
+<body>
+    <!-- Navbar Moderno -->
+    {% include 'core/navbar.html' %}
+
+    <!-- Post Header -->
+    <section class="post-detail-header">
+        <div class="container">
+            <h1><i class="fas fa-file-alt"></i> {{ post.title }}</h1>
+            <div class="post-detail-meta">
+                <span><i class="fas fa-user"></i> {{ post.author.user.username }}</span>
+                <span><i class="fas fa-tag"></i> {{ post.hilo }}</span>
+                <span><i class="fas fa-calendar"></i> {{ post.date_added|date:"d M Y" }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Post Content -->
+    <main class="container">
+        <div class="post-detail-content">
+            <article class="post-detail-card">
+                <div class="post-detail-info">
+                    <span><i class="fas fa-user"></i> <strong>Autor:</strong> {{ post.author.user.username }}</span>
+                    <span><i class="fas fa-tag"></i> <strong>Tema:</strong> {{ post.hilo }}</span>
+                    <span><i class="fas fa-clock"></i> <strong>Publicado:</strong> {{ post.date_added|date:"d M Y, H:i" }}</span>
+                    {% if user.is_authenticated and post.author.user != user %}
+                    <span style="margin-left: auto;">
+                        <a href="{% url 'reportar_post' post.idPost %}" class="btn btn-sm btn-outline" 
+                           style="border-color: var(--error); color: var(--error);" 
+                           title="Reportar contenido inapropiado">
+                            <i class="fas fa-flag"></i> Reportar
+                        </a>
+                    </span>
+                    {% endif %}
+                </div>
+                
+                <div class="post-detail-intro">
+                    {{ post.intro }}
+                </div>
+                
+                <!-- Imagen del post -->
+                {% if post.imagen %}
+                <div class="post-detail-image" style="margin: 2rem 0; text-align: center;">
+                    <img src="{{ post.imagen.url }}" alt="{{ post.title }}" style="max-width: 100%; max-height: 600px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); object-fit: contain;">
+                </div>
+                {% endif %}
+                
+                <!-- Video del post -->
+                {% if post.video_url %}
+                <div class="post-detail-video" style="margin: 2rem 0;">
+                    <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        {% with embed_url=post.get_video_embed_url %}
+                            {% if embed_url %}
+                            <iframe src="{{ embed_url }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                            {% else %}
+                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--color-bg-secondary); color: var(--color-text-secondary);">
+                                <p>URL de video no válida</p>
+                            </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="post-detail-body">
+                    {{ post.body|safe }}
+                </div>
+            </article>
+
+            <!-- Comentarios Section -->
+            <div class="comments-section">
+                <h2 class="comments-title">
+                    <i class="fas fa-comments"></i> Comentarios
+                    <span class="badge badge-primary" style="margin-left: var(--spacing-sm);">
+                        {{ post.comments.count }}
+                    </span>
+                </h2>
+
+                <!-- Lista de Comentarios -->
+                {% for comment in post.comments.all %}
+                <div class="comment-item" id="comment-{{ comment.id }}">
+                    <div class="comment-header">
+                        <div>
+                            <span class="comment-author">
+                                <i class="fas fa-user-circle"></i> {{ comment.name }}
+                            </span>
+                            <div class="comment-meta">
+                                <span><i class="fas fa-user"></i> {{ comment.author.user.username|default:"Anónimo" }}</span>
+                                <span><i class="fas fa-calendar"></i> {{ comment.date_added|date:"d M Y, H:i" }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="comment-actions">
+                            {% if user.is_authenticated and user.persona == comment.author %}
+                            <button data-comment-id="{{ comment.id }}" class="btn-edit-comment btn btn-sm btn-secondary" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <a href="{% url 'delete_comment' comment.id %}" class="btn btn-sm btn-outline" 
+                               style="border-color: var(--error); color: var(--error);" 
+                               onclick="return confirm('¿Estás seguro de eliminar este comentario?')" 
+                               title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            {% elif user.is_authenticated %}
+                            <a href="{% url 'reportar_comentario' comment.id %}" class="btn btn-sm btn-outline" 
+                               style="border-color: var(--error); color: var(--error);" 
+                               title="Reportar comentario inapropiado">
+                                <i class="fas fa-flag"></i> Reportar
+                            </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="comment-body">
+                        {{ comment.body|linebreaks }}
+                    </div>
+
+                    <!-- Formulario de Edición (oculto por defecto) -->
+                    {% if user.is_authenticated and user.persona == comment.author %}
+                    <div class="comment-edit-form" id="edit-card-{{ comment.id }}" style="display: none;">
+                        <form method="post" action="{% url 'editar_comentario' comment.id %}">
+                            {% csrf_token %}
+                            <div class="form-group">
+                                <label for="edited_comment_name" class="form-label">Nombre del comentario</label>
+                                <input type="text" 
+                                       id="edited_comment_name" 
+                                       name="edited_comment_name" 
+                                       class="form-control" 
+                                       value="{{ comment.name }}" 
+                                       required>
+                            </div>
+                            <div class="form-group">
+                                <label for="edited_comment" class="form-label">Comentario</label>
+                                <textarea id="edited_comment" 
+                                          name="edited_comment" 
+                                          class="form-control" 
+                                          rows="4" 
+                                          required>{{ comment.body }}</textarea>
+                            </div>
+                            <div style="display: flex; gap: var(--spacing-sm);">
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Guardar Cambios
+                                </button>
+                                <button type="button" class="btn btn-outline btn-cancel-edit" data-comment-id="{{ comment.id }}">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+                </div>
+                {% empty %}
+                <div class="comment-empty">
+                    <i class="fas fa-comment-slash"></i>
+                    <p>Aún no hay comentarios. ¡Sé el primero en comentar!</p>
+                </div>
+                {% endfor %}
+
+                <!-- Formulario para Agregar Comentario -->
+                {% if user.is_authenticated and not user.is_superuser %}
+                <div class="comment-form-section">
+                    <h3 class="comment-form-title">
+                        <i class="fas fa-comment-dots"></i> Agrega un comentario
+                    </h3>
+                    
+                    <form method="post" action="." class="comment-form" id="comment-form">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">
+                                <i class="fas fa-user" aria-hidden="true"></i> Nombre <span class="required">*</span>
+                            </label>
+                            {% if form.name.errors %}
+                            {{ form.name|add_attrs:"aria-invalid:true,aria-describedby:name-error" }}
+                            <div class="form-error" id="name-error" role="alert" aria-live="polite">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                                {{ form.name.errors }}
+                            </div>
+                            {% else %}
+                            {{ form.name }}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="{{ form.body.id_for_label }}" class="form-label">
+                                <i class="fas fa-comment" aria-hidden="true"></i> Comentario <span class="required">*</span>
+                            </label>
+                            {% if form.body.errors %}
+                            {{ form.body|add_attrs:"aria-invalid:true,aria-describedby:body-error" }}
+                            <div class="form-error" id="body-error" role="alert" aria-live="polite">
+                                <i class="fas fa-exclamation-circle" aria-hidden="true"></i>
+                                {{ form.body.errors }}
+                            </div>
+                            {% else %}
+                            {{ form.body }}
+                            {% endif %}
+                        </div>
+                        
+                        <div class="comment-form-actions">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-paper-plane"></i> Publicar Comentario
+                            </button>
+                            <a href="{% url 'frontpage' %}" class="btn btn-outline">
+                                <i class="fas fa-arrow-left"></i> Volver al Blog
+                            </a>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Moderno -->
+    <footer class="footer-zenmind">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>ZenMindConnect</h3>
+                <p>Tu plataforma de bienestar mental y apoyo psicológico.</p>
+                <img src="{% static 'IMG/logo_final.png' %}" alt="Logo ZenMindConnect" style="height: 60px; margin-top: var(--spacing-md);" loading="lazy">
+            </div>
+            
+            <div class="footer-section">
+                <h3>Equipo</h3>
+                <p>Nicolas Parra</p>
+                <p>Alexis Peña</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Contacto</h3>
+                <p><i class="fas fa-envelope"></i> ZenMindConnect.scrum@hotmail.com</p>
+                <p><i class="fas fa-phone"></i> 777-666-5555</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Síguenos</h3>
+                <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-md);">
+                    <a href="https://www.facebook.com/profile.php?id=100081188664230" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="https://www.instagram.com/calmind_psicol/" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://twitter.com/Calmind_psico" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://www.youtube.com/channel/UCReRVATCJYfHPiw00Be-2ug" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 ZenMindConnect. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        function toggleMobileMenu() {
+            const nav = document.getElementById('navbarNav');
+            nav.classList.toggle('active');
+        }
+        
+        function toggleEditForm(commentId) {
+            const editCard = document.getElementById(`edit-card-${commentId}`);
+            if (editCard.style.display === 'none' || editCard.style.display === '') {
+                editCard.style.display = 'block';
+                editCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            } else {
+                editCard.style.display = 'none';
+            }
+        }
+        
+        // Event listeners para botones de editar/cancelar comentarios
+        document.addEventListener('DOMContentLoaded', function() {
+            // Botones de editar
+            document.querySelectorAll('.btn-edit-comment').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const commentId = this.getAttribute('data-comment-id');
+                    toggleEditForm(commentId);
+                });
+            });
+            
+            // Botones de cancelar
+            document.querySelectorAll('.btn-cancel-edit').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const commentId = this.getAttribute('data-comment-id');
+                    toggleEditForm(commentId);
+                });
+            });
+        });
+        
+        // Interceptar envío de comentario para análisis de sentimientos
+        $(document).ready(function() {
+            $('#comment-form').submit(function(event) {
+                // El análisis de sentimientos se hace en el backend via signal
+                // Solo mostramos un mensaje de éxito
+            });
+        });
+    </script>
+    
+    {% if messages %}
+        {% for m in messages %}
+        <script>
+            Swal.fire({
+                text: "{{m}}",
+                confirmButtonText: 'Vale',
+                confirmButtonColor: '#4A90E2',
+                backdrop: true,
+                timer: 10000,
+                timerProgressBar: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+            })
+        </script>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>

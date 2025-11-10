@@ -1,0 +1,94 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# Django
+*.log
+local_settings.py
+db.sqlite3
+db.sqlite3-journal
+/media
+/staticfiles
+/static
+
+# Videos (no subir videos al repositorio)
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.webm
+core/static/Video/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Credential files (security)
+CREDENCIALES.txt
+obtener_credenciales.py
+INICIO_RAPIDO.txt
+crear_perfil_superusuario.py
+crear_agendas_prueba.py
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Model files (large) - pero mantener el modelo entrenado
+# *.h5  # Comentado para incluir el modelo de IA
+*.pkl
+*.joblib
+
+# Mantener el modelo de IA entrenado
+!core/AI ZenMindConnect/modelo_sentimientos_tf_despues_de_cargar.h5
+!core/AI ZenMindConnect/tokenizador.json
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# Coverage reports
+htmlcov/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect 2.0 | Registro</title>
+    <meta name="description" content="Regístrate en ZenMindConnect">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS ZenMind 2.0 -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_forms.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_interactive.css' %}">
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- JSON-LD Structured Data (Schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Registro de Usuario - ZenMindConnect",
+        "description": "Regístrate en ZenMindConnect y comienza tu viaje hacia el bienestar mental",
+        "url": "https://zenmindconnect.com/form_persona/",
+        "publisher": {
+            "@type": "Organization",
+            "name": "ZenMindConnect",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "{% static 'IMG/logo_final.png' %}"
+            }
+        },
+        "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Inicio",
+                    "item": "https://zenmindconnect.com/"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Registro",
+                    "item": "https://zenmindconnect.com/form_persona/"
+                }
+            ]
+        }
+    }
+    </script>
+</head>
+<body>
+    <div class="form-page-container">
+        <div class="form-wrapper">
+            <div class="form-card">
+                <div class="form-logo">
+                    <img src="{% static 'IMG/logo_final.png' %}" alt="ZenMindConnect">
+                </div>
+                
+                <div class="form-header">
+                    <h1>Registro de Usuario</h1>
+                    <p>Crea tu cuenta y comienza tu viaje hacia el bienestar mental</p>
+                </div>
+
+                {% if messages %}
+                <div style="margin-bottom: var(--spacing-lg);">
+                    {% for message in messages %}
+                    <div class="form-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                <form action="{% url 'registrar_usuario' %}" method="POST" id="form-registro">
+                    {% csrf_token %}
+                    
+                    <!-- Información Personal -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-user"></i> Información Personal
+                        </h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="Rut" class="form-label">
+                                    <i class="fas fa-id-card"></i> RUT <span class="required">*</span>
+                                </label>
+                                <input type="text" 
+                                       name="Rut" 
+                                       id="Rut" 
+                                       class="form-control" 
+                                       placeholder="Ejemplo: 199308718 (sin signos)" 
+                                       required>
+                                <small class="form-help-text">Ingresa tu RUT sin puntos ni guión</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="nombre" class="form-label">
+                                    <i class="fas fa-user"></i> Nickname <span class="required">*</span>
+                                </label>
+                                <input type="text" 
+                                       name="nombre" 
+                                       id="nombre" 
+                                       class="form-control" 
+                                       placeholder="Ejemplo: Rytore" 
+                                       required>
+                                <small class="form-help-text">Este será tu nombre de usuario</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="apellido" class="form-label">
+                                    <i class="fas fa-address-book"></i> Nombre Completo <span class="required">*</span>
+                                </label>
+                                <input type="text" 
+                                       name="apellido" 
+                                       id="apellido" 
+                                       class="form-control" 
+                                       placeholder="Ejemplo: Nicolas Parra" 
+                                       required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="fechnac" class="form-label">
+                                    <i class="fas fa-birthday-cake"></i> Fecha de Nacimiento <span class="required">*</span>
+                                </label>
+                                <input type="date" 
+                                       name="fechnac" 
+                                       id="fechnac" 
+                                       class="form-control" 
+                                       required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Información de Contacto -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-envelope"></i> Información de Contacto
+                        </h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="email" class="form-label">
+                                    <i class="fas fa-envelope"></i> Email <span class="required">*</span>
+                                </label>
+                                <input type="email" 
+                                       name="email" 
+                                       id="email" 
+                                       class="form-control" 
+                                       placeholder="micorreo@mail.com" 
+                                       required>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="Telefono" class="form-label">
+                                    <i class="fas fa-phone"></i> Teléfono <span class="required">*</span>
+                                </label>
+                                <input type="text" 
+                                       name="Telefono" 
+                                       id="Telefono" 
+                                       class="form-control" 
+                                       placeholder="Ejemplo: +56951393925" 
+                                       required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Seguridad -->
+                    <div class="form-section">
+                        <h3 class="form-section-title">
+                            <i class="fas fa-shield-alt"></i> Seguridad
+                        </h3>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="password" class="form-label">
+                                    <i class="fas fa-key"></i> Contraseña <span class="required">*</span>
+                                </label>
+                                <input type="password" 
+                                       name="password" 
+                                       id="password" 
+                                       class="form-control" 
+                                       placeholder="Mínimo 8 caracteres" 
+                                       required>
+                                <small class="form-help-text">La contraseña debe tener al menos 8 caracteres</small>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="password_confirm" class="form-label">
+                                    <i class="fas fa-key"></i> Confirmar Contraseña <span class="required">*</span>
+                                </label>
+                                <input type="password" 
+                                       name="password_confirm" 
+                                       id="password_confirm" 
+                                       class="form-control" 
+                                       placeholder="Repite tu contraseña" 
+                                       required>
+                                {% if form.errors.password_confirm %}
+                                <div class="form-error">
+                                    <i class="fas fa-exclamation-circle"></i>
+                                    <span>{{ form.errors.password_confirm }}</span>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="form-submit">
+                        <i class="fas fa-user-plus"></i> Registrarse
+                    </button>
+                </form>
+
+                <div class="form-footer">
+                    <p>¿Ya tienes cuenta?</p>
+                    <a href="{% url 'log' %}">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </a>
+                    <p style="margin-top: var(--spacing-md);">
+                        <a href="{% url 'index' %}">
+                            <i class="fas fa-home"></i> Volver al inicio
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="{% static 'JS/zenmind_2.0_interactive.js' %}"></script>
+    
+    <script>
+        // Validación de contraseñas en tiempo real
+        const password = document.getElementById('password');
+        const passwordConfirm = document.getElementById('password_confirm');
+        
+        function validatePasswords() {
+            if (password.value && passwordConfirm.value) {
+                if (password.value !== passwordConfirm.value) {
+                    passwordConfirm.setCustomValidity('Las contraseñas no coinciden');
+                    passwordConfirm.style.borderColor = 'var(--error)';
+                } else {
+                    passwordConfirm.setCustomValidity('');
+                    passwordConfirm.style.borderColor = 'var(--success)';
+                }
+            }
+        }
+        
+        password.addEventListener('input', validatePasswords);
+        passwordConfirm.addEventListener('input', validatePasswords);
+    </script>
+    
+    {% if messages %}
+        {% for m in messages %}
+        <script>
+            Swal.fire({
+                text: "{{m}}",
+                confirmButtonText: 'Vale',
+                confirmButtonColor: '#4A90E2',
+                backdrop: true,
+                timer: 10000,
+                timerProgressBar: true,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                allowEnterKey: false,
+            })
+        </script>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>

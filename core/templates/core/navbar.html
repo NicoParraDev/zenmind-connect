@@ -1,0 +1,253 @@
+{% load static %}
+<!-- Navbar Moderno -->
+<nav class="navbar-zenmind">
+    <div class="navbar-container">
+        <a href="{% url 'index' %}" class="navbar-brand">
+            <img src="{% static 'IMG/logo_final.png' %}" alt="ZenMindConnect" height="40">
+            <span>ZenMindConnect</span>
+        </a>
+        
+        <button class="navbar-toggler" onclick="toggleMobileMenu()" aria-label="Abrir menú de navegación" aria-expanded="false" aria-controls="navbarNav">
+            <i class="fas fa-bars" aria-hidden="true"></i>
+        </button>
+        
+        <ul class="navbar-nav" id="navbarNav" role="menubar">
+            <li class="nav-item" role="none">
+                <a href="{% url 'index' %}" class="nav-link" role="menuitem" aria-label="Ir a la página de inicio">
+                    <i class="fas fa-home" aria-hidden="true"></i> Inicio
+                </a>
+            </li>
+            <li class="nav-item" role="none">
+                <a href="{% url 'nos' %}" class="nav-link" role="menuitem" aria-label="Conocer más sobre nosotros">
+                    <i class="fas fa-users" aria-hidden="true"></i> Nosotros
+                </a>
+            </li>
+            
+            {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a href="{% url 'frontpage' %}" class="nav-link">
+                        <i class="fas fa-blog"></i> Blog
+                    </a>
+                </li>
+                
+                {% if user.persona %}
+                <li class="nav-item">
+                    <a href="{% url 'autenticar_persona' %}" class="nav-link">
+                        <i class="fas fa-calendar-check"></i> Reservar Cita
+                    </a>
+                </li>
+                {% endif %}
+                
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">
+                        <i class="fas fa-user-circle"></i> {{ user.username }}
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{% url 'form_mod_persona' %}" class="nav-link">
+                            <i class="fas fa-user-edit"></i> Editar Perfil
+                        </a></li>
+                        <li><a href="{% url 'logout' %}" class="nav-link">
+                            <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+                        </a></li>
+                    </ul>
+                </li>
+                
+                {% if user.is_superuser %}
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">
+                        <i class="fas fa-cog"></i> Administrar
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a href="{% url 'adm' %}" class="nav-link">
+                            <i class="fas fa-users-cog"></i> Mantenedor
+                        </a></li>
+                    </ul>
+                </li>
+                {% endif %}
+                
+                <!-- Notificaciones -->
+                {% if user.persona or user.is_superuser %}
+                <li class="nav-item">
+                    <div class="notificaciones-wrapper">
+                        <i class="fas fa-bell notificaciones-icon" onclick="toggleNotificaciones()"></i>
+                        {% with total_notificaciones=notificaciones_no_leidas|length|add:notificaciones_superusuario_no_leidas|length %}
+                            {% if total_notificaciones > 0 %}
+                                <span class="notificaciones-contador" id="contador-notificaciones">{{ total_notificaciones }}</span>
+                            {% endif %}
+                        {% endwith %}
+                        <div class="notificaciones-lista oculto" id="lista-notificaciones">
+                            {% if notificaciones_no_leidas or notificaciones_superusuario_no_leidas %}
+                                <!-- Notificaciones del usuario normal -->
+                                {% if notificaciones_no_leidas %}
+                                    {% for notificacion in notificaciones_no_leidas %}
+                                        <div class="notificacion" data-notificacion-id="{{ notificacion.id }}">
+                                            <p><strong>{{ notificacion.contenido }}</strong></p>
+                                            {% if notificacion.comentario %}
+                                                <p style="font-size: 0.9rem; color: var(--text-secondary);">
+                                                    Usuario: <strong>{{ notificacion.comentario.author.user.username|default:notificacion.comentario.name }}</strong><br>
+                                                    Comentario: <span style="color: var(--secondary-color);">{{ notificacion.comentario.body|truncatewords:10 }}</span>
+                                                </p>
+                                                <div style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-sm);">
+                                                    <a href="{% url 'post_detail' notificacion.comentario.post.slug %}" class="btn btn-sm btn-primary">
+                                                        Ver Post
+                                                    </a>
+                                                    <button class="marcar-leido btn btn-sm btn-secondary" data-notificacion-id="{{ notificacion.id }}">
+                                                        Marcar Leída
+                                                    </button>
+                                                </div>
+                                            {% else %}
+                                                <button class="marcar-leido btn btn-sm btn-secondary" data-notificacion-id="{{ notificacion.id }}">
+                                                    Marcar Leída
+                                                </button>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                                
+                                <!-- Notificaciones del superusuario (comentarios negativos) -->
+                                {% if user.is_superuser and notificaciones_superusuario_no_leidas %}
+                                    {% for notificacion in notificaciones_superusuario_no_leidas %}
+                                        <div class="notificacion notificacion-negativa" data-notificacion-id="{{ notificacion.id }}" data-tipo="superusuario">
+                                            <p style="color: var(--danger-color); font-weight: bold; margin-bottom: 0.5rem;">
+                                                <i class="fas fa-exclamation-triangle"></i> Comentario Negativo Detectado
+                                            </p>
+                                            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                                <i class="fas fa-clock"></i> {{ notificacion.fecha|date:"d/m/Y H:i" }}
+                                            </p>
+                                            <div style="margin: 0.75rem 0;">
+                                                {{ notificacion.contenido|safe }}
+                                            </div>
+                                            {% if notificacion.comentario %}
+                                                <div style="display: flex; gap: var(--spacing-sm); margin-top: var(--spacing-sm);">
+                                                    <a href="{% url 'post_detail' notificacion.comentario.post.slug %}" class="btn btn-sm btn-primary">
+                                                        <i class="fas fa-eye"></i> Ver Post
+                                                    </a>
+                                                    <button class="marcar-notificacion-superusuario-leida btn btn-sm btn-secondary" data-notificacion-id="{{ notificacion.id }}">
+                                                        <i class="fas fa-check"></i> Marcar Leída
+                                                    </button>
+                                                </div>
+                                            {% endif %}
+                                        </div>
+                                    {% endfor %}
+                                {% endif %}
+                            {% else %}
+                                <div class="notificacion">
+                                    <p>No hay notificaciones</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </li>
+                {% endif %}
+            {% else %}
+                <li class="nav-item">
+                    <a href="{% url 'log' %}" class="nav-link">
+                        <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="{% url 'form_persona' %}" class="nav-link">
+                        <i class="fas fa-user-plus"></i> Registrarse
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</nav>
+
+<script>
+    function toggleMobileMenu() {
+        const nav = document.getElementById('navbarNav');
+        nav.classList.toggle('active');
+    }
+    
+    function toggleNotificaciones() {
+        const lista = document.getElementById('lista-notificaciones');
+        if (lista) {
+            lista.classList.toggle('oculto');
+        }
+    }
+    
+    // Manejar botones de marcar como leída
+    document.addEventListener('DOMContentLoaded', function() {
+        // Notificaciones normales
+        document.querySelectorAll('.marcar-leido').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const notificacionId = this.getAttribute('data-notificacion-id');
+                fetch(`/marcar-notificacion-leida/${notificacionId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Ocultar la notificación
+                    const notificacion = document.querySelector(`[data-notificacion-id="${notificacionId}"]`);
+                    if (notificacion) {
+                        notificacion.style.display = 'none';
+                    }
+                    // Actualizar contador
+                    actualizarContador();
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+        
+        // Notificaciones del superusuario
+        document.querySelectorAll('.marcar-notificacion-superusuario-leida').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const notificacionId = this.getAttribute('data-notificacion-id');
+                fetch(`/marcar-notificacion-superusuario-leida/${notificacionId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'Content-Type': 'application/json',
+                    },
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Ocultar la notificación
+                    const notificacion = document.querySelector(`[data-notificacion-id="${notificacionId}"][data-tipo="superusuario"]`);
+                    if (notificacion) {
+                        notificacion.style.display = 'none';
+                    }
+                    // Actualizar contador
+                    actualizarContador();
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+        
+        function actualizarContador() {
+            const notificaciones = document.querySelectorAll('.notificacion:not([style*="display: none"])');
+            const contador = document.getElementById('contador-notificaciones');
+            if (contador) {
+                const total = notificaciones.length;
+                if (total > 0) {
+                    contador.textContent = total;
+                    contador.style.display = 'inline-block';
+                } else {
+                    contador.style.display = 'none';
+                }
+            }
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+

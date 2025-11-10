@@ -1,0 +1,11 @@
+# robots.txt para ZenMindConnect 2.0
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /static/
+Disallow: /media/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://zenmindconnect.com/sitemap.xml
+

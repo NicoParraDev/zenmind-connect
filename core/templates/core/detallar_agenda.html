@@ -1,0 +1,158 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect | Detalle de Agenda</title>
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- ZenMindConnect 2.0 CSS -->
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_reservas.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_interactive.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    {% include 'core/navbar.html' %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="detalle-agenda-container">
+            <div class="detalle-agenda-header">
+                <h1><i class="fas fa-clipboard-list"></i> Detalle de Agenda</h1>
+            </div>
+
+            <div class="detalle-agenda-card">
+                <!-- Información del Psicólogo -->
+                <div class="detalle-info-section">
+                    <div class="detalle-info-label">Psicólogo</div>
+                    <div class="detalle-psicologo">
+                        <i class="fas fa-user-md"></i> {{ agenda.psicologo }}
+                    </div>
+                </div>
+
+                <!-- Especialidad -->
+                <div class="detalle-info-section">
+                    <div class="detalle-info-label">Especialidad</div>
+                    <div class="detalle-especialidad">
+                        <i class="fas fa-stethoscope"></i> {{ agenda.psicologo.especialidad }}
+                    </div>
+                </div>
+
+                <!-- Fecha Disponible -->
+                <div class="detalle-info-section">
+                    <div class="detalle-info-label">Fecha Disponible</div>
+                    <div class="detalle-fecha">
+                        <i class="fas fa-calendar"></i> {{ agenda.data }}
+                    </div>
+                </div>
+
+                <!-- Horarios Disponibles -->
+                <div class="detalle-info-section">
+                    <div class="detalle-info-label">Horarios Disponibles</div>
+                    {% if horarios_disponibles %}
+                        <div class="horarios-list">
+                            {% for horario_agenda in horarios_disponibles %}
+                                {% with horas=horario_agenda.horario.horas %}
+                                    <form method="POST" action="{% url 'marcar_consulta' id=agenda.id %}" style="display: inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="horario_id" value="{{ horario_agenda.id }}">
+                                        {% if "⛅" in horas %}
+                                            <button type="submit" class="horario-badge horario-manana horario-btn-disponible" data-hora="{{ horas }}">
+                                                <i class="fas fa-clock"></i> {{ horas }}
+                                            </button>
+                                        {% elif "☀️" in horas %}
+                                            <button type="submit" class="horario-badge horario-tarde horario-btn-disponible" data-hora="{{ horas }}">
+                                                <i class="fas fa-clock"></i> {{ horas }}
+                                            </button>
+                                        {% elif "🌄" in horas %}
+                                            <button type="submit" class="horario-badge horario-noche horario-btn-disponible" data-hora="{{ horas }}">
+                                                <i class="fas fa-clock"></i> {{ horas }}
+                                            </button>
+                                        {% else %}
+                                            <button type="submit" class="horario-badge horario-btn-disponible" data-hora="{{ horas }}">
+                                                <i class="fas fa-clock"></i> {{ horas }}
+                                            </button>
+                                        {% endif %}
+                                    </form>
+                                {% endwith %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div style="background: #fff3cd; border-left: 4px solid #ffc107; padding: 1rem; border-radius: var(--border-radius);">
+                            <p style="color: #856404; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fas fa-exclamation-triangle"></i> 
+                                <strong>No hay horarios disponibles para esta fecha.</strong>
+                            </p>
+                            <p style="color: #856404; margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+                                Por favor, selecciona otra agenda o contacta al administrador.
+                            </p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <!-- Horarios Reservados (solo si hay) -->
+                {% if horarios_reservados %}
+                    <div class="detalle-info-section">
+                        <div class="detalle-info-label">Horarios Reservados</div>
+                        <div class="horarios-list">
+                            {% for horario_agenda in horarios_reservados %}
+                                {% with horas=horario_agenda.horario.horas %}
+                                    {% if "⛅" in horas %}
+                                        <div class="horario-badge horario-manana horario-reservado" data-hora="{{ horas }}">
+                                            <i class="fas fa-check-circle"></i> {{ horas }} 
+                                            <small>({{ horario_agenda.reservado_por.nombre }})</small>
+                                        </div>
+                                    {% elif "☀️" in horas %}
+                                        <div class="horario-badge horario-tarde horario-reservado" data-hora="{{ horas }}">
+                                            <i class="fas fa-check-circle"></i> {{ horas }}
+                                            <small>({{ horario_agenda.reservado_por.nombre }})</small>
+                                        </div>
+                                    {% elif "🌄" in horas %}
+                                        <div class="horario-badge horario-noche horario-reservado" data-hora="{{ horas }}">
+                                            <i class="fas fa-check-circle"></i> {{ horas }}
+                                            <small>({{ horario_agenda.reservado_por.nombre }})</small>
+                                        </div>
+                                    {% else %}
+                                        <div class="horario-badge horario-reservado" data-hora="{{ horas }}">
+                                            <i class="fas fa-check-circle"></i> {{ horas }}
+                                            <small>({{ horario_agenda.reservado_por.nombre }})</small>
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Acciones -->
+                <div class="detalle-actions">
+                    <a href="{% url 'listar_agendas' %}" class="btn-volver-lista">
+                        <i class="fas fa-arrow-left"></i> Volver a la Lista
+                    </a>
+                    {% if not user.is_authenticated or not user.persona %}
+                        <a href="{% url 'log' %}" class="btn-tomar-hora">
+                            <i class="fas fa-sign-in-alt"></i> Iniciar Sesión para Reservar
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    {% include 'core/footer.html' %}
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'JS/zenmind_2.0_interactive.js' %}"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>
+</html>

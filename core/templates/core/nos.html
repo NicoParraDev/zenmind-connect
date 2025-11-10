@@ -1,0 +1,346 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect 2.0 | Nosotros</title>
+    <meta name="description" content="Conoce más sobre ZenMindConnect, nuestra misión, visión y el equipo que trabaja por tu bienestar mental">
+    <meta name="keywords" content="nosotros, misión, visión, equipo, ZenMindConnect, bienestar mental">
+    <meta name="author" content="ZenMindConnect">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zenmindconnect.com/nos/">
+    <meta property="og:title" content="ZenMindConnect 2.0 | Nosotros">
+    <meta property="og:description" content="Conoce más sobre ZenMindConnect y nuestra misión">
+    <meta property="og:image" content="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://zenmindconnect.com/nos/">
+    <meta property="twitter:title" content="ZenMindConnect 2.0 | Nosotros">
+    <meta property="twitter:description" content="Conoce más sobre ZenMindConnect y nuestra misión">
+    <meta property="twitter:image" content="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS ZenMind 2.0 -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_video.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- JSON-LD Structured Data (Schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "AboutPage",
+        "name": "Sobre Nosotros - ZenMindConnect",
+        "description": "Conoce más sobre ZenMindConnect, nuestra misión, visión y el equipo que trabaja por tu bienestar mental",
+        "url": "https://zenmindconnect.com/nos/",
+        "mainEntity": {
+            "@type": "Organization",
+            "name": "ZenMindConnect",
+            "url": "https://zenmindconnect.com",
+            "logo": "{% static 'IMG/logo_final.png' %}",
+            "description": "Plataforma de bienestar mental y apoyo psicológico. Conectamos personas con profesionales de la salud mental para una vida más equilibrada.",
+            "foundingDate": "2024",
+            "contactPoint": {
+                "@type": "ContactPoint",
+                "contactType": "Customer Service",
+                "email": "ZenMindConnect.scrum@hotmail.com",
+                "telephone": "777-666-5555"
+            },
+            "sameAs": [
+                "https://www.facebook.com/profile.php?id=100081188664230",
+                "https://www.instagram.com/calmind_psicol/",
+                "https://twitter.com/Calmind_psico",
+                "https://www.youtube.com/channel/UCReRVATCJYfHPiw00Be-2ug"
+            ]
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Navbar Moderno -->
+    {% include 'core/navbar.html' %}
+
+    <!-- Hero Section -->
+    <section class="hero-section" style="padding: var(--spacing-2xl) 0; margin-bottom: var(--spacing-2xl);">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Sobre Nosotros</h1>
+                <p class="hero-subtitle">
+                    Conoce más sobre ZenMindConnect y nuestra misión de promover el bienestar mental
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Video Section -->
+    <main class="container" style="margin-bottom: var(--spacing-2xl);">
+        <div class="card" style="margin-bottom: var(--spacing-xl);">
+            <div class="card-header">
+                <h2><i class="fas fa-video"></i> Nuestro Video</h2>
+            </div>
+            <div class="card-body">
+                <div id="video-container">
+                    <video id="myVideo" controls>
+                        <source src="{% static 'Video/Video ZenMindConnect.mp4' %}" type="video/mp4">
+                        Tu navegador no soporta el tag de video.
+                    </video>
+                    <div id="controls" onmousemove="showControls()" onmouseleave="hideControls()">
+                        <button onclick="rewind()">&#9668;&#9668;</button>
+                        <button onclick="togglePlayPause()">
+                            <i id="play-icon" class="fas fa-play"></i>
+                            <i id="pause-icon" class="fas fa-pause"></i>
+                        </button>
+                        <button onclick="fastForward()">&#9658;&#9658;</button>
+                        <div id="speed-control">
+                            <label for="speed">Velocidad:</label>
+                            <select id="speed" onchange="changeSpeed()">
+                                <option value="0.5">0.5x</option>
+                                <option value="1" selected>1x</option>
+                                <option value="1.5">1.5x</option>
+                                <option value="2">2x</option>
+                            </select>
+                        </div>
+                        <input type="range" id="volume-bar" min="0" max="1" step="0.1" value="1" onchange="changeVolume()">
+                        <div id="progress-bar-container" onclick="seek(event)">
+                            <div id="progress-bar">
+                                <div id="progress-bar-inner"></div>
+                                <div id="current-time">0:00</div>
+                            </div>
+                        </div>
+                        <button id="fullscreen-btn" onclick="toggleFullScreen()"><i class="fas fa-expand"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- About Section -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-info-circle"></i> Nuestra Historia</h2>
+            </div>
+            <div class="card-body">
+                <p style="font-size: var(--font-lg); line-height: 1.8; color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
+                    ZenMindConnect es mucho más que una plataforma, es una comunidad comprometida con el bienestar mental y emocional. 
+                    Nosotros, en ZenMindConnect, nos esforzamos por proporcionar un espacio seguro y acogedor donde las personas pueden 
+                    encontrar apoyo, recursos y herramientas para mejorar su salud mental.
+                </p>
+                
+                <p style="font-size: var(--font-base); line-height: 1.8; color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
+                    Nuestra misión es facilitar el acceso a servicios y actividades que promuevan el equilibrio y la paz interior. 
+                    Creemos en la importancia de la conexión humana y en el poder de compartir experiencias para fortalecer la resiliencia emocional.
+                </p>
+                
+                <p style="font-size: var(--font-base); line-height: 1.8; color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
+                    En ZenMindConnect, trabajamos de la mano con profesionales de la salud mental, psicólogos y expertos en bienestar 
+                    para ofrecer a nuestros usuarios una gama diversa de opciones, desde sesiones terapéuticas hasta actividades de 
+                    autocuidado y contenido educativo.
+                </p>
+                
+                <p style="font-size: var(--font-base); line-height: 1.8; color: var(--text-secondary); margin-bottom: var(--spacing-lg);">
+                    Valoramos la privacidad y la confidencialidad, asegurando que cada miembro de nuestra comunidad se sienta seguro al 
+                    explorar su viaje hacia una mente más tranquila y equilibrada. Creemos que el bienestar mental es un derecho fundamental, 
+                    y estamos comprometidos a eliminar barreras y estigmas que puedan dificultar el acceso a la ayuda.
+                </p>
+                
+                <p style="font-size: var(--font-base); line-height: 1.8; color: var(--text-secondary);">
+                    Únete a nosotros en ZenMindConnect y forma parte de una comunidad que abraza la diversidad, fomenta el crecimiento personal 
+                    y se esfuerza por hacer del bienestar mental una prioridad para todos. Juntos, creamos un espacio donde cada mente pueda florecer.
+                </p>
+            </div>
+        </div>
+
+        <!-- Values Section -->
+        <div class="card" style="margin-top: var(--spacing-xl);">
+            <div class="card-header">
+                <h2><i class="fas fa-heart"></i> Nuestros Valores</h2>
+            </div>
+            <div class="card-body">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: var(--spacing-lg);">
+                    <div style="text-align: center; padding: var(--spacing-lg); background: var(--bg-secondary); border-radius: var(--radius-md);">
+                        <img src="{% static 'IMG/2.png' %}" alt="Tranquilidad" style="width: 100%; max-width: 200px; border-radius: var(--radius-md); margin-bottom: var(--spacing-md);">
+                        <h3 style="color: var(--text-primary); margin-bottom: var(--spacing-sm);">Tranquilidad</h3>
+                        <p style="color: var(--text-secondary);">Buscamos la paz interior y el equilibrio emocional</p>
+                    </div>
+                    
+                    <div style="text-align: center; padding: var(--spacing-lg); background: var(--bg-secondary); border-radius: var(--radius-md);">
+                        <img src="{% static 'IMG/1.png' %}" alt="Superación" style="width: 100%; max-width: 200px; border-radius: var(--radius-md); margin-bottom: var(--spacing-md);">
+                        <h3 style="color: var(--text-primary); margin-bottom: var(--spacing-sm);">Superación</h3>
+                        <p style="color: var(--text-secondary);">Fomentamos el crecimiento personal continuo</p>
+                    </div>
+                    
+                    <div style="text-align: center; padding: var(--spacing-lg); background: var(--bg-secondary); border-radius: var(--radius-md);">
+                        <img src="{% static 'IMG/3.png' %}" alt="Benevolencia" style="width: 100%; max-width: 200px; border-radius: var(--radius-md); margin-bottom: var(--spacing-md);">
+                        <h3 style="color: var(--text-primary); margin-bottom: var(--spacing-sm);">Benevolencia</h3>
+                        <p style="color: var(--text-secondary);">Actuamos con bondad y compasión hacia todos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Moderno -->
+    <footer class="footer-zenmind">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>ZenMindConnect</h3>
+                <p>Tu plataforma de bienestar mental y apoyo psicológico.</p>
+                <img src="{% static 'IMG/logo_final.png' %}" alt="Logo" style="height: 60px; margin-top: var(--spacing-md);">
+            </div>
+            
+            <div class="footer-section">
+                <h3>Equipo</h3>
+                <p>Nicolas Parra</p>
+                <p>Alexis Peña</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Contacto</h3>
+                <p><i class="fas fa-envelope"></i> ZenMindConnect.scrum@hotmail.com</p>
+                <p><i class="fas fa-phone"></i> 777-666-5555</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Síguenos</h3>
+                <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-md);">
+                    <a href="https://www.facebook.com/profile.php?id=100081188664230" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="https://www.instagram.com/calmind_psicol/" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://twitter.com/Calmind_psico" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://www.youtube.com/channel/UCReRVATCJYfHPiw00Be-2ug" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 ZenMindConnect. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'JS/video.js' %}"></script>
+    
+    <script>
+        function toggleMobileMenu() {
+            const nav = document.getElementById('navbarNav');
+            nav.classList.toggle('active');
+        }
+        
+        // Video controls
+        var video = document.getElementById("myVideo");
+        var volumeBar = document.getElementById("volume-bar");
+        var speedSelect = document.getElementById("speed");
+        var progressBar = document.getElementById("progress-bar");
+        var progressBarInner = document.getElementById("progress-bar-inner");
+        var currentTimeDisplay = document.getElementById("current-time");
+        var playIcon = document.getElementById("play-icon");
+        var pauseIcon = document.getElementById("pause-icon");
+        var controls = document.getElementById("controls");
+        var hideControlsTimeout;
+
+        function togglePlayPause() {
+            if (video.paused) {
+                video.play();
+                playIcon.style.display = "none";
+                pauseIcon.style.display = "inline-block";
+            } else {
+                video.pause();
+                playIcon.style.display = "inline-block";
+                pauseIcon.style.display = "none";
+            }
+        }
+
+        function changeVolume() {
+            video.volume = volumeBar.value;
+        }
+
+        function toggleFullScreen() {
+            if (video.requestFullscreen) {
+                video.requestFullscreen();
+            } else if (video.mozRequestFullScreen) {
+                video.mozRequestFullScreen();
+            } else if (video.webkitRequestFullscreen) {
+                video.webkitRequestFullscreen();
+            } else if (video.msRequestFullscreen) {
+                video.msRequestFullscreen();
+            }
+        }
+
+        function changeSpeed() {
+            video.playbackRate = parseFloat(speedSelect.value);
+        }
+
+        function updateProgressBar() {
+            var value = (video.currentTime / video.duration) * 100;
+            progressBarInner.style.width = value + "%";
+            updateTimeDisplay();
+        }
+
+        function updateTimeDisplay() {
+            var currentTime = formatTime(video.currentTime);
+            currentTimeDisplay.textContent = currentTime;
+        }
+
+        function formatTime(seconds) {
+            var minutes = Math.floor(seconds / 60);
+            var remainingSeconds = Math.floor(seconds % 60);
+            return minutes + ":" + (remainingSeconds < 10 ? "0" : "") + remainingSeconds;
+        }
+
+        function seek(event) {
+            var percent = event.offsetX / progressBar.clientWidth;
+            video.currentTime = percent * video.duration;
+            updateProgressBar();
+        }
+
+        function showControls() {
+            controls.style.opacity = 1;
+            clearTimeout(hideControlsTimeout);
+            hideControlsTimeout = setTimeout(function () {
+                controls.style.opacity = 0;
+            }, 10000);
+        }
+
+        function hideControls() {
+            controls.style.opacity = 0;
+        }
+
+        function rewind() {
+            var newTime = (video.currentTime - 5) < 0 ? 0 : (video.currentTime - 5);
+            video.currentTime = newTime;
+            updateProgressBar();
+        }
+
+        function fastForward() {
+            var newTime = (video.currentTime + 5) > video.duration ? video.duration : (video.currentTime + 5);
+            video.currentTime = newTime;
+            updateProgressBar();
+        }
+
+        video.addEventListener("timeupdate", updateProgressBar);
+    </script>
+</body>
+</html>

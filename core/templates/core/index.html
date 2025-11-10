@@ -1,0 +1,266 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect 2.0 | Bienestar Mental</title>
+    <meta name="description" content="Plataforma de bienestar mental y apoyo psicológico. Conectamos personas con profesionales de la salud mental para una vida más equilibrada.">
+    <meta name="keywords" content="bienestar mental, psicología, salud mental, terapia, apoyo emocional, ZenMindConnect">
+    <meta name="author" content="ZenMindConnect">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zenmindconnect.com/">
+    <meta property="og:title" content="ZenMindConnect 2.0 | Bienestar Mental">
+    <meta property="og:description" content="Plataforma de bienestar mental y apoyo psicológico">
+    <meta property="og:image" content="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://zenmindconnect.com/">
+    <meta property="twitter:title" content="ZenMindConnect 2.0 | Bienestar Mental">
+    <meta property="twitter:description" content="Plataforma de bienestar mental y apoyo psicológico">
+    <meta property="twitter:image" content="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS ZenMind 2.0 -->
+    {% load static compress %}
+    {% compress css file zenmind_css %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_hero.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_interactive.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    {% endcompress %}
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- JSON-LD Structured Data (Schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "ZenMindConnect",
+        "url": "https://zenmindconnect.com",
+        "logo": "{% static 'IMG/logo_final.png' %}",
+        "description": "Plataforma de bienestar mental y apoyo psicológico. Conectamos personas con profesionales de la salud mental para una vida más equilibrada.",
+        "contactPoint": {
+            "@type": "ContactPoint",
+            "contactType": "Customer Service",
+            "areaServed": "CL",
+            "availableLanguage": "Spanish"
+        },
+        "sameAs": [
+            "https://zenmindconnect.com"
+        ],
+        "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://zenmindconnect.com/frontpage/?search={search_term_string}",
+            "query-input": "required name=search_term_string"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Navbar Moderno -->
+    {% include 'core/navbar.html' %}
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1 class="hero-title">Bienvenido a ZenMindConnect</h1>
+                <p class="hero-subtitle">
+                    Tu espacio seguro para el bienestar mental. Conectamos personas con profesionales 
+                    de la salud mental para una vida más equilibrada.
+                </p>
+                <div class="hero-buttons">
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'form_persona' %}" class="btn btn-primary btn-lg" aria-label="Comenzar registro en ZenMindConnect">
+                        <i class="fas fa-rocket" aria-hidden="true"></i> Comenzar Ahora
+                    </a>
+                    <a href="{% url 'nos' %}" class="btn btn-outline btn-lg" aria-label="Conocer más sobre ZenMindConnect">
+                        <i class="fas fa-info-circle" aria-hidden="true"></i> Conocer Más
+                    </a>
+                    {% else %}
+                    <a href="{% url 'frontpage' %}" class="btn btn-primary btn-lg" aria-label="Ir al blog de ZenMindConnect">
+                        <i class="fas fa-blog" aria-hidden="true"></i> Ver Blog
+                    </a>
+                    {% if not user.is_superuser %}
+                    <a href="{% url 'autenticar_persona' %}" class="btn btn-outline btn-lg" aria-label="Reservar una cita con un psicólogo">
+                        <i class="fas fa-calendar-check" aria-hidden="true"></i> Reservar Cita
+                    </a>
+                    {% endif %}
+                    {% endif %}
+                </div>
+                
+                <div class="hero-features">
+                    <div class="hero-feature">
+                        <i class="fas fa-heart"></i>
+                        <h3>Apoyo Emocional</h3>
+                        <p>Profesionales capacitados para ayudarte en tu bienestar mental</p>
+                    </div>
+                    <div class="hero-feature">
+                        <i class="fas fa-clock"></i>
+                        <h3>Horarios Flexibles</h3>
+                        <p>Reserva tu cita en el horario que mejor te convenga</p>
+                    </div>
+                    <div class="hero-feature">
+                        <i class="fas fa-shield-alt"></i>
+                        <h3>Confidencialidad</h3>
+                        <p>Tu privacidad es nuestra prioridad</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Sección Principal -->
+    <main class="container" style="margin-top: var(--spacing-2xl);">
+        <!-- Card de Presentación -->
+        <div class="card">
+            <div class="card-header">
+                <h2><i class="fas fa-info-circle"></i> ¿Qué es ZenMindConnect?</h2>
+            </div>
+            <div class="card-body">
+                <p>
+                    ZenMindConnect es una iniciativa para orientar y ayudar a las personas que más lo necesitan, 
+                    ya sea en tiempos de pandemia o como necesidad para la vida cotidiana.
+                </p>
+                <p>
+                    Es capaz de ayudarte en tu estado emocional y físico a un costo accesible para todos. 
+                    Además, puedes seleccionar el horario que más te convenga y reservar una hora con anticipación.
+                </p>
+                <p>
+                    También puedes seleccionar al psicólogo que más te acomode y contactarte directamente con él.
+                </p>
+                <p>
+                    Si quieres ser parte de ZenMindConnect, debes estar estudiando psicología o ya encontrarte 
+                    graduado en esta especialidad.
+                </p>
+                <div style="margin-top: var(--spacing-lg); padding: var(--spacing-lg); background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); border-radius: var(--radius-lg); color: white; text-align: center;">
+                    <h3 style="color: white; margin-bottom: var(--spacing-sm);">
+                        <i class="fas fa-quote-left"></i> Nuestra Filosofía
+                    </h3>
+                    <p style="font-size: var(--font-lg); font-style: italic; color: white; margin: 0;">
+                        "No solo calmamos tu mente, sino también tu corazón"
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Moderno -->
+    <footer class="footer-zenmind">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>ZenMindConnect</h3>
+                <p>Tu plataforma de bienestar mental y apoyo psicológico.</p>
+                <img src="{% static 'IMG/logo_final.png' %}" alt="Logo ZenMindConnect" style="height: 60px; margin-top: var(--spacing-md);" loading="lazy">
+            </div>
+            
+            <div class="footer-section">
+                <h3>Equipo</h3>
+                <p>Nicolas Parra</p>
+                <p>Alexis Peña</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Contacto</h3>
+                <p><i class="fas fa-envelope"></i> ZenMindConnect.scrum@hotmail.com</p>
+                <p><i class="fas fa-phone"></i> 777-666-5555</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Síguenos</h3>
+                <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-md);">
+                    <a href="https://www.facebook.com/profile.php?id=100081188664230" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="https://www.instagram.com/calmind_psicol/" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://twitter.com/Calmind_psico" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://www.youtube.com/channel/UCReRVATCJYfHPiw00Be-2ug" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 ZenMindConnect. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    {% compress js %}
+    <script src="{% static 'JS/zenmind_2.0_interactive.js' %}"></script>
+    {% endcompress %}
+    <script>
+        function toggleMobileMenu() {
+            const nav = document.getElementById('navbarNav');
+            nav.classList.toggle('active');
+        }
+        
+        function toggleNotificaciones() {
+            const lista = document.getElementById('lista-notificaciones');
+            lista.classList.toggle('oculto');
+        }
+        
+        // Script para notificaciones (mantener funcionalidad existente)
+        const contadorNotificaciones = document.getElementById('contador-notificaciones');
+        const listaNotificaciones = document.getElementById('lista-notificaciones');
+        const notificacionesNoLeidas = document.querySelectorAll('.notificacion');
+        
+        if (notificacionesNoLeidas.length > 0 && contadorNotificaciones) {
+            const botonesMarcarLeido = document.querySelectorAll('.marcar-leido');
+            botonesMarcarLeido.forEach((boton) => {
+                boton.addEventListener('click', function () {
+                    const notificacionId = this.getAttribute('data-notificacion-id');
+                    marcarComoLeido(notificacionId, this.closest('.notificacion'));
+                });
+            });
+        }
+        
+        function marcarComoLeido(notificacionId, elemento) {
+            $.ajax({
+                url: '/marcar-notificacion-leida/' + notificacionId + '/',
+                method: 'GET',
+                success: function (data) {
+                    if (data.mensaje === 'Notificación marcada como leída con éxito') {
+                        $.ajax({
+                            url: '/eliminar-notificacion/' + notificacionId + '/',
+                            method: 'GET',
+                            success: function (data) {
+                                if (data.mensaje === 'Notificación eliminada con éxito') {
+                                    elemento.remove();
+                                    const notificacionesRestantes = document.querySelectorAll('.notificacion');
+                                    if (notificacionesRestantes.length === 0) {
+                                        listaNotificaciones.innerHTML = '<div class="notificacion"><p>No hay notificaciones</p></div>';
+                                        if (contadorNotificaciones) contadorNotificaciones.style.display = 'none';
+                                    } else if (contadorNotificaciones) {
+                                        contadorNotificaciones.textContent = notificacionesRestantes.length;
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,283 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect | Comprobante de Registro</title>
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- ZenMindConnect 2.0 CSS -->
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_interactive.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        .comprobante-container {
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 0 1rem;
+        }
+        
+        .comprobante-card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius-lg);
+            padding: 3rem;
+            box-shadow: var(--shadow-lg);
+            border: 2px solid var(--primary-color);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .comprobante-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        }
+        
+        .comprobante-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+        
+        .comprobante-icon {
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, var(--success-color), var(--secondary-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1.5rem;
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .comprobante-icon i {
+            font-size: 3rem;
+            color: white;
+        }
+        
+        .comprobante-title {
+            font-size: 2rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+        
+        .comprobante-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        
+        .comprobante-body {
+            margin-bottom: 2rem;
+        }
+        
+        .comprobante-section {
+            margin-bottom: 2rem;
+            padding-bottom: 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .comprobante-section:last-child {
+            border-bottom: none;
+        }
+        
+        .comprobante-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .comprobante-value {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+        
+        .comprobante-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+        
+        .comprobante-info-item {
+            background: var(--bg-secondary);
+            padding: 1rem;
+            border-radius: var(--border-radius);
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .comprobante-footer {
+            text-align: center;
+            margin-top: 2.5rem;
+            padding-top: 2rem;
+            border-top: 2px solid var(--border-color);
+        }
+        
+        .comprobante-message {
+            background: linear-gradient(135deg, rgba(80, 200, 120, 0.1), rgba(74, 144, 226, 0.1));
+            padding: 1.5rem;
+            border-radius: var(--border-radius);
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--success-color);
+        }
+        
+        .comprobante-message p {
+            margin: 0;
+            color: var(--text-primary);
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+        
+        .comprobante-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn-comprobante {
+            padding: 0.75rem 2rem;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-comprobante-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-comprobante-primary:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .btn-comprobante-secondary {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+        
+        .btn-comprobante-secondary:hover {
+            background: var(--bg-tertiary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        
+        @media print {
+            .comprobante-actions {
+                display: none;
+            }
+            
+            .navbar-zenmind,
+            .footer-zenmind {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    {% include 'core/navbar.html' %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="comprobante-container">
+            <div class="comprobante-card">
+                <div class="comprobante-header">
+                    <div class="comprobante-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h1 class="comprobante-title">¡Registro Exitoso!</h1>
+                    <p class="comprobante-subtitle">Tu cuenta ha sido creada correctamente</p>
+                </div>
+
+                <div class="comprobante-message">
+                    <p>
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Bienvenido a ZenMindConnect!</strong> Tu registro se ha completado exitosamente. 
+                        Ahora puedes iniciar sesión y comenzar a usar nuestros servicios.
+                    </p>
+                </div>
+
+                <div class="comprobante-body">
+                    <div class="comprobante-section">
+                        <div class="comprobante-label">Información de la Cuenta</div>
+                        <div class="comprobante-info-grid">
+                            <div class="comprobante-info-item">
+                                <div class="comprobante-label">Nombre Completo</div>
+                                <div class="comprobante-value">{{ persona.nombre }} {{ persona.apellido }}</div>
+                            </div>
+                            <div class="comprobante-info-item">
+                                <div class="comprobante-label">RUT</div>
+                                <div class="comprobante-value">{{ persona.rut }}</div>
+                            </div>
+                            <div class="comprobante-info-item">
+                                <div class="comprobante-label">Email</div>
+                                <div class="comprobante-value">{{ persona.correo }}</div>
+                            </div>
+                            <div class="comprobante-info-item">
+                                <div class="comprobante-label">Teléfono</div>
+                                <div class="comprobante-value">{{ persona.telefono }}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="comprobante-section">
+                        <div class="comprobante-label">Usuario</div>
+                        <div class="comprobante-value">{{ persona.user.username }}</div>
+                    </div>
+
+                    <div class="comprobante-section">
+                        <div class="comprobante-label">Fecha de Registro</div>
+                        <div class="comprobante-value">{{ fecha_registro|date:"d/m/Y H:i" }}</div>
+                    </div>
+                </div>
+
+                <div class="comprobante-footer">
+                    <div class="comprobante-actions">
+                        <a href="{% url 'log' %}" class="btn-comprobante btn-comprobante-primary">
+                            <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+                        </a>
+                        <a href="{% url 'index' %}" class="btn-comprobante btn-comprobante-secondary">
+                            <i class="fas fa-home"></i> Ir al Inicio
+                        </a>
+                    </div>
+                    <p style="margin-top: 1.5rem; color: var(--text-secondary); font-size: 0.9rem;">
+                        <i class="fas fa-print"></i> Puedes imprimir esta página como comprobante
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    {% include 'core/footer.html' %}
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'JS/zenmind_2.0_interactive.js' %}"></script>
+</body>
+</html>
+

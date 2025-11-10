@@ -1,0 +1,464 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect | Modificar Cita</title>
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- ZenMindConnect 2.0 CSS -->
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_forms.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_reservas.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_interactive.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    {% include 'core/navbar.html' %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="modificar-cita-container">
+            <!-- Header -->
+            <div class="modificar-cita-header">
+                <div class="header-icon">
+                    <i class="fas fa-calendar-edit"></i>
+                </div>
+                <div class="header-content">
+                    <h1>Modificar Cita</h1>
+                    <p>Selecciona un nuevo horario para tu consulta</p>
+                </div>
+            </div>
+
+            <!-- Tarjeta de Información Actual -->
+            <div class="cita-actual-card">
+                <div class="card-header">
+                    <i class="fas fa-info-circle"></i>
+                    <h2>Información de tu Cita Actual</h2>
+                </div>
+                <div class="cita-info-grid">
+                    <div class="cita-info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-user-md"></i>
+                        </div>
+                        <div class="info-content">
+                            <span class="info-label">Psicólogo</span>
+                            <span class="info-value">{{ horario_agenda_actual.agenda.psicologo.nombre }}</span>
+                        </div>
+                    </div>
+                    <div class="cita-info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-stethoscope"></i>
+                        </div>
+                        <div class="info-content">
+                            <span class="info-label">Especialidad</span>
+                            <span class="info-value">{{ horario_agenda_actual.agenda.psicologo.especialidad }}</span>
+                        </div>
+                    </div>
+                    <div class="cita-info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-calendar"></i>
+                        </div>
+                        <div class="info-content">
+                            <span class="info-label">Fecha</span>
+                            <span class="info-value">{{ horario_agenda_actual.agenda.data|date:"d/m/Y" }}</span>
+                        </div>
+                    </div>
+                    <div class="cita-info-item">
+                        <div class="info-icon">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div class="info-content">
+                            <span class="info-label">Horario Actual</span>
+                            <span class="horario-badge-actual">{{ horario_agenda_actual.horario.horas }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tarjeta de Selección de Nuevo Horario -->
+            <div class="nuevo-horario-card">
+                <div class="card-header">
+                    <i class="fas fa-clock"></i>
+                    <h2>Selecciona un Nuevo Horario</h2>
+                </div>
+                
+                <form method="POST" class="modificar-cita-form">
+                    {% csrf_token %}
+                    
+                    {% if horarios_disponibles %}
+                        <div class="horarios-grid-modificar">
+                            {% for horario_agenda in horarios_disponibles %}
+                                {% with horas=horario_agenda.horario.horas %}
+                                    <label class="horario-option-card">
+                                        <input type="radio" name="nuevo_horario_id" value="{{ horario_agenda.id }}" required>
+                                        <div class="horario-card-content">
+                                            {% if "⛅" in horas %}
+                                                <div class="horario-badge horario-manana">
+                                                    <i class="fas fa-clock"></i>
+                                                    <span>{{ horas }}</span>
+                                                </div>
+                                            {% elif "☀️" in horas %}
+                                                <div class="horario-badge horario-tarde">
+                                                    <i class="fas fa-clock"></i>
+                                                    <span>{{ horas }}</span>
+                                                </div>
+                                            {% elif "🌄" in horas %}
+                                                <div class="horario-badge horario-noche">
+                                                    <i class="fas fa-clock"></i>
+                                                    <span>{{ horas }}</span>
+                                                </div>
+                                            {% else %}
+                                                <div class="horario-badge">
+                                                    <i class="fas fa-clock"></i>
+                                                    <span>{{ horas }}</span>
+                                                </div>
+                                            {% endif %}
+                                            <div class="horario-check">
+                                                <i class="fas fa-check-circle"></i>
+                                            </div>
+                                        </div>
+                                    </label>
+                                {% endwith %}
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <div class="empty-icon">
+                                <i class="fas fa-calendar-times"></i>
+                            </div>
+                            <h3>No hay horarios disponibles</h3>
+                            <p>No hay otros horarios disponibles para esta fecha. Por favor, selecciona otra fecha o cancela esta cita.</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="form-actions-modificar">
+                        <a href="{% url 'autenticar_persona' %}" class="btn-volver">
+                            <i class="fas fa-arrow-left"></i> Volver a Mis Citas
+                        </a>
+                        {% if horarios_disponibles %}
+                            <button type="submit" class="btn-guardar">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    {% include 'core/footer.html' %}
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'JS/zenmind_2.0_interactive.js' %}"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <style>
+        .modificar-cita-container {
+            max-width: 1000px;
+            margin: 2rem auto;
+            padding: 0 var(--spacing-md);
+        }
+
+        /* Header */
+        .modificar-cita-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+            padding: var(--spacing-xl);
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .header-icon {
+            width: 80px;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            font-size: 2.5rem;
+            color: var(--text-white);
+        }
+
+        .header-content h1 {
+            color: var(--text-white);
+            font-size: var(--font-3xl);
+            margin: 0 0 var(--spacing-xs) 0;
+        }
+
+        .header-content p {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: var(--font-lg);
+            margin: 0;
+        }
+
+        /* Tarjeta de Cita Actual */
+        .cita-actual-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-xl);
+            margin-bottom: var(--spacing-xl);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .card-header i {
+            font-size: var(--font-xl);
+            color: var(--primary-color);
+        }
+
+        .card-header h2 {
+            color: var(--text-primary);
+            font-size: var(--font-xl);
+            margin: 0;
+        }
+
+        .cita-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: var(--spacing-lg);
+        }
+
+        .cita-info-item {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            transition: all var(--transition-fast);
+        }
+
+        .cita-info-item:hover {
+            background: var(--bg-hover);
+            transform: translateX(5px);
+        }
+
+        .info-icon {
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            border-radius: var(--radius-md);
+            color: var(--text-white);
+            font-size: var(--font-lg);
+        }
+
+        .info-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-xs);
+            flex: 1;
+        }
+
+        .info-label {
+            font-size: var(--font-sm);
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .info-value {
+            font-size: var(--font-base);
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .horario-badge-actual {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--text-white);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: var(--font-base);
+        }
+
+        /* Tarjeta de Nuevo Horario */
+        .nuevo-horario-card {
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: var(--spacing-xl);
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .horarios-grid-modificar {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: var(--spacing-md);
+            margin: var(--spacing-lg) 0;
+        }
+
+        .horario-option-card {
+            cursor: pointer;
+            display: block;
+        }
+
+        .horario-option-card input[type="radio"] {
+            display: none;
+        }
+
+        .horario-card-content {
+            position: relative;
+            transition: all var(--transition-base);
+        }
+
+        .horario-option-card input[type="radio"]:checked + .horario-card-content .horario-badge {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 121, 105, 0.4);
+            border: 3px solid var(--primary-color);
+        }
+
+        .horario-option-card input[type="radio"]:checked + .horario-card-content .horario-check {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        .horario-check {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+            width: 30px;
+            height: 30px;
+            background: var(--success-color);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-white);
+            opacity: 0;
+            transform: scale(0);
+            transition: all var(--transition-base);
+            box-shadow: var(--shadow-md);
+            z-index: 10;
+        }
+
+        .horario-option-card:hover .horario-card-content .horario-badge {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: var(--spacing-2xl) var(--spacing-lg);
+        }
+
+        .empty-icon {
+            font-size: 4rem;
+            color: var(--text-secondary);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .empty-state h3 {
+            color: var(--text-primary);
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .empty-state p {
+            color: var(--text-secondary);
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Botones */
+        .form-actions-modificar {
+            display: flex;
+            gap: var(--spacing-md);
+            justify-content: flex-end;
+            margin-top: var(--spacing-xl);
+            padding-top: var(--spacing-lg);
+            border-top: 2px solid var(--border-color);
+        }
+
+        .btn-volver,
+        .btn-guardar {
+            padding: var(--spacing-md) var(--spacing-xl);
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            font-size: var(--font-base);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            transition: all var(--transition-fast);
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-volver {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border-color);
+        }
+
+        .btn-volver:hover {
+            background: var(--bg-hover);
+            border-color: var(--primary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-guardar {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: var(--text-white);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-guardar:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .modificar-cita-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .cita-info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .horarios-grid-modificar {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+
+            .form-actions-modificar {
+                flex-direction: column;
+            }
+
+            .btn-volver,
+            .btn-guardar {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</body>
+</html>
+

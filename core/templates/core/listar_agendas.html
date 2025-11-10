@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect | Lista de Agendas</title>
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- ZenMindConnect 2.0 CSS -->
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_reservas.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_interactive.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    {% include 'core/navbar.html' %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="agendas-container">
+            <div class="agendas-header">
+                <h1><i class="fas fa-calendar-alt"></i> Agendas Disponibles</h1>
+                <p class="subtitle">Selecciona un psicólogo y una fecha para ver los horarios disponibles</p>
+            </div>
+
+            <!-- Filtros y Búsqueda -->
+            <div class="agendas-filters">
+                <form method="GET" action="{% url 'listar_agendas' %}" class="filters-form">
+                    <div class="filter-group">
+                        <label for="especialidad"><i class="fas fa-filter"></i> Filtrar por Especialidad</label>
+                        <select name="especialidad" id="especialidad" class="filter-select">
+                            <option value="">Todas las especialidades</option>
+                            {% for especialidad in especialidades %}
+                                <option value="{{ especialidad.id }}" {% if especialidad_seleccionada == especialidad.id %}selected{% endif %}>
+                                    {{ especialidad.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="q"><i class="fas fa-search"></i> Buscar</label>
+                        <div class="search-input-group">
+                            <input type="text" name="q" id="q" class="filter-input" placeholder="Buscar por psicólogo o especialidad..." value="{{ busqueda }}">
+                            <button type="submit" class="btn-filter">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    {% if especialidad_seleccionada or busqueda %}
+                        <a href="{% url 'listar_agendas' %}" class="btn-clear-filters">
+                            <i class="fas fa-times"></i> Limpiar Filtros
+                        </a>
+                    {% endif %}
+                </form>
+                
+                <div class="filters-stats">
+                    <i class="fas fa-info-circle"></i>
+                    <span>Mostrando <strong>{{ total_psicologos }}</strong> psicólogo(s) con <strong>{{ total_agendas }}</strong> agenda(s) disponible(s)</span>
+                </div>
+            </div>
+
+            {% if psicologos_agendas %}
+                <div class="psicologos-grid">
+                    {% for psicologo_data in psicologos_agendas %}
+                        <div class="psicologo-card">
+                            <div class="psicologo-card-header">
+                                <div class="psicologo-info-main">
+                                    <div class="psicologo-avatar">
+                                        <i class="fas fa-user-md"></i>
+                                    </div>
+                                    <div class="psicologo-details">
+                                        <h3 class="psicologo-nombre">{{ psicologo_data.psicologo.nombre }}</h3>
+                                        <div class="psicologo-especialidad">
+                                            <i class="fas fa-stethoscope"></i> {{ psicologo_data.psicologo.especialidad }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="psicologo-stats">
+                                    <div class="stat-item">
+                                        <i class="fas fa-calendar-check"></i>
+                                        <span>{{ psicologo_data.total_fechas }} fecha(s)</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <i class="fas fa-clock"></i>
+                                        <span>{{ psicologo_data.total_horarios_disponibles }} horario(s)</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="psicologo-card-body">
+                                <div class="fechas-disponibles">
+                                    <div class="fechas-label">
+                                        <i class="fas fa-calendar-alt"></i> Fechas Disponibles
+                                    </div>
+                                    <div class="fechas-grid">
+                                        {% for agenda in psicologo_data.agendas %}
+                                            {% with horarios_disponibles=agenda.get_horarios_disponibles.count horarios_reservados=agenda.get_horarios_reservados.count %}
+                                                <a href="{% url 'detallar_agenda' id=agenda.id %}" class="fecha-badge {% if horarios_disponibles == 0 %}fecha-completa{% endif %}">
+                                                    <div class="fecha-dia">{{ agenda.data|date:"d" }}</div>
+                                                    <div class="fecha-mes">{{ agenda.data|date:"M" }}</div>
+                                                    <div class="fecha-ano">{{ agenda.data|date:"Y" }}</div>
+                                                    <div class="fecha-horarios">
+                                                        <i class="fas fa-clock"></i>
+                                                        <span>{{ horarios_disponibles }} disponible{{ horarios_disponibles|pluralize }}</span>
+                                                    </div>
+                                                    {% if horarios_disponibles == 0 %}
+                                                        <div class="fecha-completa-badge">
+                                                            <i class="fas fa-check-circle"></i> Completa
+                                                        </div>
+                                                    {% endif %}
+                                                </a>
+                                            {% endwith %}
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="psicologo-card-footer">
+                                <div class="psicologo-contact">
+                                    <a href="mailto:{{ psicologo_data.psicologo.email }}" class="contact-link">
+                                        <i class="fas fa-envelope"></i> {{ psicologo_data.psicologo.email }}
+                                    </a>
+                                    <span class="contact-separator">|</span>
+                                    <a href="tel:{{ psicologo_data.psicologo.telefono }}" class="contact-link">
+                                        <i class="fas fa-phone"></i> {{ psicologo_data.psicologo.telefono }}
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="agendas-empty">
+                    <div class="agendas-empty-icon">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
+                    <h3>No hay agendas disponibles</h3>
+                    <p>Actualmente no hay agendas disponibles. Por favor, intenta más tarde.</p>
+                    <a href="{% url 'index' %}" class="btn-primary">
+                        <i class="fas fa-arrow-left"></i> Volver al Inicio
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    {% include 'core/footer.html' %}
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'JS/zenmind_2.0_interactive.js' %}"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        // Auto-submit cuando cambia el filtro de especialidad
+        document.addEventListener('DOMContentLoaded', function() {
+            const especialidadSelect = document.getElementById('especialidad');
+            if (especialidadSelect) {
+                especialidadSelect.addEventListener('change', function() {
+                    this.closest('form').submit();
+                });
+            }
+            
+            // Enter para buscar
+            const searchInput = document.getElementById('q');
+            if (searchInput) {
+                searchInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        this.closest('form').submit();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>

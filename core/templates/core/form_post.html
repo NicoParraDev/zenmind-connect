@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect 2.0 | Crear Post</title>
+    <meta name="description" content="Crea un nuevo post en ZenMindConnect">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CKEditor 5 (Gratuito, sin API key requerida) -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+    
+    <!-- CSS ZenMind 2.0 -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_forms.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    
+    <!-- Estilos específicos para formulario de post -->
+    <style>
+        .form-page-container {
+            padding: 3rem 2rem !important;
+        }
+        
+        .form-wrapper {
+            max-width: 1000px !important;
+            width: 100% !important;
+        }
+        
+        .form-card {
+            padding: 3rem 4rem !important;
+            max-width: 100% !important;
+        }
+        
+        .form-group {
+            margin-bottom: 2rem !important;
+        }
+        
+        .form-label {
+            font-size: 1rem !important;
+            font-weight: 600 !important;
+            margin-bottom: 0.75rem !important;
+        }
+        
+        .form-control {
+            padding: 1rem 1.25rem !important;
+            font-size: 1rem !important;
+            line-height: 1.5 !important;
+        }
+        
+        textarea.form-control {
+            min-height: 200px !important;
+        }
+        
+        .form-header h1 {
+            font-size: 2.5rem !important;
+            font-weight: 700 !important;
+            margin-bottom: 1rem !important;
+        }
+        
+        @media (max-width: 768px) {
+            .form-card {
+                padding: 2rem 1.5rem !important;
+            }
+            
+            .form-wrapper {
+                padding: 0 1rem !important;
+            }
+        }
+    </style>
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- JSON-LD Structured Data (Schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "WebPage",
+        "name": "Crear Post - ZenMindConnect",
+        "description": "Crea un nuevo post en ZenMindConnect para compartir tus pensamientos y experiencias con la comunidad",
+        "url": "https://zenmindconnect.com/form_post/",
+        "publisher": {
+            "@type": "Organization",
+            "name": "ZenMindConnect",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "{% static 'IMG/logo_final.png' %}"
+            }
+        },
+        "breadcrumb": {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+                {
+                    "@type": "ListItem",
+                    "position": 1,
+                    "name": "Inicio",
+                    "item": "https://zenmindconnect.com/"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 2,
+                    "name": "Blog",
+                    "item": "https://zenmindconnect.com/frontpage/"
+                },
+                {
+                    "@type": "ListItem",
+                    "position": 3,
+                    "name": "Crear Post",
+                    "item": "https://zenmindconnect.com/form_post/"
+                }
+            ]
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Navbar Moderno -->
+    {% include 'core/navbar.html' %}
+
+    <!-- Form Page -->
+    <div class="form-page-container" style="padding: 3rem 2rem;">
+        <div class="form-wrapper" style="max-width: 1000px; width: 100%;">
+            <div class="form-card" style="padding: 3rem 4rem; max-width: 100%;">
+                <div class="form-logo">
+                    <img src="{% static 'IMG/logo_final.png' %}" alt="ZenMindConnect">
+                </div>
+                
+                <div class="form-header">
+                    <h1><i class="fas fa-edit"></i> Crear Nuevo Post</h1>
+                    <p>Comparte tus pensamientos y experiencias con la comunidad</p>
+                </div>
+
+                <form method="POST" action="#" id="formulario" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <!-- Token de JavaScript para middleware de seguridad -->
+                    <input type="hidden" name="js_token" value="active" id="js_token">
+                    
+                    {% if messages %}
+                        <div class="alert-container">
+                            {% for message in messages %}
+                                <div class="alert alert-{{ message.tags }}">
+                                    <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% elif message.tags == 'success' %}check-circle{% else %}info-circle{% endif %}"></i>
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+                    
+                    {% if post_form.errors %}
+                        <div class="alert alert-error">
+                            <i class="fas fa-exclamation-circle"></i>
+                            <strong>Por favor, corrige los siguientes errores:</strong>
+                            <ul>
+                                {% for field, errors in post_form.errors.items %}
+                                    {% for error in errors %}
+                                        <li>{{ field|title }}: {{ error }}</li>
+                                    {% endfor %}
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    {% endif %}
+                    
+                    <div class="form-group">
+                        <label for="{{ post_form.title.id_for_label }}" class="form-label">
+                            <i class="fas fa-heading"></i> Título <span class="required">*</span>
+                        </label>
+                        <input type="text" 
+                               name="{{ post_form.title.name }}" 
+                               id="{{ post_form.title.id_for_label }}" 
+                               class="form-control" 
+                               placeholder="Título del post"
+                               value="{{ post_form.title.value|default:'' }}"
+                               required>
+                        <small class="form-help-text">Escribe un título atractivo para tu post</small>
+                    </div>
+                    
+                    <!-- Campo Slug oculto por defecto - solo se muestra si el usuario quiere personalizar -->
+                    <div class="form-group" id="slug-group" style="display: none;">
+                        <label for="{{ post_form.slug.id_for_label }}" class="form-label">
+                            <i class="fas fa-link"></i> Personalizar URL (Opcional)
+                        </label>
+                        {{ post_form.slug }}
+                        <small class="form-help-text">
+                            Si no completas este campo, la URL se generará automáticamente desde el título.
+                            Si la URL ya existe, se agregará un número automáticamente.
+                        </small>
+                    </div>
+                    
+                    <!-- Botón para mostrar/ocultar el campo de personalización -->
+                    <div class="form-group" style="margin-top: -10px; margin-bottom: 20px;">
+                        <button type="button" class="btn btn-link" id="toggle-slug" style="padding: 0; color: var(--color-primary); text-decoration: none; font-size: 0.9rem;">
+                            <i class="fas fa-cog"></i> Personalizar URL del post
+                        </button>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ post_form.intro.id_for_label }}" class="form-label">
+                            <i class="fas fa-align-left"></i> Introducción <span class="required">*</span>
+                        </label>
+                        <textarea name="{{ post_form.intro.name }}" 
+                                  id="{{ post_form.intro.id_for_label }}" 
+                                  class="form-control" 
+                                  rows="3"
+                                  placeholder="Introducción breve..."
+                                  required>{{ post_form.intro.value|default:'' }}</textarea>
+                        <small class="form-help-text">Una breve introducción que aparecerá en el listado</small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ post_form.body.id_for_label }}" class="form-label">
+                            <i class="fas fa-align-justify"></i> Contenido <span class="required">*</span>
+                        </label>
+                        <textarea name="{{ post_form.body.name }}" 
+                                  id="{{ post_form.body.id_for_label }}" 
+                                  class="form-control" 
+                                  rows="10"
+                                  placeholder="Contenido del post...">{{ post_form.body.value|default:'' }}</textarea>
+                        <small class="form-help-text">
+                            Escribe el contenido completo de tu post. Puedes usar las herramientas de formato (negrita, cursiva, colores, listas, etc.).
+                            <strong>Importante:</strong> Por temas de bienestar, no se permiten memes, imágenes obscenas o videos inapropiados.
+                        </small>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ post_form.imagen.id_for_label }}" class="form-label">
+                            <i class="fas fa-image"></i> Imagen (Opcional)
+                        </label>
+                        <input type="file" 
+                               name="{{ post_form.imagen.name }}" 
+                               id="{{ post_form.imagen.id_for_label }}" 
+                               class="form-control" 
+                               accept="image/*">
+                        <small class="form-help-text">
+                            Solo imágenes relacionadas con bienestar mental (máx. 5MB). Formatos: JPG, PNG, GIF, WebP.
+                        </small>
+                        <!-- Previsualización de imagen -->
+                        <div id="imagen-preview-container" style="margin-top: 1rem; display: none;">
+                            <img id="imagen-preview" src="" alt="Vista previa" style="max-width: 100%; max-height: 400px; border-radius: 8px; border: 2px solid var(--color-border); object-fit: contain;">
+                            <button type="button" id="remove-imagen-preview" class="btn btn-sm btn-outline" style="margin-top: 0.5rem;">
+                                <i class="fas fa-times"></i> Eliminar imagen
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ post_form.video_url.id_for_label }}" class="form-label">
+                            <i class="fas fa-video"></i> Video (Opcional) - URL de YouTube/Vimeo
+                        </label>
+                        <input type="url" 
+                               name="{{ post_form.video_url.name }}" 
+                               id="{{ post_form.video_url.id_for_label }}" 
+                               class="form-control" 
+                               placeholder="https://www.youtube.com/watch?v=... o https://vimeo.com/..."
+                               value="{{ post_form.video_url.value|default:'' }}">
+                        <small class="form-help-text">
+                            Solo videos de música binaural, meditación o contenido relacionado con bienestar mental.
+                        </small>
+                        <!-- Previsualización de video -->
+                        <div id="video-preview-container" style="margin-top: 1rem; display: none;">
+                            <div id="video-preview" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; border: 2px solid var(--color-border);">
+                                <iframe id="video-preview-iframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>
+                            </div>
+                            <button type="button" id="remove-video-preview" class="btn btn-sm btn-outline" style="margin-top: 0.5rem;">
+                                <i class="fas fa-times"></i> Eliminar video
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="{{ post_form.hilo.id_for_label }}" class="form-label">
+                            <i class="fas fa-tag"></i> Tema/Hilo <span class="required">*</span>
+                        </label>
+                        <select name="{{ post_form.hilo.name }}" 
+                                id="{{ post_form.hilo.id_for_label }}" 
+                                class="form-control" 
+                                required>
+                            <option value="">---------</option>
+                            {% if hilos %}
+                                {% for hilo in hilos %}
+                                <option value="{{ hilo.idTiphilo }}" {% if post_form.hilo.value == hilo.idTiphilo %}selected{% endif %}>
+                                    {{ hilo.nombreHilo }}
+                                </option>
+                                {% endfor %}
+                            {% elif post_form.hilo.field.queryset %}
+                                {% for hilo in post_form.hilo.field.queryset %}
+                                <option value="{{ hilo.idTiphilo }}" {% if post_form.hilo.value == hilo.idTiphilo %}selected{% endif %}>
+                                    {{ hilo.nombreHilo }}
+                                </option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                        <small class="form-help-text">Selecciona el tema al que pertenece tu post</small>
+                    </div>
+                    
+                    <div class="form-check">
+                        <input type="checkbox" name="legal" value="agree" id="agree" required>
+                        <label for="agree">Acepto velar por el respeto común y mantener un ambiente positivo</label>
+                    </div>
+                    
+                    <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg); flex-wrap: wrap;">
+                        <button type="submit" class="btn btn-primary btn-lg" style="flex: 1; min-width: 200px;">
+                            <i class="fas fa-paper-plane"></i> Publicar Post
+                        </button>
+                        <button type="reset" class="btn btn-outline btn-lg" style="flex: 1; min-width: 200px;">
+                            <i class="fas fa-redo"></i> Limpiar Campos
+                        </button>
+                        <a href="{% url 'frontpage' %}" class="btn btn-outline btn-lg" style="flex: 1; min-width: 200px;">
+                            <i class="fas fa-arrow-left"></i> Volver al Blog
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        function toggleMobileMenu() {
+            const nav = document.getElementById('navbarNav');
+            nav.classList.toggle('active');
+        }
+        
+        // Inicializar CKEditor cuando el DOM esté listo
+        window.addEventListener('load', function() {
+            const bodyFieldId = '{{ post_form.body.id_for_label }}';
+            const bodyField = document.getElementById(bodyFieldId);
+            
+            if (bodyField && typeof ClassicEditor !== 'undefined') {
+                // Esperar un momento para asegurar que el campo esté completamente renderizado
+                setTimeout(function() {
+                    ClassicEditor
+                        .create(bodyField, {
+                            toolbar: {
+                                items: [
+                                    'heading',
+                                    '|',
+                                    'bold',
+                                    'italic',
+                                    'underline',
+                                    '|',
+                                    'bulletedList',
+                                    'numberedList',
+                                    '|',
+                                    'link',
+                                    'blockQuote',
+                                    '|',
+                                    'undo',
+                                    'redo'
+                                ],
+                                shouldNotGroupWhenFull: true
+                            },
+                            language: 'es',
+                            heading: {
+                                options: [
+                                    { model: 'paragraph', title: 'Párrafo', class: 'ck-heading_paragraph' },
+                                    { model: 'heading1', view: 'h1', title: 'Título 1', class: 'ck-heading_heading1' },
+                                    { model: 'heading2', view: 'h2', title: 'Título 2', class: 'ck-heading_heading2' },
+                                    { model: 'heading3', view: 'h3', title: 'Título 3', class: 'ck-heading_heading3' }
+                                ]
+                            }
+                        })
+                        .then(editor => {
+                            console.log('CKEditor inicializado correctamente en:', bodyFieldId);
+                            window.ckeditorInstance = editor; // Guardar instancia para sincronización
+                        })
+                        .catch(error => {
+                            console.error('Error al inicializar CKEditor:', error);
+                            // Si CKEditor falla, al menos permitir edición normal del textarea
+                            if (bodyField) {
+                                bodyField.removeAttribute('readonly');
+                                bodyField.removeAttribute('disabled');
+                            }
+                        });
+                }, 200);
+            } else {
+                console.warn('CKEditor no está disponible o el campo no existe');
+                // Asegurar que el campo sea editable aunque CKEditor no funcione
+                if (bodyField) {
+                    bodyField.removeAttribute('readonly');
+                    bodyField.removeAttribute('disabled');
+                }
+            }
+        });
+        
+        // Previsualización de imagen
+        window.addEventListener('load', function() {
+            const imagenInput = document.getElementById('{{ post_form.imagen.id_for_label }}');
+            const imagenPreview = document.getElementById('imagen-preview');
+            const imagenPreviewContainer = document.getElementById('imagen-preview-container');
+            const removeImagenBtn = document.getElementById('remove-imagen-preview');
+            
+            if (imagenInput) {
+                imagenInput.removeAttribute('readonly');
+                imagenInput.removeAttribute('disabled');
+                
+                // Mostrar previsualización cuando se selecciona una imagen
+                imagenInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Validar tamaño (5MB máximo)
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert('La imagen es demasiado grande. Tamaño máximo: 5MB');
+                            e.target.value = '';
+                            imagenPreviewContainer.style.display = 'none';
+                            return;
+                        }
+                        
+                        // Validar tipo
+                        const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                        if (!tiposPermitidos.includes(file.type)) {
+                            alert('Tipo de archivo no permitido. Solo se permiten imágenes (JPG, PNG, GIF, WebP)');
+                            e.target.value = '';
+                            imagenPreviewContainer.style.display = 'none';
+                            return;
+                        }
+                        
+                        // Mostrar previsualización
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imagenPreview.src = e.target.result;
+                            imagenPreviewContainer.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        imagenPreviewContainer.style.display = 'none';
+                    }
+                });
+                
+                // Botón para eliminar imagen
+                if (removeImagenBtn) {
+                    removeImagenBtn.addEventListener('click', function() {
+                        imagenInput.value = '';
+                        imagenPreviewContainer.style.display = 'none';
+                    });
+                }
+            }
+            
+            // Previsualización de video
+            const videoUrlInput = document.getElementById('{{ post_form.video_url.id_for_label }}');
+            const videoPreviewContainer = document.getElementById('video-preview-container');
+            const videoPreviewIframe = document.getElementById('video-preview-iframe');
+            const removeVideoBtn = document.getElementById('remove-video-preview');
+            
+            if (videoUrlInput) {
+                videoUrlInput.removeAttribute('readonly');
+                videoUrlInput.removeAttribute('disabled');
+                
+                // Función para extraer ID de video de YouTube
+                function getYouTubeVideoId(url) {
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                    const match = url.match(regExp);
+                    return (match && match[2].length === 11) ? match[2] : null;
+                }
+                
+                // Función para extraer ID de video de Vimeo
+                function getVimeoVideoId(url) {
+                    const regExp = /(?:vimeo\.com\/)(\d+)/;
+                    const match = url.match(regExp);
+                    return match ? match[1] : null;
+                }
+                
+                // Mostrar previsualización cuando se ingresa una URL válida
+                videoUrlInput.addEventListener('input', function(e) {
+                    const url = e.target.value.trim();
+                    if (url) {
+                        const esYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+                        const esVimeo = url.includes('vimeo.com');
+                        
+                        if (esYoutube) {
+                            const videoId = getYouTubeVideoId(url);
+                            if (videoId) {
+                                videoPreviewIframe.src = `https://www.youtube.com/embed/${videoId}`;
+                                videoPreviewContainer.style.display = 'block';
+                            } else {
+                                videoPreviewContainer.style.display = 'none';
+                            }
+                        } else if (esVimeo) {
+                            const videoId = getVimeoVideoId(url);
+                            if (videoId) {
+                                videoPreviewIframe.src = `https://player.vimeo.com/video/${videoId}`;
+                                videoPreviewContainer.style.display = 'block';
+                            } else {
+                                videoPreviewContainer.style.display = 'none';
+                            }
+                        } else {
+                            videoPreviewContainer.style.display = 'none';
+                        }
+                    } else {
+                        videoPreviewContainer.style.display = 'none';
+                    }
+                });
+                
+                // Validar al perder el foco
+                videoUrlInput.addEventListener('blur', function(e) {
+                    const url = e.target.value.trim();
+                    if (url) {
+                        const esYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+                        const esVimeo = url.includes('vimeo.com');
+                        
+                        if (!esYoutube && !esVimeo) {
+                            alert('Solo se permiten URLs de YouTube o Vimeo');
+                            e.target.value = '';
+                            videoPreviewContainer.style.display = 'none';
+                        }
+                    }
+                });
+                
+                // Botón para eliminar video
+                if (removeVideoBtn) {
+                    removeVideoBtn.addEventListener('click', function() {
+                        videoUrlInput.value = '';
+                        videoPreviewContainer.style.display = 'none';
+                        videoPreviewIframe.src = '';
+                    });
+                }
+            }
+            
+            // Asegurar que el select de hilo sea editable
+            const hiloSelect = document.getElementById('{{ post_form.hilo.id_for_label }}');
+            if (hiloSelect) {
+                hiloSelect.removeAttribute('readonly');
+                hiloSelect.removeAttribute('disabled');
+            }
+            
+            // Asegurar que el checkbox sea clickeable
+            const checkbox = document.getElementById('agree');
+            if (checkbox) {
+                checkbox.removeAttribute('readonly');
+                checkbox.removeAttribute('disabled');
+            }
+            
+            // Forzar habilitación de TODOS los campos del formulario
+            const form = document.getElementById('formulario');
+            if (form) {
+                const allFields = form.querySelectorAll('input, textarea, select, button');
+                allFields.forEach(function(field) {
+                    field.removeAttribute('readonly');
+                    field.removeAttribute('disabled');
+                    field.style.pointerEvents = 'auto';
+                    field.style.opacity = '1';
+                    field.style.cursor = 'auto';
+                });
+            }
+        });
+        
+        // Validar y sincronizar CKEditor antes de enviar el formulario
+        const form = document.getElementById('formulario');
+        if (form) {
+            form.addEventListener('submit', function(e) {
+                // Validar que el campo body tenga contenido
+                const bodyFieldId = '{{ post_form.body.id_for_label }}';
+                const bodyField = document.getElementById(bodyFieldId);
+                let bodyContent = '';
+                
+                // Obtener contenido de CKEditor si está disponible
+                if (window.ckeditorInstance) {
+                    bodyContent = window.ckeditorInstance.getData().trim();
+                    window.ckeditorInstance.updateSourceElement();
+                } else if (bodyField) {
+                    bodyContent = bodyField.value.trim();
+                }
+                
+                // Validar que el contenido tenga al menos 20 caracteres
+                if (bodyContent.length < 20) {
+                    e.preventDefault();
+                    alert('El contenido del post debe tener al menos 20 caracteres.');
+                    if (window.ckeditorInstance) {
+                        window.ckeditorInstance.focus();
+                    } else if (bodyField) {
+                        bodyField.focus();
+                    }
+                    return false;
+                }
+                
+                console.log('CKEditor sincronizado antes de enviar');
+            });
+        }
+        
+        // Toggle para mostrar/ocultar campo de personalización de URL
+        const toggleSlugBtn = document.getElementById('toggle-slug');
+        if (toggleSlugBtn) {
+            toggleSlugBtn.addEventListener('click', function() {
+            const slugGroup = document.getElementById('slug-group');
+            const isVisible = slugGroup.style.display !== 'none';
+            
+            if (isVisible) {
+                slugGroup.style.display = 'none';
+                this.innerHTML = '<i class="fas fa-cog"></i> Personalizar URL del post';
+            } else {
+                slugGroup.style.display = 'block';
+                this.innerHTML = '<i class="fas fa-times"></i> Ocultar personalización de URL';
+            }
+        });
+        }
+        
+        // Auto-generar slug desde el título (solo si el campo está visible y vacío)
+        const titleField = document.getElementById('{{ post_form.title.id_for_label }}');
+        if (titleField) {
+            titleField.addEventListener('input', function() {
+            const title = this.value;
+            const slugField = document.getElementById('{{ post_form.slug.id_for_label }}');
+            const slugGroup = document.getElementById('slug-group');
+            
+            // Solo auto-generar si el campo está visible y vacío o fue auto-generado
+            if (slugGroup.style.display !== 'none' && (!slugField.value || slugField.dataset.autoGenerated === 'true')) {
+                const slug = title.toLowerCase()
+                    .replace(/[^a-z0-9]+/g, '-')
+                    .replace(/^-+|-+$/g, '');
+                slugField.value = slug;
+                slugField.dataset.autoGenerated = 'true';
+            }
+        });
+        }
+        
+        // Marcar slug como manual si el usuario lo edita
+        const slugField = document.getElementById('{{ post_form.slug.id_for_label }}');
+        if (slugField) {
+            slugField.addEventListener('input', function() {
+                this.dataset.autoGenerated = 'false';
+            });
+        }
+    </script>
+</body>
+</html>

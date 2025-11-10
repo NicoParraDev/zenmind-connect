@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect | {% block cabecera_title %}Insertar Horarios{% endblock %}</title>
+    {% block cabecera %}{% endblock %}
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- ZenMindConnect 2.0 CSS -->
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_forms.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_interactive.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Navbar -->
+    {% include 'core/navbar.html' %}
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="form-container">
+            {% if user.is_authenticated and user.is_superuser %}
+                <div class="form-header">
+                    <h1><i class="fas fa-clock"></i> {% block form_title %}Insertar Horarios{% endblock %}</h1>
+                    <p class="form-subtitle">{% block form_subtitle %}Define los horarios disponibles para las consultas{% endblock %}</p>
+                </div>
+
+                <div class="form-card">
+                    <form method="POST" enctype="multipart/form-data" class="zenmind-form">
+                        {% csrf_token %}
+                        
+                        <div class="form-group">
+                            {{ form.as_p }}
+                        </div>
+
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">
+                                <i class="fas fa-save"></i> Guardar
+                            </button>
+                            <a href="{% url 'adm' %}" class="btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Volver a Administración
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            {% else %}
+                <div class="access-denied">
+                    <div class="access-denied-icon">
+                        <i class="fas fa-lock"></i>
+                    </div>
+                    <h2>Acceso Denegado</h2>
+                    <p>No tienes permisos para acceder a esta página.</p>
+                    <a href="{% url 'index' %}" class="btn-primary">
+                        <i class="fas fa-arrow-left"></i> Volver al Inicio
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    {% include 'core/footer.html' %}
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'JS/zenmind_2.0_interactive.js' %}"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    {% if messages %}
+        {% for m in messages %}
+            <script>
+                Swal.fire({
+                    text: "{{ m }}",
+                    icon: 'success',
+                    confirmButtonText: 'Vale',
+                    confirmButtonColor: '#007969',
+                    backdrop: true,
+                    timer: 10000,
+                    timerProgressBar: true,
+                    allowOutsideClick: false,
+                    allowEscapeKey: false,
+                    allowEnterKey: false,
+                });
+            </script>
+        {% endfor %}
+    {% endif %}
+
+    {% block js %}
+    {% endblock %}
+</body>
+</html>

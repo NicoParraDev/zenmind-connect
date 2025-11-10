@@ -1,0 +1,291 @@
+/* Estilos para el sistema de notificaciones - ZenMindConnect 2.0 */
+.notificaciones-contador {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
+    color: var(--text-white);
+    border-radius: 50%;
+    padding: 4px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 20px;
+    height: 20px;
+    text-align: center;
+    line-height: 12px;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+    animation: pulse-notificacion 2s ease-in-out infinite;
+    z-index: 1001;
+}
+
+.notificaciones-lista {
+    position: fixed;
+    top: 70px;
+    right: var(--spacing-md);
+    width: 380px;
+    max-height: 500px;
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-xl);
+    padding: var(--spacing-md);
+    overflow-y: auto;
+    z-index: 1001;
+    border: 1px solid var(--border-color);
+    backdrop-filter: blur(10px);
+}
+
+.notificaciones-lista.oculto {
+    display: none;
+}
+
+/* Scrollbar personalizado para notificaciones */
+.notificaciones-lista::-webkit-scrollbar {
+    width: 6px;
+}
+
+.notificaciones-lista::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+}
+
+.notificaciones-lista::-webkit-scrollbar-thumb {
+    background: var(--primary-color);
+    border-radius: var(--radius-sm);
+}
+
+.notificaciones-lista::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-dark);
+}
+
+.notificacion {
+    margin-bottom: var(--spacing-md);
+    padding: var(--spacing-md);
+    border: 1px solid var(--border-color);
+    background: var(--bg-white);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-fast);
+    border-left: 3px solid var(--primary-color);
+}
+
+.notificacion:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateX(2px);
+}
+
+.notificacion:last-child {
+    margin-bottom: 0;
+}
+
+.notificacion p {
+    margin: 0.5rem 0;
+    line-height: 1.6;
+}
+
+.notificacion p:first-child {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.notificacion .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    border-radius: var(--radius-sm);
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-weight: 500;
+}
+
+.notificacion .btn-primary {
+    background: var(--primary-color);
+    color: var(--text-white);
+}
+
+.notificacion .btn-primary:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-sm);
+}
+
+.notificacion .btn-secondary {
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.notificacion .btn-secondary:hover {
+    background: var(--bg-hover);
+    border-color: var(--primary-color);
+}
+
+.oculto {
+    display: none;
+}
+
+@keyframes pulse-notificacion {
+    0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(255, 107, 107, 0.4);
+    }
+    50% {
+        transform: scale(1.1);
+        box-shadow: 0 4px 12px rgba(255, 107, 107, 0.6);
+    }
+}
+
+/* Notificaciones negativas (superusuario) */
+.notificacion-negativa {
+    border-left: 4px solid var(--danger-color) !important;
+    background: linear-gradient(135deg, rgba(220, 53, 69, 0.08), rgba(220, 53, 69, 0.15)) !important;
+    box-shadow: 0 2px 8px rgba(220, 53, 69, 0.2);
+}
+
+.notificacion-negativa:hover {
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.notificacion-negativa p:first-child {
+    margin-bottom: 0.5rem;
+}
+
+.notificacion-negativa .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Notificaciones Page Styles */
+.notificaciones-page-container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+}
+
+.notificaciones-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.notificacion-card {
+    background: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-base);
+}
+
+.notificacion-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.notificacion-no-leida {
+    border-left: 4px solid var(--primary-color);
+    background: linear-gradient(90deg, rgba(74, 144, 226, 0.05) 0%, var(--card-bg) 5%);
+}
+
+.notificacion-content {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+}
+
+.notificacion-icon {
+    font-size: var(--font-xl);
+    color: var(--text-secondary);
+    flex-shrink: 0;
+    margin-top: var(--spacing-xs);
+}
+
+.notificacion-no-leida .notificacion-icon {
+    color: var(--primary-color);
+}
+
+.notificacion-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.notificacion-texto {
+    color: var(--text-primary);
+    font-size: var(--font-base);
+    line-height: 1.6;
+    margin: 0 0 var(--spacing-sm) 0;
+}
+
+.notificacion-meta {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.notificacion-fecha {
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+}
+
+.notificacion-actions {
+    display: flex;
+    gap: var(--spacing-xs);
+    flex-shrink: 0;
+}
+
+.btn-notificacion {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--border-radius);
+    border: none;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    text-decoration: none;
+    color: var(--text-white);
+}
+
+.btn-marcar-leida {
+    background: var(--success-color);
+}
+
+.btn-marcar-leida:hover {
+    background: var(--success-dark);
+    transform: scale(1.1);
+}
+
+.btn-eliminar {
+    background: var(--danger-color);
+}
+
+.btn-eliminar:hover {
+    background: var(--danger-dark);
+    transform: scale(1.1);
+}
+
+/* Responsive para notificaciones */
+@media (max-width: 768px) {
+    .notificaciones-lista {
+        width: calc(100% - var(--spacing-md) * 2);
+        right: var(--spacing-md);
+        left: var(--spacing-md);
+        max-height: 400px;
+    }
+    
+    .notificaciones-page-container {
+        padding: var(--spacing-md);
+    }
+    
+    .notificacion-content {
+        flex-direction: column;
+    }
+    
+    .notificacion-actions {
+        align-self: flex-end;
+    }
+}
+

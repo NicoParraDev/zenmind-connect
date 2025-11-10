@@ -1,0 +1,494 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect 2.0 | Editar Post</title>
+    <meta name="description" content="Edita tu publicación en ZenMindConnect">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CKEditor 5 (Gratuito, sin API key requerida) -->
+    <script src="https://cdn.ckeditor.com/ckeditor5/41.1.0/classic/ckeditor.js"></script>
+    
+    <!-- CSS ZenMind 2.0 -->
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_forms.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_interactive.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- Estilos específicos para asegurar visibilidad del footer -->
+    <style>
+        .form-page-container {
+            padding-bottom: calc(3rem + 350px) !important;
+            overflow: visible !important;
+            min-height: auto !important;
+        }
+        
+        .footer-zenmind {
+            position: relative !important;
+            z-index: 100 !important;
+            margin-top: 4rem !important;
+            clear: both !important;
+        }
+        
+        main.main-content {
+            padding-bottom: 2rem !important;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    {% include 'core/navbar.html' %}
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="form-page-container">
+            <div class="form-wrapper">
+                <div class="form-card">
+                    <div class="form-header">
+                        <div class="form-header-icon">
+                            <i class="fas fa-edit"></i>
+                        </div>
+                        <div class="form-header-content">
+                            <h1>Editar Publicación</h1>
+                            <p>Modifica el contenido de tu post</p>
+                        </div>
+                    </div>
+                    
+                    {% if post %}
+                    <form method="POST" class="zenmind-form" id="edit-post-form" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <!-- Token de JavaScript para middleware de seguridad -->
+                        <input type="hidden" name="js_token" value="active" id="js_token">
+                        
+                        {% if messages %}
+                            {% for message in messages %}
+                                <div class="alert-message {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %}">
+                                    <i class="fas {% if message.tags == 'error' %}fa-exclamation-circle{% elif message.tags == 'success' %}fa-check-circle{% else %}fa-info-circle{% endif %}"></i>
+                                    {{ message }}
+                                </div>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <div class="form-group">
+                            <label for="id_title" class="form-label">
+                                <i class="fas fa-heading"></i> Título del Post
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="error-message">
+                                    {% for error in form.title.errors %}
+                                        <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_intro" class="form-label">
+                                <i class="fas fa-align-left"></i> Introducción
+                            </label>
+                            {{ form.intro }}
+                            {% if form.intro.errors %}
+                                <div class="error-message">
+                                    {% for error in form.intro.errors %}
+                                        <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-help">Una breve introducción que aparecerá en la lista de posts</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_body" class="form-label">
+                                <i class="fas fa-file-alt"></i> Contenido del Post
+                            </label>
+                            {{ form.body }}
+                            {% if form.body.errors %}
+                                <div class="error-message">
+                                    {% for error in form.body.errors %}
+                                        <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-help">
+                                Escribe el contenido completo de tu publicación. Puedes usar las herramientas de formato.
+                                <strong>Importante:</strong> Por temas de bienestar, no se permiten memes, imágenes obscenas o videos inapropiados.
+                            </small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_imagen" class="form-label">
+                                <i class="fas fa-image"></i> Imagen (Opcional)
+                            </label>
+                            {{ form.imagen }}
+                            {% if post.imagen %}
+                            <div style="margin-top: 1rem;">
+                                <p><strong>Imagen actual:</strong></p>
+                                <img src="{{ post.imagen.url }}" alt="Imagen actual" style="max-width: 100%; max-height: 300px; border-radius: 8px; border: 2px solid var(--color-border); object-fit: contain;">
+                            </div>
+                            {% endif %}
+                            <small class="form-help">Solo imágenes relacionadas con bienestar mental (máx. 5MB)</small>
+                            <!-- Previsualización de nueva imagen -->
+                            <div id="imagen-preview-container" style="margin-top: 1rem; display: none;">
+                                <p><strong>Nueva imagen:</strong></p>
+                                <img id="imagen-preview" src="" alt="Vista previa" style="max-width: 100%; max-height: 400px; border-radius: 8px; border: 2px solid var(--color-border); object-fit: contain;">
+                                <button type="button" id="remove-imagen-preview" class="btn btn-sm btn-outline" style="margin-top: 0.5rem;">
+                                    <i class="fas fa-times"></i> Eliminar nueva imagen
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_video_url" class="form-label">
+                                <i class="fas fa-video"></i> Video (Opcional) - URL de YouTube/Vimeo
+                            </label>
+                            {{ form.video_url }}
+                            {% if post.video_url %}
+                            <div style="margin-top: 1rem;">
+                                <p><strong>Video actual:</strong></p>
+                                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; border: 2px solid var(--color-border);">
+                                    {% with embed_url=post.get_video_embed_url %}
+                                        {% if embed_url %}
+                                        <iframe src="{{ embed_url }}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>
+                                        {% else %}
+                                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: var(--color-bg-secondary); color: var(--color-text-secondary);">
+                                            <p>URL de video no válida</p>
+                                        </div>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                            </div>
+                            {% endif %}
+                            <small class="form-help">Solo videos de música binaural, meditación o contenido relacionado con bienestar mental.</small>
+                            <!-- Previsualización de nuevo video -->
+                            <div id="video-preview-container" style="margin-top: 1rem; display: none;">
+                                <p><strong>Nuevo video:</strong></p>
+                                <div id="video-preview" style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 8px; border: 2px solid var(--color-border);">
+                                    <iframe id="video-preview-iframe" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" frameborder="0" allowfullscreen></iframe>
+                                </div>
+                                <button type="button" id="remove-video-preview" class="btn btn-sm btn-outline" style="margin-top: 0.5rem;">
+                                    <i class="fas fa-times"></i> Eliminar nuevo video
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="id_hilo" class="form-label">
+                                <i class="fas fa-tag"></i> Tema/Categoría
+                            </label>
+                            {{ form.hilo }}
+                            {% if form.hilo.errors %}
+                                <div class="error-message">
+                                    {% for error in form.hilo.errors %}
+                                        <i class="fas fa-exclamation-circle"></i> {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">
+                                <i class="fas fa-save"></i> Guardar Cambios
+                            </button>
+                            <button type="reset" class="btn-secondary" onclick="resetForm()">
+                                <i class="fas fa-undo"></i> Restaurar Original
+                            </button>
+                            <a href="{% url 'frontpage' %}" class="btn-outline">
+                                <i class="fas fa-arrow-left"></i> Volver a Publicaciones
+                            </a>
+                        </div>
+                    </form>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <h3>Post no encontrado</h3>
+                        <p>El post que intentas editar no existe o no tienes permiso para editarlo.</p>
+                        <a href="{% url 'frontpage' %}" class="btn-primary">
+                            <i class="fas fa-arrow-left"></i> Volver a Publicaciones
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    <div style="margin-top: 4rem; position: relative; z-index: 10;">
+        {% include 'core/footer.html' %}
+    </div>
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'JS/zenmind_2.0_interactive.js' %}"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        // Guardar valores originales del formulario
+        const originalValues = {
+            title: document.getElementById('id_title')?.value || '',
+            intro: document.getElementById('id_intro')?.value || '',
+            body: document.getElementById('id_body')?.value || '',
+            hilo: document.getElementById('id_hilo')?.value || ''
+        };
+        
+        function resetForm() {
+            if (confirm('¿Estás seguro de restaurar los valores originales? Se perderán los cambios no guardados.')) {
+                document.getElementById('id_title').value = originalValues.title;
+                document.getElementById('id_intro').value = originalValues.intro;
+                document.getElementById('id_body').value = originalValues.body;
+                document.getElementById('id_hilo').value = originalValues.hilo;
+            }
+        }
+        
+        // Validación del formulario
+        // Sincronizar CKEditor antes de enviar el formulario
+        document.getElementById('edit-post-form')?.addEventListener('submit', function(e) {
+            // CKEditor sincroniza automáticamente, pero forzamos actualización
+            if (window.ckeditorModInstance) {
+                window.ckeditorModInstance.updateSourceElement();
+                console.log('CKEditor sincronizado antes de enviar');
+            }
+            const title = document.getElementById('id_title')?.value.trim();
+            const intro = document.getElementById('id_intro')?.value.trim();
+            const body = document.getElementById('id_body')?.value.trim();
+            
+            if (!title || title.length < 5) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Título muy corto',
+                    text: 'El título debe tener al menos 5 caracteres',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#00796B'
+                });
+                return false;
+            }
+            
+            if (!intro || intro.length < 10) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Introducción muy corta',
+                    text: 'La introducción debe tener al menos 10 caracteres',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#00796B'
+                });
+                return false;
+            }
+            
+            if (!body || body.length < 20) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Contenido muy corto',
+                    text: 'El contenido debe tener al menos 20 caracteres',
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#00796B'
+                });
+                return false;
+            }
+        });
+        
+        // Mostrar mensajes con SweetAlert2
+        {% if messages %}
+            {% for message in messages %}
+                Swal.fire({
+                    icon: '{% if message.tags == "error" %}error{% elif message.tags == "success" %}success{% else %}info{% endif %}',
+                    title: '{% if message.tags == "error" %}Error{% elif message.tags == "success" %}Éxito{% else %}Información{% endif %}',
+                    text: "{{ message }}",
+                    confirmButtonText: 'Entendido',
+                    confirmButtonColor: '#00796B',
+                    backdrop: true,
+                    timer: 5000,
+                    timerProgressBar: true
+                });
+            {% endfor %}
+        {% endif %}
+    </script>
+    
+    <script>
+        // Inicializar CKEditor cuando el DOM esté listo
+        window.addEventListener('load', function() {
+            const bodyField = document.getElementById('id_body');
+            
+            if (bodyField && typeof ClassicEditor !== 'undefined') {
+                ClassicEditor
+                    .create(bodyField, {
+                            toolbar: {
+                                items: [
+                                    'heading', '|',
+                                    'bold', 'italic', 'underline', '|',
+                                    'bulletedList', 'numberedList', '|',
+                                    'link', 'blockQuote', '|',
+                                    'undo', 'redo'
+                                ],
+                                shouldNotGroupWhenFull: true
+                            },
+                            language: 'es',
+                            heading: {
+                                options: [
+                                    { model: 'paragraph', title: 'Párrafo', class: 'ck-heading_paragraph' },
+                                    { model: 'heading1', view: 'h1', title: 'Título 1', class: 'ck-heading_heading1' },
+                                    { model: 'heading2', view: 'h2', title: 'Título 2', class: 'ck-heading_heading2' },
+                                    { model: 'heading3', view: 'h3', title: 'Título 3', class: 'ck-heading_heading3' }
+                                ]
+                            }
+                    })
+                    .then(editor => {
+                        console.log('CKEditor inicializado correctamente en: id_body');
+                        window.ckeditorModInstance = editor; // Guardar instancia para sincronización
+                    })
+                    .catch(error => {
+                        console.error('Error al inicializar CKEditor:', error);
+                        if (bodyField) {
+                            bodyField.removeAttribute('readonly');
+                            bodyField.removeAttribute('disabled');
+                        }
+                    });
+            }
+        });
+        
+        // Previsualización de imagen
+        window.addEventListener('load', function() {
+            const imagenInput = document.getElementById('id_imagen');
+            const imagenPreview = document.getElementById('imagen-preview');
+            const imagenPreviewContainer = document.getElementById('imagen-preview-container');
+            const removeImagenBtn = document.getElementById('remove-imagen-preview');
+            
+            if (imagenInput) {
+                imagenInput.addEventListener('change', function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                        // Validar tamaño (5MB máximo)
+                        if (file.size > 5 * 1024 * 1024) {
+                            alert('La imagen es demasiado grande. Tamaño máximo: 5MB');
+                            e.target.value = '';
+                            imagenPreviewContainer.style.display = 'none';
+                            return;
+                        }
+                        
+                        // Validar tipo
+                        const tiposPermitidos = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+                        if (!tiposPermitidos.includes(file.type)) {
+                            alert('Tipo de archivo no permitido. Solo se permiten imágenes (JPG, PNG, GIF, WebP)');
+                            e.target.value = '';
+                            imagenPreviewContainer.style.display = 'none';
+                            return;
+                        }
+                        
+                        // Mostrar previsualización
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            imagenPreview.src = e.target.result;
+                            imagenPreviewContainer.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        imagenPreviewContainer.style.display = 'none';
+                    }
+                });
+                
+                // Botón para eliminar imagen
+                if (removeImagenBtn) {
+                    removeImagenBtn.addEventListener('click', function() {
+                        imagenInput.value = '';
+                        imagenPreviewContainer.style.display = 'none';
+                    });
+                }
+            }
+            
+            // Previsualización de video
+            const videoUrlInput = document.getElementById('id_video_url');
+            const videoPreviewContainer = document.getElementById('video-preview-container');
+            const videoPreviewIframe = document.getElementById('video-preview-iframe');
+            const removeVideoBtn = document.getElementById('remove-video-preview');
+            
+            if (videoUrlInput) {
+                // Función para extraer ID de video de YouTube
+                function getYouTubeVideoId(url) {
+                    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+                    const match = url.match(regExp);
+                    return (match && match[2].length === 11) ? match[2] : null;
+                }
+                
+                // Función para extraer ID de video de Vimeo
+                function getVimeoVideoId(url) {
+                    const regExp = /(?:vimeo\.com\/)(\d+)/;
+                    const match = url.match(regExp);
+                    return match ? match[1] : null;
+                }
+                
+                // Mostrar previsualización cuando se ingresa una URL válida
+                videoUrlInput.addEventListener('input', function(e) {
+                    const url = e.target.value.trim();
+                    if (url) {
+                        const esYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+                        const esVimeo = url.includes('vimeo.com');
+                        
+                        if (esYoutube) {
+                            const videoId = getYouTubeVideoId(url);
+                            if (videoId) {
+                                videoPreviewIframe.src = `https://www.youtube.com/embed/${videoId}`;
+                                videoPreviewContainer.style.display = 'block';
+                            } else {
+                                videoPreviewContainer.style.display = 'none';
+                            }
+                        } else if (esVimeo) {
+                            const videoId = getVimeoVideoId(url);
+                            if (videoId) {
+                                videoPreviewIframe.src = `https://player.vimeo.com/video/${videoId}`;
+                                videoPreviewContainer.style.display = 'block';
+                            } else {
+                                videoPreviewContainer.style.display = 'none';
+                            }
+                        } else {
+                            videoPreviewContainer.style.display = 'none';
+                        }
+                    } else {
+                        videoPreviewContainer.style.display = 'none';
+                    }
+                });
+                
+                // Validar al perder el foco
+                videoUrlInput.addEventListener('blur', function(e) {
+                    const url = e.target.value.trim();
+                    if (url) {
+                        const esYoutube = url.includes('youtube.com') || url.includes('youtu.be');
+                        const esVimeo = url.includes('vimeo.com');
+                        
+                        if (!esYoutube && !esVimeo) {
+                            alert('Solo se permiten URLs de YouTube o Vimeo');
+                            e.target.value = '';
+                            videoPreviewContainer.style.display = 'none';
+                        }
+                    }
+                });
+                
+                // Botón para eliminar video
+                if (removeVideoBtn) {
+                    removeVideoBtn.addEventListener('click', function() {
+                        videoUrlInput.value = '';
+                        videoPreviewContainer.style.display = 'none';
+                        videoPreviewIframe.src = '';
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>

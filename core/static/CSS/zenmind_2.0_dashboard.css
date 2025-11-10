@@ -1,0 +1,338 @@
+/* ============================================
+   ZENMIND CONNECT 2.0 - DASHBOARD / AREA PERSONA
+   ============================================ */
+
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: var(--spacing-2xl) var(--spacing-md);
+}
+
+.dashboard-header {
+    background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+    color: var(--text-white);
+    padding: var(--spacing-2xl);
+    border-radius: var(--radius-lg);
+    margin-bottom: var(--spacing-xl);
+    text-align: center;
+}
+
+.dashboard-header h1 {
+    color: var(--text-white);
+    font-size: var(--font-3xl);
+    margin-bottom: var(--spacing-sm);
+}
+
+.dashboard-header p {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: var(--font-lg);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
+}
+
+.dashboard-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-base);
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-lg);
+}
+
+.dashboard-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 2px solid var(--bg-secondary);
+}
+
+.dashboard-card-header i {
+    font-size: var(--font-2xl);
+    color: var(--primary-color);
+}
+
+.dashboard-card-header h2 {
+    font-size: var(--font-xl);
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.consultas-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.consulta-item {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border-left: 4px solid var(--primary-color);
+    transition: all var(--transition-base);
+}
+
+.consulta-item:hover {
+    transform: translateX(5px);
+    border-left-color: var(--secondary-color);
+}
+
+.consulta-item:last-child {
+    margin-bottom: 0;
+}
+
+.consulta-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.consulta-info strong {
+    color: var(--text-primary);
+    font-size: var(--font-base);
+}
+
+.consulta-info span {
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+}
+
+.consulta-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.consulta-details {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+    margin: var(--spacing-sm) 0;
+}
+
+.consulta-detail-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: var(--font-sm);
+}
+
+.consulta-detail-item strong {
+    min-width: 120px;
+    color: var(--text-primary);
+}
+
+.consulta-detail-item span {
+    color: var(--text-secondary);
+}
+
+.horario-badge-reserva {
+    display: inline-block;
+    background: var(--primary-color);
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--border-radius);
+    font-weight: 600;
+    font-size: var(--font-sm);
+}
+
+.consulta-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.btn-consulta {
+    padding: 0.5rem 1rem;
+    border-radius: var(--border-radius);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all var(--transition-base);
+    border: none;
+    cursor: pointer;
+}
+
+.btn-consulta:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.btn-ver {
+    background: var(--info);
+    color: white;
+}
+
+.btn-ver:hover {
+    background: var(--primary-dark);
+}
+
+.btn-modificar {
+    background: var(--warning);
+    color: white;
+}
+
+.btn-modificar:hover {
+    background: #F57C00;
+}
+
+.btn-cancelar {
+    background: var(--danger-color);
+    color: white;
+}
+
+.btn-cancelar:hover {
+    background: #C82333;
+}
+
+.empty-state {
+    text-align: center;
+    padding: var(--spacing-2xl);
+    color: var(--text-secondary);
+}
+
+.empty-state i {
+    font-size: var(--font-4xl);
+    color: var(--text-light);
+    margin-bottom: var(--spacing-md);
+}
+
+.empty-state p {
+    font-size: var(--font-lg);
+    margin-bottom: var(--spacing-md);
+}
+
+.dashboard-actions {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+    margin-top: var(--spacing-lg);
+}
+
+/* Paginación */
+.pagination-wrapper {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+    align-items: center;
+    margin-top: var(--spacing-xl);
+}
+
+.pagination-info {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+}
+
+.pagination-info i {
+    color: var(--primary-color);
+}
+
+.pagination-info-simple {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    color: var(--text-secondary);
+    font-size: var(--font-sm);
+}
+
+.pagination-info-simple i {
+    color: var(--primary-color);
+}
+
+.pagination-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.pagination-btn {
+    padding: 0.5rem 0.75rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: var(--border-radius);
+    font-size: var(--font-base);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    height: 40px;
+}
+
+.pagination-btn:hover {
+    background: var(--primary-dark);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.pagination-btn.disabled {
+    background: var(--bg-secondary);
+    color: var(--text-light);
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.pagination-btn.disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+.pagination-current {
+    padding: 0.5rem 1rem;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    border-radius: var(--border-radius);
+    font-size: var(--font-sm);
+    font-weight: 600;
+    margin: 0 var(--spacing-sm);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .dashboard-actions {
+        flex-direction: column;
+    }
+    
+    .dashboard-actions .btn {
+        width: 100%;
+    }
+    
+    .pagination-controls {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .pagination-current {
+        width: 100%;
+        text-align: center;
+        margin: var(--spacing-sm) 0;
+    }
+}
+

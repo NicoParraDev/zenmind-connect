@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect 2.0 | Panel de Administración</title>
+    <meta name="description" content="Panel de administración de ZenMindConnect">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS ZenMind 2.0 -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_admin.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+</head>
+<body>
+    <!-- Navbar Moderno -->
+    {% include 'core/navbar.html' %}
+
+    {% block content %}
+    {% if user.is_authenticated and user.is_superuser %}
+    <!-- Admin Container -->
+    <main class="admin-container">
+        <!-- Admin Header -->
+        <div class="admin-header">
+            <div class="admin-header-content">
+                <h1>
+                    <i class="fas fa-shield-alt"></i>
+                    Panel de Administración
+                    <span class="admin-badge">
+                        <i class="fas fa-crown"></i> Super Admin
+                    </span>
+                </h1>
+                <p>Bienvenido, <strong>{{ user.username }}</strong>. Gestiona todos los aspectos de ZenMindConnect desde aquí.</p>
+            </div>
+        </div>
+
+        <!-- Stats Grid (Placeholder - puedes agregar estadísticas reales) -->
+        <div class="admin-stats">
+            <div class="stat-card success">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="stat-value">-</div>
+                <div class="stat-label">Usuarios Totales</div>
+            </div>
+            
+            <div class="stat-card info">
+                <div class="stat-icon">
+                    <i class="fas fa-user-md"></i>
+                </div>
+                <div class="stat-value">-</div>
+                <div class="stat-label">Psicólogos</div>
+            </div>
+            
+            <div class="stat-card warning">
+                <div class="stat-icon">
+                    <i class="fas fa-calendar-check"></i>
+                </div>
+                <div class="stat-value">-</div>
+                <div class="stat-label">Citas Programadas</div>
+            </div>
+            
+            <div class="stat-card danger">
+                <div class="stat-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div class="stat-value">-</div>
+                <div class="stat-label">Posts del Blog</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+            <div class="quick-actions-title">
+                <i class="fas fa-bolt"></i>
+                Acciones Rápidas
+            </div>
+            <div class="quick-actions-buttons">
+                <a href="{% url 'lista_usuarios' %}" class="btn btn-outline">
+                    <i class="fas fa-list"></i> Ver Usuarios
+                </a>
+                <a href="{% url 'index' %}" class="btn btn-outline">
+                    <i class="fas fa-home"></i> Volver al Inicio
+                </a>
+            </div>
+        </div>
+
+        <!-- Admin Actions Grid -->
+        <div class="admin-actions">
+            <!-- Registrar Especialidad -->
+            <a href="{% url 'registrar_especialidad' %}" class="admin-action-card success">
+                <div class="admin-action-card-content">
+                    <div class="admin-action-icon">
+                        <i class="fas fa-tags"></i>
+                    </div>
+                    <h3 class="admin-action-title">Registrar Especialidad</h3>
+                    <p class="admin-action-description">
+                        Agrega nuevas especialidades para los psicólogos del sistema. Organiza las áreas de atención disponibles.
+                    </p>
+                    <div class="admin-action-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Registrar Psicólogo -->
+            <a href="{% url 'registrar_psicologo' %}" class="admin-action-card info">
+                <div class="admin-action-card-content">
+                    <div class="admin-action-icon">
+                        <i class="fas fa-user-md"></i>
+                    </div>
+                    <h3 class="admin-action-title">Registrar Psicólogo</h3>
+                    <p class="admin-action-description">
+                        Registra nuevos profesionales de la salud mental en la plataforma. Asigna especialidades a cada profesional.
+                    </p>
+                    <div class="admin-action-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Crear Nueva Agenda -->
+            <a href="{% url 'crear_nueva_agenda' %}" class="admin-action-card primary">
+                <div class="admin-action-card-content">
+                    <div class="admin-action-icon">
+                        <i class="fas fa-calendar-plus"></i>
+                    </div>
+                    <h3 class="admin-action-title">Crear Nueva Agenda</h3>
+                    <p class="admin-action-description">
+                        Crea nuevas agendas para los psicólogos. Selecciona la fecha y los horarios disponibles directamente desde aquí.
+                    </p>
+                    <div class="admin-action-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
+
+            <!-- Ver Lista de Pacientes -->
+            <a href="{% url 'lista_usuarios' %}" class="admin-action-card danger">
+                <div class="admin-action-card-content">
+                    <div class="admin-action-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <h3 class="admin-action-title">Ver Lista de Pacientes</h3>
+                    <p class="admin-action-description">
+                        Gestiona todos los usuarios registrados. Visualiza información, edita perfiles y administra cuentas.
+                    </p>
+                    <div class="admin-action-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </main>
+
+    {% else %}
+    <!-- Access Denied -->
+    <main class="admin-container">
+        <div class="access-denied">
+            <div class="access-denied-icon">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h2>Acceso Denegado</h2>
+            <p>No tienes permisos para acceder a esta página. Solo los administradores pueden ver este panel.</p>
+            <a href="{% url 'index' %}" class="btn btn-primary">
+                <i class="fas fa-home"></i> Volver al Inicio
+            </a>
+        </div>
+    </main>
+    {% endif %}
+    {% endblock %}
+
+    <!-- Footer Moderno -->
+    <footer class="footer-zenmind">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>ZenMindConnect</h3>
+                <p>Tu plataforma de bienestar mental y apoyo psicológico.</p>
+                <img src="{% static 'IMG/logo_final.png' %}" alt="Logo" style="height: 60px; margin-top: var(--spacing-md);">
+            </div>
+            
+            <div class="footer-section">
+                <h3>Equipo</h3>
+                <p>Nicolas Parra</p>
+                <p>Alexis Peña</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Contacto</h3>
+                <p><i class="fas fa-envelope"></i> ZenMindConnect.scrum@hotmail.com</p>
+                <p><i class="fas fa-phone"></i> 777-666-5555</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Síguenos</h3>
+                <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-md);">
+                    <a href="https://www.facebook.com/profile.php?id=100081188664230" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="https://www.instagram.com/calmind_psicol/" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://twitter.com/Calmind_psico" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://www.youtube.com/channel/UCReRVATCJYfHPiw00Be-2ug" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 ZenMindConnect. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        function toggleMobileMenu() {
+            const nav = document.getElementById('navbarNav');
+            nav.classList.toggle('active');
+        }
+        
+        // Animación de entrada para las cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const cards = document.querySelectorAll('.admin-action-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease-out';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });
+    </script>
+</body>
+</html>

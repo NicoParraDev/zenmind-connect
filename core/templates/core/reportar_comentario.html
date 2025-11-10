@@ -1,0 +1,47 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportar Comentario - ZenMindConnect</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_forms.css' %}">
+</head>
+<body>
+    <div class="form-page-container">
+        <div class="form-wrapper">
+            <div class="form-card">
+                <h1><i class="fas fa-flag"></i> Reportar Comentario</h1>
+                <p>¿Por qué quieres reportar este comentario?</p>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label>Razón del reporte:</label>
+                        <select name="razon" class="form-control" required>
+                            <option value="Contenido inapropiado">Contenido inapropiado</option>
+                            <option value="Acoso o bullying">Acoso o bullying</option>
+                            <option value="Contenido sexual">Contenido sexual</option>
+                            <option value="Violencia">Violencia</option>
+                            <option value="Spam">Spam</option>
+                            <option value="Otro">Otro</option>
+                        </select>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; margin-top: 20px;">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-flag"></i> Reportar
+                        </button>
+                        <a href="{% url 'post_detail' comment.post.slug %}" class="btn btn-outline">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

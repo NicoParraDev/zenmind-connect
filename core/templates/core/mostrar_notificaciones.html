@@ -1,0 +1,100 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect 2.0 | Mis Notificaciones</title>
+    <meta name="description" content="Gestiona y revisa todas tus notificaciones en ZenMindConnect">
+    <meta name="robots" content="noindex, nofollow">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS ZenMind 2.0 -->
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_interactive.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+</head>
+<body>
+    <!-- Navbar -->
+    {% include 'core/navbar.html' %}
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="dashboard-container">
+            <div class="dashboard-header">
+                <div class="dashboard-title-section">
+                    <h1>
+                        <i class="fas fa-bell"></i> Mis Notificaciones
+                    </h1>
+                    <p class="dashboard-subtitle">Gestiona y revisa todas tus notificaciones</p>
+                </div>
+            </div>
+            
+            <div class="notificaciones-page-container">
+                {% if notificaciones %}
+                    <div class="notificaciones-list">
+                        {% for notificacion in notificaciones %}
+                            <div class="notificacion-card {% if not notificacion.leida %}notificacion-no-leida{% endif %}">
+                                <div class="notificacion-content">
+                                    <div class="notificacion-icon">
+                                        <i class="fas {% if notificacion.leida %}fa-check-circle{% else %}fa-circle{% endif %}"></i>
+                                    </div>
+                                    <div class="notificacion-body">
+                                        <p class="notificacion-texto">{{ notificacion.contenido|safe }}</p>
+                                        <div class="notificacion-meta">
+                                            <span class="notificacion-fecha">
+                                                <i class="fas fa-clock"></i> {{ notificacion.fecha|date:"d/m/Y H:i" }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div class="notificacion-actions">
+                                        {% if not notificacion.leida %}
+                                            <a href="{% url 'marcar_notificacion_leida' notificacion.pk %}" class="btn-notificacion btn-marcar-leida" title="Marcar como leída" aria-label="Marcar notificación como leída">
+                                                <i class="fas fa-check" aria-hidden="true"></i>
+                                            </a>
+                                        {% endif %}
+                                        <a href="{% url 'eliminar_notificacion' notificacion.pk %}" class="btn-notificacion btn-eliminar" title="Eliminar" aria-label="Eliminar notificación" onclick="return confirm('¿Estás seguro de eliminar esta notificación?');">
+                                            <i class="fas fa-trash" aria-hidden="true"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <div class="empty-icon">
+                            <i class="fas fa-bell-slash"></i>
+                        </div>
+                        <h3>No tienes notificaciones</h3>
+                        <p>Cuando recibas notificaciones, aparecerán aquí</p>
+                        <a href="{% url 'frontpage' %}" class="btn-primary" aria-label="Volver al blog">
+                            <i class="fas fa-arrow-left" aria-hidden="true"></i> Volver al Blog
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+    
+    <!-- Footer -->
+    {% include 'core/footer.html' %}
+    
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'JS/zenmind_2.0_interactive.js' %}"></script>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</body>
+</html>

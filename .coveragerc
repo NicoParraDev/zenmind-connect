@@ -1,0 +1,39 @@
+[run]
+source = core
+omit = 
+    */migrations/*
+    */tests/*
+    */__pycache__/*
+    */venv/*
+    */env/*
+    manage.py
+    */settings.py
+    */wsgi.py
+    */asgi.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstractmethod
+    class .*\bProtocol\):
+    if settings.DEBUG
+    if self.debug:
+    if DEBUG
+    if testing:
+    if False:
+    if 0:
+    if True:
+    pass
+
+precision = 2
+show_missing = True
+skip_covered = False
+
+[html]
+directory = htmlcov
+

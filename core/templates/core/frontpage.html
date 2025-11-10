@@ -1,0 +1,241 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect 2.0 | Blog de Bienestar Mental</title>
+    <meta name="description" content="Blog de ZenMindConnect - Comparte tus experiencias, lee artículos sobre bienestar mental y conecta con nuestra comunidad">
+    <meta name="keywords" content="blog, bienestar mental, psicología, salud mental, artículos, comunidad, ZenMindConnect">
+    <meta name="author" content="ZenMindConnect">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zenmindconnect.com/frontpage/">
+    <meta property="og:title" content="ZenMindConnect 2.0 | Blog de Bienestar Mental">
+    <meta property="og:description" content="Blog de ZenMindConnect - Comparte tus experiencias y lee artículos sobre bienestar mental">
+    <meta property="og:image" content="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://zenmindconnect.com/frontpage/">
+    <meta property="twitter:title" content="ZenMindConnect 2.0 | Blog de Bienestar Mental">
+    <meta property="twitter:description" content="Blog de ZenMindConnect - Comparte tus experiencias y lee artículos sobre bienestar mental">
+    <meta property="twitter:image" content="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS ZenMind 2.0 -->
+    {% load static compress %}
+    {% compress css file zenmind_blog_css %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_blog.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    {% endcompress %}
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <!-- JSON-LD Structured Data (Schema.org) -->
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "CollectionPage",
+        "name": "Blog de ZenMindConnect",
+        "description": "Blog de ZenMindConnect - Comparte tus experiencias, lee artículos sobre bienestar mental y conecta con nuestra comunidad",
+        "url": "https://zenmindconnect.com/frontpage/",
+        "publisher": {
+            "@type": "Organization",
+            "name": "ZenMindConnect",
+            "logo": {
+                "@type": "ImageObject",
+                "url": "{% static 'IMG/logo_final.png' %}"
+            }
+        },
+        "mainEntity": {
+            "@type": "ItemList",
+            "itemListElement": [
+                {% for post in page_obj %}
+                {
+                    "@type": "ListItem",
+                    "position": {{ forloop.counter }},
+                    "item": {
+                        "@type": "BlogPosting",
+                        "headline": "{{ post.title|escapejs }}",
+                        "url": "https://zenmindconnect.com/{{ post.slug }}/"
+                    }
+                }{% if not forloop.last %},{% endif %}
+                {% endfor %}
+            ]
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Navbar Moderno -->
+    {% include 'core/navbar.html' %}
+
+    <!-- Blog Header -->
+    <section class="blog-header">
+        <div class="container">
+            <h1><i class="fas fa-blog"></i> Publicaciones</h1>
+            <p>Comparte tus experiencias y conecta con la comunidad</p>
+      </div>
+    </section>
+
+    <!-- Main Content -->
+    <main class="container">
+        <!-- Actions Card -->
+        <div class="blog-actions">
+            {% if user.is_superuser %}
+                <h1>Administración de Blogs</h1>
+                <p>Aquí puedes administrar los blogs de los usuarios</p>
+            {% else %}
+                <h1>Tu espacio para desahogarte</h1>
+                <p>Comparte tus pensamientos y experiencias con la comunidad</p>
+                <a href="{% url 'form_post' %}" class="btn btn-primary btn-lg" style="margin-top: var(--spacing-md);" aria-label="Crear un nuevo post">
+                    <i class="fas fa-plus-circle" aria-hidden="true"></i> Añadir Nuevo Post
+                </a>
+            {% endif %}
+        </div>
+
+        <!-- Posts List -->
+        <div class="post-list">
+            {% for post in page_obj %}
+            <article class="post-item">
+                <div class="post-header-info">
+                    <div>
+                        {% if user.is_authenticated and user.persona == post.author %}
+                        <span class="post-author-badge">
+                            <i class="fas fa-user-check"></i> Tu publicación
+                        </span>
+                        {% endif %}
+                        <h2 class="post-title">{{ post.title }}</h2>
+      </div>
+    </div>
+                
+                <div class="post-meta">
+                    <span><i class="fas fa-user"></i> <strong>Autor:</strong> {{ post.author.user.username }}</span>
+                    <span><i class="fas fa-tag"></i> <strong>Tema:</strong> {{ post.hilo }}</span>
+                    <span><i class="fas fa-calendar"></i> {{ post.date_added|date:"d M Y" }}</span>
+                </div>
+                
+                <p class="post-intro">{{ post.intro }}</p>
+                
+                <div class="post-actions">
+                    <a href="{% url 'post_detail' post.slug %}" class="btn btn-primary" aria-label="Ver detalles del post {{ post.title }}">
+                        <i class="fas fa-eye" aria-hidden="true"></i> Ver Más
+                    </a>
+
+              {% if user.is_authenticated and user.persona == post.author %}
+                    <a href="{% url 'form_mod_post' post.idPost %}" class="btn btn-secondary" aria-label="Editar post {{ post.title }}">
+                        <i class="fas fa-edit" aria-hidden="true"></i> Editar
+                    </a>
+                    <a href="{% url 'form_borrar_post' post.idPost %}" class="btn btn-outline" style="border-color: var(--error); color: var(--error);" aria-label="Eliminar post {{ post.title }}">
+                        <i class="fas fa-trash" aria-hidden="true"></i> Eliminar
+                    </a>
+          {% endif %}
+          
+                    {% if user.is_superuser %}
+                    <a href="{% url 'form_borrar_post' post.idPost %}" class="btn btn-outline" style="border-color: var(--error); color: var(--error);">
+                        <i class="fas fa-trash"></i> Eliminar Post
+                    </a>
+                    {% endif %}
+          </div>
+        </article>
+        {% empty %}
+            <div class="post-empty">
+                <i class="fas fa-clipboard-list"></i>
+                <p>Aún no hay posts. ¡Vamos a crear uno!</p>
+                {% if user.is_authenticated and not user.is_superuser %}
+                <a href="{% url 'form_post' %}" class="btn btn-primary btn-lg" style="margin-top: var(--spacing-md);">
+                    <i class="fas fa-plus-circle"></i> Crear Primer Post
+                </a>
+                {% endif %}
+        </div>
+        {% endfor %}
+        </div>
+    </main>
+
+    <!-- Footer Moderno -->
+    <footer class="footer-zenmind">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>ZenMindConnect</h3>
+                <p>Tu plataforma de bienestar mental y apoyo psicológico.</p>
+                <img src="{% static 'IMG/logo_final.png' %}" alt="Logo ZenMindConnect" style="height: 60px; margin-top: var(--spacing-md);" loading="lazy">
+      </div>
+      
+            <div class="footer-section">
+                <h3>Equipo</h3>
+                <p>Nicolas Parra</p>
+                <p>Alexis Peña</p>
+    </div>
+
+            <div class="footer-section">
+                <h3>Contacto</h3>
+                <p><i class="fas fa-envelope"></i> ZenMindConnect.scrum@hotmail.com</p>
+                <p><i class="fas fa-phone"></i> 777-666-5555</p>
+  </div>
+
+            <div class="footer-section">
+                <h3>Síguenos</h3>
+                <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-md);">
+                    <a href="https://www.facebook.com/profile.php?id=100081188664230" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="https://www.instagram.com/calmind_psicol/" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://twitter.com/Calmind_psico" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://www.youtube.com/channel/UCReRVATCJYfHPiw00Be-2ug" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+        </div>
+      </div>
+    
+        <div class="footer-bottom">
+            <p>&copy; 2025 ZenMindConnect. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <script>
+        function toggleMobileMenu() {
+            const nav = document.getElementById('navbarNav');
+            nav.classList.toggle('active');
+        }
+    </script>
+  
+  {% if messages %}
+  {% for m in messages %}
+        <script>
+          Swal.fire({
+                text: "{{m}}",
+            confirmButtonText: 'Vale',
+                confirmButtonColor: '#4A90E2',
+            backdrop: true,
+            timer: 10000,
+            timerProgressBar: true,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            allowEnterKey: false,
+          })
+        </script>
+        {% endfor %}
+    {% endif %}
+</body>
+</html>

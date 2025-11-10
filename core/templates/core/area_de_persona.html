@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenMindConnect 2.0 | Mi Área</title>
+    <meta name="description" content="Área personal de usuario">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS ZenMind 2.0 -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/style_notificaciones.css' %}">
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+</head>
+<body>
+    <!-- Navbar Moderno -->
+    {% include 'core/navbar.html' %}
+
+    <!-- Dashboard -->
+    <main class="dashboard-container">
+        <div class="dashboard-header">
+            <h1><i class="fas fa-user-circle"></i> Bienvenido, {{ user.username }}</h1>
+            <p>Gestiona tus consultas y reservas desde aquí</p>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- Card de Consultas -->
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <i class="fas fa-calendar-check"></i>
+                    <h2>Mis Consultas</h2>
+                </div>
+                
+                {% block content %}
+                {% if reservas %}
+                <ul class="consultas-list">
+                    {% for reserva in reservas %}
+                    <li class="consulta-item">
+                        <div class="consulta-info">
+                            <div class="consulta-header">
+                                <strong><i class="fas fa-user-md"></i> Psicólogo:</strong>
+                                <span>{{ reserva.agenda.psicologo.nombre }}</span>
+                            </div>
+                            <div class="consulta-details">
+                                <div class="consulta-detail-item">
+                                    <strong><i class="fas fa-stethoscope"></i> Especialidad:</strong>
+                                    <span>{{ reserva.agenda.psicologo.especialidad }}</span>
+                                </div>
+                                <div class="consulta-detail-item">
+                                    <strong><i class="fas fa-calendar"></i> Fecha:</strong>
+                                    <span>{{ reserva.agenda.data|date:"d/m/Y" }}</span>
+                                </div>
+                                <div class="consulta-detail-item">
+                                    <strong><i class="fas fa-clock"></i> Horario:</strong>
+                                    <span class="horario-badge-reserva">{{ reserva.horario.horas }}</span>
+                                </div>
+                            </div>
+                            <div class="consulta-actions">
+                                <a href="{% url 'comprobante_reserva' id=reserva.agenda.id %}" class="btn-consulta btn-ver" title="Ver comprobante">
+                                    <i class="fas fa-eye"></i> Ver
+                                </a>
+                                <a href="{% url 'modificar_cita' id=reserva.id %}" class="btn-consulta btn-modificar" title="Modificar horario">
+                                    <i class="fas fa-edit"></i> Modificar
+                                </a>
+                                <a href="{% url 'cancelar_cita' id=reserva.id %}" class="btn-consulta btn-cancelar" title="Cancelar cita" onclick="return confirm('¿Estás seguro de que deseas cancelar esta cita?');">
+                                    <i class="fas fa-times"></i> Cancelar
+                                </a>
+                            </div>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+                
+                <!-- Paginación -->
+                {% if page_obj.has_other_pages %}
+                    <div class="pagination-wrapper" style="margin-top: var(--spacing-xl); padding-top: var(--spacing-lg); border-top: 2px solid var(--border-color);">
+                        <div class="pagination-info">
+                            <i class="fas fa-info-circle"></i>
+                            Mostrando página <strong>{{ page_obj.number }}</strong> de <strong>{{ paginator.num_pages }}</strong>
+                            (Total: <strong>{{ paginator.count }}</strong> cita{{ paginator.count|pluralize }})
+                        </div>
+                        <div class="pagination-controls">
+                            {% if page_obj.has_previous %}
+                                <a href="?page=1" class="pagination-btn" title="Primera página">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                                <a href="?page={{ page_obj.previous_page_number }}" class="pagination-btn" title="Página anterior">
+                                    <i class="fas fa-angle-left"></i>
+                                </a>
+                            {% else %}
+                                <span class="pagination-btn disabled" title="Primera página">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </span>
+                                <span class="pagination-btn disabled" title="Página anterior">
+                                    <i class="fas fa-angle-left"></i>
+                                </span>
+                            {% endif %}
+                            
+                            <span class="pagination-current">
+                                Página {{ page_obj.number }} de {{ paginator.num_pages }}
+                            </span>
+                            
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}" class="pagination-btn" title="Página siguiente">
+                                    <i class="fas fa-angle-right"></i>
+                                </a>
+                                <a href="?page={{ paginator.num_pages }}" class="pagination-btn" title="Última página">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            {% else %}
+                                <span class="pagination-btn disabled" title="Página siguiente">
+                                    <i class="fas fa-angle-right"></i>
+                                </span>
+                                <span class="pagination-btn disabled" title="Última página">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% else %}
+                    {% if reservas %}
+                        <div class="pagination-info-simple" style="margin-top: var(--spacing-lg); padding-top: var(--spacing-md); border-top: 2px solid var(--border-color);">
+                            <i class="fas fa-info-circle"></i>
+                            Mostrando <strong>{{ paginator.count }}</strong> cita{{ paginator.count|pluralize }}
+                        </div>
+                    {% endif %}
+                {% endif %}
+                {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-calendar-times"></i>
+                    <p>Aún no has reservado ninguna hora</p>
+                    <a href="{% url 'listar_agendas' %}" class="btn btn-primary">
+                        <i class="fas fa-calendar-plus"></i> Reservar Ahora
+                    </a>
+                </div>
+                {% endif %}
+                {% endblock %}
+            </div>
+
+            <!-- Card de Acciones Rápidas -->
+            <div class="dashboard-card">
+                <div class="dashboard-card-header">
+                    <i class="fas fa-bolt"></i>
+                    <h2>Acciones Rápidas</h2>
+                </div>
+                
+                <div class="dashboard-actions">
+                    <a href="{% url 'listar_agendas' %}" class="btn btn-primary">
+                        <i class="fas fa-eye"></i> Ver Agendas
+                    </a>
+                    <a href="{% url 'autenticar_persona' %}" class="btn btn-secondary">
+                        <i class="fas fa-calendar-plus"></i> Nueva Reserva
+                    </a>
+                    <a href="{% url 'form_mod_persona' %}" class="btn btn-outline">
+                        <i class="fas fa-user-edit"></i> Editar Perfil
+                    </a>
+                    <a href="{% url 'index' %}" class="btn btn-outline">
+                        <i class="fas fa-home"></i> Volver al Inicio
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer Moderno -->
+    <footer class="footer-zenmind">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h3>ZenMindConnect</h3>
+                <p>Tu plataforma de bienestar mental y apoyo psicológico.</p>
+                <img src="{% static 'IMG/logo_final.png' %}" alt="Logo" style="height: 60px; margin-top: var(--spacing-md);">
+            </div>
+            
+            <div class="footer-section">
+                <h3>Equipo</h3>
+                <p>Nicolas Parra</p>
+                <p>Alexis Peña</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Contacto</h3>
+                <p><i class="fas fa-envelope"></i> ZenMindConnect.scrum@hotmail.com</p>
+                <p><i class="fas fa-phone"></i> 777-666-5555</p>
+            </div>
+            
+            <div class="footer-section">
+                <h3>Síguenos</h3>
+                <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-md);">
+                    <a href="https://www.facebook.com/profile.php?id=100081188664230" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-facebook"></i>
+                    </a>
+                    <a href="https://www.instagram.com/calmind_psicol/" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-instagram"></i>
+                    </a>
+                    <a href="https://twitter.com/Calmind_psico" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-twitter"></i>
+                    </a>
+                    <a href="https://www.youtube.com/channel/UCReRVATCJYfHPiw00Be-2ug" target="_blank" style="font-size: var(--font-xl); color: rgba(255,255,255,0.8);">
+                        <i class="fab fa-youtube"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            <p>&copy; 2025 ZenMindConnect. Todos los derechos reservados.</p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <script>
+        function toggleMobileMenu() {
+            const nav = document.getElementById('navbarNav');
+            nav.classList.toggle('active');
+        }
+    </script>
+</body>
+</html>

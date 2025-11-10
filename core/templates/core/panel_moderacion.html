@@ -1,0 +1,56 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Moderación - ZenMindConnect</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_admin.css' %}">
+</head>
+<body>
+    {% include 'core/navbar.html' %}
+    
+    <div class="container" style="margin-top: 40px;">
+        <h1><i class="fas fa-shield-alt"></i> Panel de Moderación</h1>
+        <p>Posts reportados que requieren revisión</p>
+        
+        {% if posts_reportados %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Autor</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for post in posts_reportados %}
+                    <tr>
+                        <td><a href="{% url 'post_detail' post.slug %}">{{ post.title }}</a></td>
+                        <td>{{ post.author.user.username }}</td>
+                        <td>{{ post.date_added|date:"d M Y" }}</td>
+                        <td>
+                            <a href="{% url 'moderar_post' post.idPost 'aprobar' %}" class="btn btn-sm btn-success">
+                                <i class="fas fa-check"></i> Aprobar
+                            </a>
+                            <a href="{% url 'moderar_post' post.idPost 'rechazar' %}" class="btn btn-sm btn-danger"
+                               onclick="return confirm('¿Estás seguro de eliminar este post?')">
+                                <i class="fas fa-times"></i> Rechazar
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p>No hay posts reportados pendientes de moderación.</p>
+        {% endif %}
+    </div>
+</body>
+</html>
+
