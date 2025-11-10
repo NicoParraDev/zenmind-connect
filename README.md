@@ -252,9 +252,11 @@ Este proyecto es privado y confidencial.
 
 ---
 
-## 👥 Equipo
+## 👨‍💻 Desarrollador
 
-Desarrollado con ❤️ para el bienestar mental.
+**ZenMindConnect 2.0** fue desarrollado por **Nicolás Parra** desde su época de estudiante en **Duoc UC** hasta el día de hoy, siendo un proyecto en constante evolución y mejora.
+
+Este proyecto representa años de aprendizaje, desarrollo y dedicación, comenzando como un proyecto académico y evolucionando hasta convertirse en una plataforma completa de bienestar mental con integración de IA, sistema de reservas, moderación de contenido y múltiples funcionalidades avanzadas.
 
 ---
 
