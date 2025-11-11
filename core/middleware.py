@@ -130,6 +130,7 @@ class AntiBotMiddleware(MiddlewareMixin):
             '/favicon.ico',
             '/robots.txt',
             '/sitemap.xml',
+            '/videocall/',  # Rutas de videollamada (polling legítimo del chat)
         ]
         return any(path.startswith(ignore) for ignore in ignore_paths)
     
@@ -176,6 +177,18 @@ class AntiBotMiddleware(MiddlewareMixin):
         """
         Detecta patrones de scraping basados en frecuencia y rutas.
         """
+        # Si el usuario está autenticado, aplicar límites más permisivos
+        is_authenticated = False
+        try:
+            if hasattr(request, 'user') and hasattr(request.user, 'is_authenticated'):
+                is_authenticated = request.user.is_authenticated
+        except AttributeError:
+            pass
+        
+        # Ignorar rutas de videocall (polling legítimo del chat)
+        if request.path.startswith('/videocall/'):
+            return False
+        
         # Contar requests por IP en ventana de tiempo
         cache_key = f'scraping_pattern:{ip_address}'
         request_count = cache.get(cache_key, 0)
@@ -183,8 +196,15 @@ class AntiBotMiddleware(MiddlewareMixin):
         # Incrementar contador
         cache.set(cache_key, request_count + 1, 60)  # 1 minuto
         
-        # Si hay más de 30 requests por minuto, es sospechoso
-        if request_count > 30:
+        # Límites diferentes para usuarios autenticados vs no autenticados
+        if is_authenticated:
+            # Usuarios autenticados pueden hacer más requests (polling, AJAX, etc.)
+            max_requests = 100  # 100 requests por minuto para usuarios autenticados
+        else:
+            # Usuarios no autenticados: límite más estricto
+            max_requests = 30  # 30 requests por minuto para usuarios no autenticados
+        
+        if request_count > max_requests:
             return True
         
         # Verificar si está accediendo a muchas rutas diferentes rápidamente
@@ -193,8 +213,14 @@ class AntiBotMiddleware(MiddlewareMixin):
         paths.add(request.path)
         cache.set(paths_key, paths, 60)
         
-        # Si accede a más de 20 rutas diferentes en 1 minuto, es scraping
-        if len(paths) > 20:
+        # Límites diferentes para rutas diferentes
+        if is_authenticated:
+            max_paths = 50  # 50 rutas diferentes para usuarios autenticados
+        else:
+            max_paths = 20  # 20 rutas diferentes para usuarios no autenticados
+        
+        # Si accede a más de X rutas diferentes en 1 minuto, es scraping
+        if len(paths) > max_paths:
             return True
         
         return False

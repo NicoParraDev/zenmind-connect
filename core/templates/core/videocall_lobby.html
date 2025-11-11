@@ -1,0 +1,952 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Videollamada - ZenMindConnect 2.0</title>
+    <meta name="description" content="Inicia una videollamada con tu psicólogo de forma segura">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS ZenMind 2.0 -->
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <style>
+        /* Override del CSS de videocall que puede causar conflictos */
+        body {
+            background-color: var(--bg-secondary) !important;
+            font-family: var(--font-primary) !important;
+        }
+        
+        .videocall-lobby-container {
+            min-height: calc(100vh - 200px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-primary) 100%);
+            padding: var(--spacing-2xl) var(--spacing-md);
+            margin-top: var(--spacing-xl);
+        }
+        
+        #form-container {
+            width: 100%;
+            max-width: 550px;
+            box-shadow: var(--shadow-xl);
+            background-color: var(--bg-card);
+            padding: var(--spacing-2xl);
+            border-radius: var(--radius-xl);
+            position: relative !important;
+            top: auto !important;
+            left: auto !important;
+            transform: none !important;
+            border: 1px solid var(--border-color);
+        }
+        
+        #logo {
+            display: block;
+            width: 140px;
+            height: auto;
+            margin: 0 auto var(--spacing-lg);
+        }
+        
+        #welcome-message {
+            text-align: center;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        #welcome-message h1 {
+            font-size: var(--font-3xl);
+            color: var(--primary-color);
+            margin-bottom: var(--spacing-sm);
+            font-family: var(--font-heading);
+            font-weight: 700;
+        }
+        
+        #welcome-message p {
+            font-size: var(--font-lg);
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+        
+        .field-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+        
+        .form-field {
+            margin-bottom: 0;
+        }
+        
+        .form-field label {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-sm);
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: var(--font-base);
+        }
+        
+        .form-field label i {
+            color: var(--primary-color);
+            font-size: var(--font-lg);
+        }
+        
+        .form-field input[type="text"] {
+            width: 100%;
+            padding: var(--spacing-md);
+            border: 2px solid var(--border-color);
+            border-radius: var(--radius-md);
+            font-size: var(--font-base);
+            transition: all var(--transition-base);
+            box-sizing: border-box;
+            font-family: var(--font-primary);
+            background-color: var(--bg-primary);
+        }
+        
+        .form-field input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+        
+        .form-field input[type="submit"] {
+            width: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            font-size: var(--font-lg);
+            margin-top: var(--spacing-md);
+            transition: all var(--transition-base);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .form-field input[type="submit"]:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        
+        .form-field input[type="submit"]:active {
+            transform: translateY(0);
+        }
+        
+        /* Botón generar sala */
+        .btn-generate {
+            background: var(--secondary-color);
+            color: white;
+            border: none;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            font-size: var(--font-lg);
+            min-width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .btn-generate:hover {
+            background: var(--secondary-dark);
+            transform: scale(1.05);
+        }
+        
+        /* Botón copiar */
+        .btn-copy {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-base);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+        }
+        
+        .btn-copy:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+        }
+        
+        .btn-copy.copied {
+            background: var(--success-color);
+        }
+        
+        .invitation-panel {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Contador de inicio */
+        .countdown-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        .countdown-container {
+            background: var(--bg-card);
+            padding: var(--spacing-2xl);
+            border-radius: var(--radius-xl);
+            text-align: center;
+            box-shadow: var(--shadow-2xl);
+            border: 2px solid var(--primary-color);
+        }
+        
+        .countdown-number {
+            font-size: 120px;
+            font-weight: 700;
+            color: var(--primary-color);
+            font-family: var(--font-heading);
+            line-height: 1;
+            margin: var(--spacing-lg) 0;
+            animation: pulse 1s ease-in-out infinite;
+        }
+        
+        .countdown-message {
+            font-size: var(--font-xl);
+            color: var(--text-primary);
+            margin-top: var(--spacing-md);
+            font-weight: 600;
+        }
+        
+        .countdown-submessage {
+            font-size: var(--font-base);
+            color: var(--text-secondary);
+            margin-top: var(--spacing-sm);
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+        }
+        
+        /* Responsive */
+        @media screen and (max-width: 768px) {
+            .videocall-lobby-container {
+                padding: var(--spacing-lg) var(--spacing-md);
+            }
+            
+            #form-container {
+                padding: var(--spacing-xl) var(--spacing-lg);
+            }
+            
+            #welcome-message h1 {
+                font-size: var(--font-2xl);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar Moderno -->
+    {% include 'core/navbar.html' %}
+
+    <!-- Contenido Principal -->
+<div class="videocall-lobby-container">
+    <div id="form-container">
+        <img id="logo" src="{% static 'IMG/logo_final.png' %}" alt="ZenMindConnect"/>
+        
+        <div id="welcome-message">
+            <h1>Bienvenido a la Videollamada</h1>
+            {% if is_psicologo %}
+            <p>Crea salas privadas o eventos grupales para tus sesiones</p>
+            {% else %}
+            <p>Crea una sala privada y comparte el enlace con tu psicólogo, o únete a una sala existente</p>
+            {% endif %}
+        </div>
+        
+        <form id="form">
+            <div class="field-wrapper">
+                <div class="form-field">
+                    <label for="room-input">
+                        <i class="fas fa-door-open"></i> Nombre de Sala
+                    </label>
+                    <div style="display: flex; gap: var(--spacing-sm); align-items: center;">
+                        <input 
+                            type="text" 
+                            id="room-input"
+                            name="room" 
+                            placeholder="Ej: CONSULTA-001" 
+                            style="text-transform:uppercase; flex: 1;" 
+                            required
+                        />
+                        <button type="button" id="generate-room-btn" class="btn-generate" title="Generar nombre automático">
+                            <i class="fas fa-magic"></i>
+                        </button>
+                    </div>
+                    <small style="color: var(--text-secondary); font-size: var(--font-xs); margin-top: var(--spacing-xs); display: block;">
+                        <i class="fas fa-info-circle"></i> Comparte este nombre con quien quieras invitar
+                    </small>
+                </div>
+                
+                        <div class="form-field">
+                            <label for="name-input">
+                                <i class="fas fa-user"></i> Tu Nombre
+                            </label>
+                            <input 
+                                type="text" 
+                                id="name-input"
+                                name="name" 
+                                value="{% if request.user.persona %}{{ request.user.persona.nombre }} {{ request.user.persona.apellido }}{% endif %}" 
+                                placeholder="Ingresa tu nombre completo" 
+                                style="text-transform:uppercase" 
+                                required
+                            />
+                        </div>
+                        
+                        {% if is_psicologo %}
+                        <div class="form-field">
+                            <label for="room-type">
+                                <i class="fas fa-users"></i> Tipo de Sala
+                            </label>
+                            <select 
+                                id="room-type" 
+                                name="room_type" 
+                                style="width: 100%; padding: var(--spacing-md); border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: var(--font-base); background-color: var(--bg-primary); font-family: var(--font-primary);"
+                                required
+                            >
+                                <option value="private">🔒 Sesión Privada (Psicólogo + Practicante + Paciente)</option>
+                                <option value="group">🌐 Evento Grupal (Psicólogo + Muchos Usuarios)</option>
+                            </select>
+                            <small style="color: var(--text-secondary); font-size: var(--font-xs); margin-top: var(--spacing-xs); display: block;">
+                                <i class="fas fa-info-circle"></i> 
+                                <span id="room-type-description">Sesión privada para 3 participantes (psicólogo + practicante + paciente)</span>
+                            </small>
+                        </div>
+                        
+                        <div class="form-field" id="couple-therapy-field" style="display: none;">
+                            <label for="is-couple-therapy" style="display: flex; align-items: center; gap: var(--spacing-sm); cursor: pointer;">
+                                <input 
+                                    type="checkbox" 
+                                    id="is-couple-therapy" 
+                                    name="is_couple_therapy"
+                                    style="width: 20px; height: 20px; cursor: pointer;"
+                                />
+                                <span>
+                                    <i class="fas fa-heart"></i> Terapia de Pareja
+                                </span>
+                            </label>
+                            <small style="color: var(--text-secondary); font-size: var(--font-xs); margin-top: var(--spacing-xs); display: block; margin-left: 28px;">
+                                <i class="fas fa-info-circle"></i> 
+                                Permite hasta 5 participantes (psicólogo + practicante + pareja). La pareja puede estar en el mismo dispositivo.
+                            </small>
+                        </div>
+                        {% else %}
+                        <!-- Usuarios normales: solo pueden unirse a salas existentes, no crear eventos grupales -->
+                        <input type="hidden" name="room_type" value="private" id="room-type">
+                        <input type="hidden" name="is_couple_therapy" value="false" id="is-couple-therapy">
+                        {% endif %}
+                        
+                        <div class="form-field">
+                            <label for="user-role">
+                                <i class="fas fa-user-tag"></i> Tu Rol
+                            </label>
+                            <select 
+                                id="user-role" 
+                                name="user_role" 
+                                style="width: 100%; padding: var(--spacing-md); border: 2px solid var(--border-color); border-radius: var(--radius-md); font-size: var(--font-base); background-color: var(--bg-primary); font-family: var(--font-primary);"
+                                required
+                            >
+                                {% if is_psicologo %}
+                                <option value="psicologo">👨‍⚕️ Psicólogo (Host)</option>
+                                {% endif %}
+                                {% if is_practicante %}
+                                <option value="practicante">👨‍🎓 Practicante (Observador)</option>
+                                {% endif %}
+                                <option value="paciente" id="paciente-option">👤 Paciente</option>
+                                <option value="audience" id="audience-option" style="display: none;">👥 Audiencia</option>
+                            </select>
+                            <small style="color: var(--text-secondary); font-size: var(--font-xs); margin-top: var(--spacing-xs); display: block;">
+                                <i class="fas fa-info-circle"></i> 
+                                <span id="role-description">El rol determina tus permisos en la sala</span>
+                            </small>
+                        </div>
+                        
+                        <div class="form-field">
+                            {% if is_psicologo %}
+                            <input type="submit" value="🎥 Crear Sala e Iniciar Videollamada" />
+                            {% else %}
+                            <input type="submit" value="🎥 Crear Sala e Iniciar Videollamada" />
+                            <small style="color: var(--text-secondary); font-size: var(--font-xs); margin-top: var(--spacing-xs); display: block; text-align: center;">
+                                <i class="fas fa-info-circle"></i> 
+                                Puedes crear una sala privada y compartir el enlace con tu psicólogo
+                            </small>
+                            {% endif %}
+                        </div>
+            </div>
+        </form>
+        
+        <!-- Panel de invitación (oculto inicialmente) -->
+        <div id="invitation-panel" class="invitation-panel" style="display: none; margin-top: var(--spacing-xl); padding: var(--spacing-lg); background: var(--bg-secondary); border-radius: var(--radius-md); border: 2px solid var(--primary-color);">
+            <h3 style="color: var(--primary-color); margin-bottom: var(--spacing-md); display: flex; align-items: center; gap: var(--spacing-sm);">
+                <i class="fas fa-share-alt"></i> Invitar a la Videollamada
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: var(--spacing-md);">
+                Comparte este enlace con la persona que quieras invitar. Solo necesita estar registrada en ZenMindConnect.
+            </p>
+            
+            <div class="invitation-link-container" style="display: flex; gap: var(--spacing-sm); margin-bottom: var(--spacing-md);">
+                <input 
+                    type="text" 
+                    id="invitation-link" 
+                    readonly 
+                    style="flex: 1; padding: var(--spacing-md); border: 2px solid var(--border-color); border-radius: var(--radius-md); background: white; font-size: var(--font-sm);"
+                />
+                <button id="copy-link-btn" class="btn-copy" title="Copiar enlace">
+                    <i class="fas fa-copy"></i> Copiar
+                </button>
+            </div>
+            
+            <div class="invitation-info" style="display: flex; flex-direction: column; gap: var(--spacing-sm);">
+                <div style="display: flex; align-items: center; gap: var(--spacing-sm); color: var(--text-secondary); font-size: var(--font-sm);">
+                    <i class="fas fa-key"></i>
+                    <strong>Nombre de Sala:</strong> <span id="room-name-display" style="color: var(--primary-color); font-weight: 600;"></span>
+                </div>
+                <div style="display: flex; align-items: center; gap: var(--spacing-sm); color: var(--text-secondary); font-size: var(--font-sm);">
+                    <i class="fas fa-users"></i>
+                    <span>La persona invitada debe usar el mismo nombre de sala para unirse</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <!-- Variables de configuración desde Django (ocultas en atributo data) -->
+    <div id="videocall-config" 
+         data-is-psicologo="{% if is_psicologo %}true{% else %}false{% endif %}"
+         data-is-practicante="{% if is_practicante %}true{% else %}false{% endif %}"
+         style="display: none;"></div>
+    
+    <script>
+    let form = document.getElementById('form')
+    let generateBtn = document.getElementById('generate-room-btn')
+    let invitationPanel = document.getElementById('invitation-panel')
+    let invitationLink = document.getElementById('invitation-link')
+    let copyBtn = document.getElementById('copy-link-btn')
+    let roomNameDisplay = document.getElementById('room-name-display')
+    let roomInput = document.getElementById('room-input')
+    
+    // Función para generar nombre de sala automático (siempre único)
+    function generateRoomName() {
+        // Usar timestamp más preciso y múltiples caracteres aleatorios para evitar duplicados
+        const timestamp = Date.now().toString().slice(-6)
+        const random1 = Math.random().toString(36).substring(2, 5).toUpperCase()
+        const random2 = Math.random().toString(36).substring(2, 4).toUpperCase()
+        const random3 = Math.floor(Math.random() * 1000).toString().padStart(3, '0')
+        // Combinar para mayor unicidad
+        const roomName = `SALA-${timestamp}-${random1}${random2}${random3}`
+        return roomName
+    }
+    
+    // Función para generar un nombre único (evita repeticiones inmediatas)
+    let lastGeneratedName = null
+    function generateUniqueRoomName() {
+        let newName
+        let attempts = 0
+        const maxAttempts = 10
+        
+        do {
+            newName = generateRoomName()
+            attempts++
+            // Si es el mismo que el anterior, esperar un poco y generar otro
+            if (newName === lastGeneratedName && attempts < maxAttempts) {
+                // Agregar un pequeño delay y regenerar
+                const extraRandom = Math.random().toString(36).substring(2, 3).toUpperCase()
+                newName = `SALA-${Date.now().toString().slice(-6)}-${extraRandom}${Math.random().toString(36).substring(2, 6).toUpperCase()}`
+            }
+        } while (newName === lastGeneratedName && attempts < maxAttempts)
+        
+        lastGeneratedName = newName
+        return newName
+    }
+    
+    // Generar nombre de sala automáticamente al cargar la página
+    if (roomInput && !roomInput.value) {
+        roomInput.value = generateUniqueRoomName()
+    }
+    
+    // Función para actualizar el panel de invitación con el nombre de sala actual
+    function updateInvitationPanel() {
+        if (!roomInput || !roomInput.value) return
+        
+        const roomName = roomInput.value.trim()
+        if (!roomName) return
+        
+        // Obtener tipo de sala y configuración
+        const roomTypeSelect = document.getElementById('room-type')
+        const coupleTherapyCheckbox = document.getElementById('is-couple-therapy')
+        let roomType = 'private'
+        if (roomTypeSelect) {
+            if (roomTypeSelect.tagName === 'SELECT') {
+                roomType = roomTypeSelect.value
+            } else if (roomTypeSelect.tagName === 'INPUT') {
+                roomType = roomTypeSelect.value || 'private'
+            }
+        }
+        const isCoupleTherapy = coupleTherapyCheckbox ? coupleTherapyCheckbox.checked : false
+        
+        // Construir URL de invitación
+        const baseUrl = window.location.origin
+        const coupleParam = isCoupleTherapy ? '&is_couple_therapy=true' : ''
+        const invitationUrl = `${baseUrl}/videocall/room/${roomName}/?room_type=${roomType}${coupleParam}`
+        
+        // Actualizar elementos del panel
+        if (invitationLink) {
+            invitationLink.value = invitationUrl
+        }
+        if (roomNameDisplay) {
+            roomNameDisplay.textContent = roomName
+        }
+        
+        // Si el panel está visible, mantenerlo visible
+        if (invitationPanel && invitationPanel.style.display !== 'none') {
+            invitationPanel.style.display = 'block'
+        }
+    }
+    
+    // Generar nombre de sala automático al hacer clic en el botón (siempre diferente)
+    generateBtn.addEventListener('click', function() {
+        // Generar un nombre nuevo y diferente
+        let newName = generateUniqueRoomName()
+        // Asegurar que sea diferente al actual
+        while (newName === roomInput.value) {
+            newName = generateUniqueRoomName()
+        }
+        roomInput.value = newName
+        roomInput.focus()
+        
+        // Actualizar panel de invitación si está visible
+        updateInvitationPanel()
+    })
+    
+    // Actualizar panel de invitación cuando cambia el nombre de sala manualmente
+    if (roomInput) {
+        roomInput.addEventListener('input', function() {
+            // Actualizar panel si está visible
+            if (invitationPanel && invitationPanel.style.display !== 'none') {
+                updateInvitationPanel()
+            }
+        })
+        
+        roomInput.addEventListener('change', function() {
+            // Actualizar panel si está visible
+            if (invitationPanel && invitationPanel.style.display !== 'none') {
+                updateInvitationPanel()
+            }
+        })
+    }
+    
+            // Actualizar descripción según tipo de sala (solo para psicólogos)
+            const roomTypeSelect = document.getElementById('room-type')
+            const roomTypeDescription = document.getElementById('room-type-description')
+            const userRoleSelect = document.getElementById('user-role')
+            const audienceOption = document.getElementById('audience-option')
+            const pacienteOption = document.getElementById('paciente-option')
+            const roleDescription = document.getElementById('role-description')
+            const coupleTherapyField = document.getElementById('couple-therapy-field')
+            const coupleTherapyCheckbox = document.getElementById('is-couple-therapy')
+            
+            // Configuración según tipo de usuario (desde atributo data)
+            const configElement = document.getElementById('videocall-config');
+            const isPsicologo = configElement ? configElement.getAttribute('data-is-psicologo') === 'true' : false;
+            const isPracticante = configElement ? configElement.getAttribute('data-is-practicante') === 'true' : false;
+            
+            if (isPsicologo) {
+                // Solo psicólogos pueden configurar tipo de sala y terapia de pareja
+                function updateRoomTypeDescription() {
+                    const roomType = roomTypeSelect ? roomTypeSelect.value : 'private';
+                    const isCouple = coupleTherapyCheckbox ? coupleTherapyCheckbox.checked : false;
+                    
+                    if (roomType === 'group') {
+                        if (roomTypeDescription) {
+                            roomTypeDescription.textContent = 'Evento grupal para muchos participantes (hasta 50)';
+                        }
+                        if (roleDescription) {
+                            roleDescription.textContent = 'En eventos grupales: psicólogo (host), practicante (observador/apoyo), y audiencia (participantes)';
+                        }
+                        
+                        // Mostrar audiencia, ocultar paciente
+                        if (audienceOption) audienceOption.style.display = 'block';
+                        if (pacienteOption) pacienteOption.style.display = 'none';
+                        
+                        // Si estaba seleccionado paciente, cambiar a audiencia
+                        if (userRoleSelect && userRoleSelect.value === 'paciente') {
+                            userRoleSelect.value = 'audience';
+                        }
+                        
+                        // Ocultar terapia de pareja en eventos grupales
+                        if (coupleTherapyField) {
+                            coupleTherapyField.style.display = 'none';
+                            if (coupleTherapyCheckbox) coupleTherapyCheckbox.checked = false;
+                        }
+                    } else {
+                        if (roomTypeDescription) {
+                            if (isCouple) {
+                                roomTypeDescription.textContent = 'Sesión privada para hasta 5 participantes (psicólogo + practicante + pareja)';
+                            } else {
+                                roomTypeDescription.textContent = 'Sesión privada para 3 participantes (psicólogo + practicante + paciente)';
+                            }
+                        }
+                        if (roleDescription) {
+                            roleDescription.textContent = 'El rol determina tus permisos en la sala';
+                        }
+                        
+                        // Ocultar audiencia, mostrar paciente
+                        if (audienceOption) audienceOption.style.display = 'none';
+                        if (pacienteOption) pacienteOption.style.display = 'block';
+                        
+                        // Si estaba seleccionado audiencia, cambiar a paciente
+                        if (userRoleSelect && userRoleSelect.value === 'audience') {
+                            userRoleSelect.value = 'paciente';
+                        }
+                        
+                        // Mostrar terapia de pareja solo en sesiones privadas
+                        if (coupleTherapyField) {
+                            coupleTherapyField.style.display = 'block';
+                        }
+                    }
+                }
+                
+                if (roomTypeSelect && roomTypeSelect.tagName === 'SELECT') {
+                    roomTypeSelect.addEventListener('change', function() {
+                        updateRoomTypeDescription();
+                        // Actualizar panel de invitación si está visible
+                        if (invitationPanel && invitationPanel.style.display !== 'none') {
+                            updateInvitationPanel();
+                        }
+                    });
+                }
+                if (coupleTherapyCheckbox) {
+                    coupleTherapyCheckbox.addEventListener('change', function() {
+                        updateRoomTypeDescription();
+                        // Actualizar panel de invitación si está visible
+                        if (invitationPanel && invitationPanel.style.display !== 'none') {
+                            updateInvitationPanel();
+                        }
+                    });
+                }
+                
+                // Inicializar
+                updateRoomTypeDescription();
+            } else {
+                // Usuarios normales: solo pueden crear sesiones privadas como pacientes
+                if (roleDescription) {
+                    roleDescription.textContent = 'Te unirás a una sesión privada como paciente';
+                }
+                // Asegurar que solo paciente esté visible
+                if (audienceOption) audienceOption.style.display = 'none';
+                if (pacienteOption) pacienteOption.style.display = 'block';
+            }
+            
+            let handleSubmit = async (e) => {
+                e.preventDefault();
+                let room = e.target.room.value.toUpperCase().trim();
+                let name = e.target.name.value.trim();
+                let roomType = e.target.room_type ? e.target.room_type.value : 'private';  // Por defecto privada para usuarios normales
+                let userRole = e.target.user_role.value;
+                let isCoupleTherapy = false;
+                
+                // Solo psicólogos pueden configurar tipo de sala y terapia de pareja
+                if (isPsicologo && coupleTherapyCheckbox) {
+                    isCoupleTherapy = coupleTherapyCheckbox.checked && roomType === 'private';
+                }
+                
+                if (!room || !name || !roomType || !userRole) {
+                    alert('Por favor, completa todos los campos');
+                    return;
+                }
+                
+                // Validar que el nombre de sala no tenga caracteres especiales
+                if (!/^[A-Z0-9\-_]+$/.test(room)) {
+                    alert('El nombre de sala solo puede contener letras, números, guiones y guiones bajos');
+                    return;
+                }
+                
+                try {
+                    let response = await fetch(`/videocall/get_token/?channel=${room}`)
+                    let data = await response.json()
+                    
+                    if (data.error) {
+                        alert('Error: ' + data.error);
+                        return;
+                    }
+                    
+                    let UID = data.uid
+                    let token = data.token
+                    
+                    // Guardar en sessionStorage
+                    sessionStorage.setItem('token', token)
+                    sessionStorage.setItem('UID', UID)
+                    sessionStorage.setItem('room', room)
+                    sessionStorage.setItem('name', name)
+                    sessionStorage.setItem('roomType', roomType)
+                    sessionStorage.setItem('userRole', userRole)
+                    sessionStorage.setItem('isCoupleTherapy', isCoupleTherapy)
+                    
+                    // Crear sala con tipo y rol
+                    try {
+                        const createRoomResponse = await fetch('/videocall/create_room/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({
+                                room_name: room,
+                                room_type: roomType,
+                                is_couple_therapy: isCoupleTherapy,
+                                user_role: userRole
+                            })
+                        })
+                        
+                        if (!createRoomResponse.ok) {
+                            console.warn('No se pudo crear la sala con tipo, continuando...')
+                        }
+                    } catch (err) {
+                        console.warn('Error al crear sala:', err)
+                    }
+                    
+                    // Construir URL de invitación
+                    const baseUrl = window.location.origin;
+                    const coupleParam = isCoupleTherapy ? '&is_couple_therapy=true' : '';
+                    const invitationUrl = `${baseUrl}/videocall/room/${room}/?room_type=${roomType}${coupleParam}`;
+                    
+                    // Actualizar y mostrar panel de invitación
+                    updateInvitationPanel();
+                    
+                    // Mostrar panel con animación
+                    invitationPanel.style.display = 'block';
+                    invitationPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                    
+                    // Mostrar contador de inicio y abrir en nueva pestaña
+                    showCountdownAndOpen(invitationUrl);
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    alert('Error al iniciar la videollamada. Por favor, intenta de nuevo.');
+                }
+            }
+            
+            // Función para obtener CSRF token
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+    
+    // Copiar enlace al portapapeles
+    copyBtn.addEventListener('click', async function() {
+        try {
+            await navigator.clipboard.writeText(invitationLink.value)
+            
+            // Feedback visual
+            const originalText = copyBtn.innerHTML
+            copyBtn.innerHTML = '<i class="fas fa-check"></i> ¡Copiado!'
+            copyBtn.classList.add('copied')
+            
+            setTimeout(() => {
+                copyBtn.innerHTML = originalText
+                copyBtn.classList.remove('copied')
+            }, 2000)
+            
+        } catch (error) {
+            // Fallback para navegadores antiguos
+            invitationLink.select()
+            document.execCommand('copy')
+            alert('Enlace copiado al portapapeles')
+        }
+    })
+    
+    form.addEventListener('submit', handleSubmit);
+    
+    // Variable global para poder cancelar el countdown
+    let countdownInterval = null;
+    let countdownOverlay = null;
+    
+    // Función para mostrar contador y abrir en nueva pestaña
+    function showCountdownAndOpen(url) {
+        // Crear overlay de contador
+        const overlay = document.createElement('div');
+        overlay.className = 'countdown-overlay';
+        overlay.id = 'countdown-overlay';
+        countdownOverlay = overlay;
+        
+        const container = document.createElement('div');
+        container.className = 'countdown-container';
+        
+        const message = document.createElement('div');
+        message.className = 'countdown-message';
+        message.textContent = 'Abriendo videollamada en nueva pestaña...';
+        
+        const number = document.createElement('div');
+        number.className = 'countdown-number';
+        number.id = 'countdown-number';
+        
+        const submessage = document.createElement('div');
+        submessage.className = 'countdown-submessage';
+        submessage.textContent = 'La sala se abrirá automáticamente';
+        
+        // Botón de cancelar
+        const cancelBtn = document.createElement('button');
+        cancelBtn.textContent = 'Cancelar';
+        cancelBtn.style.cssText = `
+            margin-top: var(--spacing-lg);
+            padding: var(--spacing-md) var(--spacing-xl);
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: 2px solid rgba(239, 68, 68, 1);
+            border-radius: var(--radius-md);
+            font-size: var(--font-base);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: var(--font-primary);
+        `;
+        cancelBtn.onmouseover = function() {
+            this.style.background = 'rgba(239, 68, 68, 1)';
+            this.style.transform = 'scale(1.05)';
+        };
+        cancelBtn.onmouseout = function() {
+            this.style.background = 'rgba(239, 68, 68, 0.9)';
+            this.style.transform = 'scale(1)';
+        };
+        cancelBtn.onclick = function() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            if (countdownOverlay) {
+                countdownOverlay.style.animation = 'fadeOut 0.3s ease-out';
+                setTimeout(() => {
+                    if (countdownOverlay && countdownOverlay.parentNode) {
+                        countdownOverlay.remove();
+                    }
+                    countdownOverlay = null;
+                }, 300);
+            }
+        };
+        
+        container.appendChild(message);
+        container.appendChild(number);
+        container.appendChild(submessage);
+        container.appendChild(cancelBtn);
+        overlay.appendChild(container);
+        document.body.appendChild(overlay);
+        
+        // Contador de 3 segundos
+        let count = 3;
+        number.textContent = count;
+        
+        countdownInterval = setInterval(() => {
+            count--;
+            if (count > 0) {
+                number.textContent = count;
+            } else {
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                }
+                number.textContent = '🚀';
+                message.textContent = '¡Abriendo videollamada!';
+                
+                // Abrir en nueva pestaña después de un breve delay
+                setTimeout(() => {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                    
+                    // Ocultar contador con animación
+                    if (countdownOverlay) {
+                        countdownOverlay.style.animation = 'fadeOut 0.3s ease-out';
+                        setTimeout(() => {
+                            if (countdownOverlay && countdownOverlay.parentNode) {
+                                countdownOverlay.remove();
+                            }
+                            countdownOverlay = null;
+                        }, 300);
+                    }
+                }, 500);
+            }
+        }, 1000);
+    }
+    
+    // Agregar animación de fadeOut
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+
+    <!-- Footer -->
+    {% include 'core/footer.html' %}
+</body>
+</html>
+

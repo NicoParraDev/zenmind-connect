@@ -312,7 +312,7 @@ CSP_SCRIPT_SRC = "'self' 'unsafe-inline' https://code.jquery.com https://cdn.jsd
 CSP_STYLE_SRC = "'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com https://cdn.ckeditor.com"
 CSP_FONT_SRC = "'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com"
 CSP_IMG_SRC = "'self' data: https:"
-CSP_CONNECT_SRC = "'self' https://cdn.ckeditor.com"
+CSP_CONNECT_SRC = "'self' https://cdn.ckeditor.com https://webrtc2-ap-web-1.agora.io https://webrtc2-ap-web-3.agora.io https://webrtc2-2.ap.sd-rtn.com https://webrtc2-4.ap.sd-rtn.com wss://webrtc2-ap-web-1.agora.io wss://webrtc2-ap-web-3.agora.io wss://webrtc2-2.ap.sd-rtn.com wss://webrtc2-4.ap.sd-rtn.com https://api.agora.io"
 CSP_FRAME_SRC = "'self' https://www.youtube.com https://youtube.com https://youtu.be https://player.vimeo.com https://vimeo.com"
 CSP_FRAME_ANCESTORS = "'none'"
 

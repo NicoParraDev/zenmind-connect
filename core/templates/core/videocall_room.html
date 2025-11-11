@@ -1,0 +1,1883 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sala: {{ room.name }} - ZenMindConnect 2.0</title>
+    <meta name="description" content="Videollamada en curso - ZenMindConnect">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- Agora RTC SDK -->
+    <script src="{% static 'videocall/assets/AgoraRTC_N-4.8.0.js' %}"></script>
+    
+    <!-- CSS ZenMind 2.0 -->
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    
+    <link rel="icon" href="{% static 'IMG/logo_final.png' %}">
+    
+    <style>
+        body {
+            background-color: #0a0e27;
+            font-family: var(--font-primary);
+            overflow: hidden;
+            height: 100vh;
+        }
+        
+        .videocall-room-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100vw;
+        }
+        
+        /* Header con información de la sala */
+        .room-header {
+            background: linear-gradient(135deg, #1a1f3a 0%, #0a0e27 100%);
+            padding: var(--spacing-md) var(--spacing-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid rgba(102, 126, 234, 0.3);
+            z-index: 1000;
+        }
+        
+        .room-info {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            color: white;
+        }
+        
+        .room-info h2 {
+            margin: 0;
+            font-size: var(--font-xl);
+            font-weight: 600;
+            color: white;
+        }
+        
+        .room-info .room-name {
+            color: #667eea;
+            font-weight: 700;
+        }
+        
+        .room-timer {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            color: #10b981;
+            font-weight: 600;
+            font-size: var(--font-lg);
+        }
+        
+        /* Contenedor principal: video + chat */
+        .room-main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Área de video */
+        .video-container-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #0a0e27;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .video-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-md);
+            padding: var(--spacing-md);
+            overflow-y: auto;
+        }
+        
+        /* Cuando hay solo un participante, ocupar casi toda la pantalla */
+        .video-grid > div[id^="user-container-"]:only-child {
+            max-width: 95vw;
+            max-height: 75vh;
+            width: 90vw;
+            height: 70vh;
+            margin: 0 auto;
+        }
+        
+        .video-item {
+            position: relative;
+            background: #1a1f3a;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .video-item:hover {
+            border-color: #667eea;
+            transform: scale(1.02);
+        }
+        
+        .video-item video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .video-item.local-video {
+            border-color: #10b981;
+        }
+        
+        /* Estilos para los contenedores de video individuales creados por Agora */
+        #video-grid > div[id^="user-container-"] {
+            position: relative;
+            background: #1a1f3a;
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            aspect-ratio: 16/9;
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            transition: all 0.3s ease;
+            min-height: 200px;
+        }
+        
+        #video-grid > div[id^="user-container-"]:hover {
+            border-color: #667eea;
+            transform: scale(1.02);
+            cursor: pointer;
+        }
+        
+        /* Botón de expandir video */
+        .expand-video-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 21;
+            opacity: 0;
+            transition: opacity 0.3s ease, background 0.3s ease;
+            font-size: var(--font-sm);
+        }
+        
+        #video-grid > div[id^="user-container-"]:hover .expand-video-btn {
+            opacity: 1;
+        }
+        
+        .expand-video-btn:hover {
+            background: rgba(102, 126, 234, 0.9);
+            transform: scale(1.1);
+        }
+        
+        /* Botón de mute individual para usuarios remotos */
+        .mute-remote-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 21;
+            opacity: 0;
+            transition: opacity 0.3s ease, background 0.3s ease;
+            font-size: var(--font-sm);
+        }
+        
+        #video-grid > div[id^="user-container-"]:hover .mute-remote-btn {
+            opacity: 1;
+        }
+        
+        .mute-remote-btn:hover {
+            background: rgba(239, 68, 68, 0.9);
+            transform: scale(1.1);
+        }
+        
+        .mute-remote-btn.muted {
+            background: rgba(239, 68, 68, 0.9);
+            opacity: 1;
+        }
+        
+        .mute-remote-btn.muted:hover {
+            background: rgba(239, 68, 68, 1);
+        }
+        
+        /* Asegurar que el botón expandir siempre esté en la esquina superior derecha */
+        #video-grid > div[id^="user-container-"] .expand-video-btn {
+            top: 10px !important;
+            right: 10px !important;
+        }
+        
+        /* Si hay botón de mute, el expandir sigue en la derecha */
+        #video-grid > div[id^="user-container-"]:has(.mute-remote-btn) .expand-video-btn {
+            top: 10px !important;
+            right: 10px !important;
+        }
+        
+        /* Vista expandida del video - Usando zoom CSS en lugar de reproducir track */
+        .video-expanded-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0, 0, 0, 0.98);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s ease;
+            pointer-events: auto;
+        }
+        
+        .video-expanded-overlay.active {
+            display: flex;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+        
+        .video-expanded-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        
+        /* Clase para el contenedor original cuando está expandido */
+        .video-container-expanded {
+            position: fixed !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) scale(2.5) !important;
+            width: 40vw !important;
+            height: 30vh !important;
+            z-index: 10001 !important;
+            transition: transform 0.3s ease !important;
+        }
+        
+        .video-container-expanded .video-player {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        .video-container-expanded .video-player video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: contain !important;
+        }
+        
+        .video-expanded-name {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: var(--spacing-md) var(--spacing-lg);
+            border-radius: var(--radius-md);
+            font-size: var(--font-xl);
+            font-weight: 600;
+            z-index: 10001;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(102, 126, 234, 0.5);
+        }
+        
+        /* Cuando el video está expandido, el botón de expandir cambia a comprimir */
+        .video-container-expanded .expand-video-btn {
+            background: rgba(239, 68, 68, 0.9) !important;
+            opacity: 1 !important;
+            z-index: 10002 !important;
+        }
+        
+        .video-container-expanded .expand-video-btn:hover {
+            background: rgba(239, 68, 68, 1) !important;
+        }
+        
+        .video-container-expanded .expand-video-btn i.fa-expand {
+            display: none;
+        }
+        
+        .video-container-expanded .expand-video-btn i.fa-compress {
+            display: block !important;
+        }
+        
+        .expand-video-btn i.fa-compress {
+            display: none;
+        }
+        
+        #video-grid > div[id^="user-container-"] .video-player {
+            width: 100%;
+            height: 100%;
+            min-height: 200px;
+            background: #1a1f3a;
+            position: relative;
+        }
+        
+        /* Placeholder cuando la cámara está apagada - Diseño profesional y limpio */
+        .video-player.camera-off {
+            background: #1a1f3a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .camera-off-placeholder {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 10;
+        }
+        
+        .camera-off-placeholder .user-initials {
+            width: 60px !important;
+            height: 60px !important;
+            min-width: 60px !important;
+            min-height: 60px !important;
+            max-width: 60px !important;
+            max-height: 60px !important;
+            border-radius: 50% !important;
+            background: linear-gradient(to top, #7c3aed 0%, #a78bfa 100%) !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 1.4em !important;
+            font-weight: 700 !important;
+            color: white !important;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+            border: none !important;
+            letter-spacing: 1px !important;
+            position: relative !important;
+            text-shadow: 
+                0 0 0 white,
+                -1px -1px 0 rgba(255, 0, 150, 0.3),
+                1px 1px 0 rgba(0, 200, 255, 0.3) !important;
+        }
+        
+        /* Efecto sutil de glitch/aberration cromática */
+        .camera-off-placeholder .user-initials::before,
+        .camera-off-placeholder .user-initials::after {
+            content: attr(data-initials) !important;
+            position: absolute !important;
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 1.4em !important;
+            font-weight: 700 !important;
+            letter-spacing: 1px !important;
+        }
+        
+        .camera-off-placeholder .user-initials::before {
+            color: rgba(255, 0, 150, 0.4) !important;
+            transform: translate(-1px, -1px) !important;
+            z-index: -1 !important;
+        }
+        
+        .camera-off-placeholder .user-initials::after {
+            color: rgba(0, 200, 255, 0.4) !important;
+            transform: translate(1px, 1px) !important;
+            z-index: -1 !important;
+        }
+        
+        .camera-off-placeholder .camera-icon,
+        .camera-off-placeholder .user-name {
+            display: none;
+        }
+        
+        /* Estilos para el elemento video que Agora crea dentro de video-player */
+        #video-grid > div[id^="user-container-"] .video-player > div,
+        #video-grid > div[id^="user-container-"] .video-player video {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover;
+            display: block;
+        }
+        
+        /* Asegurar que cualquier elemento hijo de video-player ocupe todo el espacio */
+        #video-grid > div[id^="user-container-"] .video-player * {
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        /* Video local con borde verde */
+        #video-grid > div[id^="user-container-"].local-video-item {
+            border-color: #10b981;
+        }
+        
+        /* Wrapper de nombre de usuario */
+        .username-wrapper {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-md);
+            font-size: var(--font-sm);
+            font-weight: 600;
+            z-index: 10;
+        }
+        
+        .user-name {
+            color: white;
+        }
+        
+        .video-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: rgba(255, 255, 255, 0.5);
+            background: #1a1f3a;
+        }
+        
+        .video-placeholder i {
+            font-size: 3rem;
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .video-label {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: var(--radius-md);
+            font-size: var(--font-sm);
+            font-weight: 600;
+        }
+        
+        /* Panel de chat */
+        /* Panel lateral: usuarios O chat (alternativo) */
+        .side-panel {
+            width: 350px;
+            background: #1a1f3a;
+            border-left: 2px solid rgba(102, 126, 234, 0.3);
+            display: flex;
+            flex-direction: column;
+            transition: width 0.3s ease, border-width 0.3s ease, opacity 0.3s ease;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        .side-panel.hidden {
+            width: 0;
+            border-left-width: 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        /* Panel de usuarios */
+        .users-panel {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .users-panel.hidden {
+            display: none;
+        }
+        
+        .users-header {
+            padding: var(--spacing-md);
+            background: rgba(102, 126, 234, 0.1);
+            border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .users-header h3 {
+            margin: 0;
+            color: white;
+            font-size: var(--font-md);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .users-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-sm);
+        }
+        
+        .user-item {
+            padding: var(--spacing-sm) var(--spacing-md);
+            margin-bottom: var(--spacing-xs);
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s ease;
+        }
+        
+        .user-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+        
+        .user-item.current-user {
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.5);
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.85em;
+            flex-shrink: 0;
+        }
+        
+        .user-details {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .user-name {
+            color: white;
+            font-weight: 500;
+            font-size: 0.9em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .user-role {
+            color: #a0aec0;
+            font-size: 0.75em;
+            text-transform: capitalize;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: var(--spacing-xs);
+        }
+        
+        .kick-btn {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.5);
+            color: #ef4444;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.8em;
+        }
+        
+        .kick-btn:hover {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: #ef4444;
+        }
+        
+        .kick-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .users-count {
+            color: #a0aec0;
+            font-size: 0.85em;
+            margin-top: var(--spacing-xs);
+        }
+        
+        .chat-panel {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .chat-panel.hidden {
+            display: none;
+        }
+        
+        /* Cuando el chat está oculto, el área de video se expande automáticamente */
+        /* El flexbox se ajusta automáticamente cuando el chat tiene width: 0 */
+        
+        /* Asegurar que el área de video ocupe todo el espacio cuando el chat está oculto */
+        .room-main-content.chat-hidden .video-container-area {
+            flex: 1 1 100%;
+            width: 100%;
+        }
+        
+        .chat-header {
+            padding: var(--spacing-md);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chat-header h3 {
+            margin: 0;
+            font-size: var(--font-lg);
+            font-weight: 600;
+        }
+        
+        .chat-toggle-btn {
+            background: transparent;
+            border: none;
+            color: white;
+            cursor: pointer;
+            font-size: var(--font-xl);
+            padding: var(--spacing-xs);
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-md);
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-sm);
+        }
+        
+        .chat-message {
+            padding: var(--spacing-sm) var(--spacing-md);
+            border-radius: var(--radius-md);
+            max-width: 80%;
+            word-wrap: break-word;
+            margin-bottom: var(--spacing-sm);
+            display: block;
+            visibility: visible;
+            opacity: 1;
+            animation: slideIn 0.2s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(5px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Mensajes nuevos con transición suave */
+        .chat-message[data-message-id] {
+            will-change: opacity, transform;
+        }
+        
+        /* Indicador de escritura */
+        .typing-indicator {
+            padding: var(--spacing-sm) var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            color: #a0aec0;
+            font-style: italic;
+            font-size: 0.9em;
+            margin-top: var(--spacing-xs);
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+        }
+        
+        .typing-dots span {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: #667eea;
+            animation: typingDot 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dots span:nth-child(1) {
+            animation-delay: 0s;
+        }
+        
+        .typing-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typingDot {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.7;
+            }
+            30% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+        
+        .typing-text {
+            color: #a0aec0;
+        }
+        
+        .chat-message.own-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            margin-left: auto;
+        }
+        
+        .chat-message.other-message {
+            align-self: flex-start;
+            background: #2d3748;
+            color: white;
+            margin-right: auto;
+        }
+        
+        /* Asegurar que los mensajes sin clase específica también se muestren */
+        .chat-message:not(.own-message):not(.other-message) {
+            align-self: flex-start;
+            background: #2d3748;
+            color: white;
+            margin-right: auto;
+        }
+        
+        .message-author {
+            font-weight: 600;
+            font-size: var(--font-xs);
+            margin-bottom: var(--spacing-xs);
+            opacity: 0.8;
+        }
+        
+        .message-time {
+            font-size: var(--font-xs);
+            opacity: 0.6;
+            margin-top: var(--spacing-xs);
+        }
+        
+        .chat-input-container {
+            padding: var(--spacing-md);
+            border-top: 2px solid rgba(102, 126, 234, 0.3);
+            display: flex;
+            gap: var(--spacing-sm);
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: var(--spacing-md);
+            border: 2px solid rgba(102, 126, 234, 0.3);
+            border-radius: var(--radius-md);
+            background: #0a0e27;
+            color: white;
+            font-size: var(--font-base);
+            font-family: var(--font-primary);
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .chat-send-btn {
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .chat-send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Controles de video */
+        .video-controls {
+            padding: var(--spacing-lg);
+            background: linear-gradient(135deg, #1a1f3a 0%, #0a0e27 100%);
+            border-top: 2px solid rgba(102, 126, 234, 0.3);
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-md);
+            z-index: 100;
+        }
+        
+        .control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-lg);
+            transition: all 0.3s ease;
+            background: #2d3748;
+            color: white;
+        }
+        
+        .control-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .control-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .control-btn.muted {
+            background: #ef4444;
+        }
+        
+        .control-btn.leave-btn {
+            background: #ef4444;
+            width: 60px;
+            height: 60px;
+        }
+        
+        .control-btn.leave-btn:hover {
+            background: #dc2626;
+        }
+        
+        .control-btn.hidden {
+            display: none;
+        }
+        
+        /* Responsive */
+        @media screen and (max-width: 768px) {
+            .room-main-content {
+                flex-direction: column;
+            }
+            
+            .side-panel {
+                width: 100%;
+                height: 40vh;
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                z-index: 1000;
+            }
+            
+            .side-panel.hidden {
+                width: 0;
+                height: 0;
+            }
+            
+            .users-panel,
+            .chat-panel {
+                width: 100%;
+                height: 100%;
+            }
+            
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .room-header {
+                flex-direction: column;
+                gap: var(--spacing-sm);
+                align-items: flex-start;
+            }
+        }
+        
+        /* Scrollbar personalizado */
+        .chat-messages::-webkit-scrollbar,
+        .video-grid::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track,
+        .video-grid::-webkit-scrollbar-track {
+            background: #0a0e27;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb,
+        .video-grid::-webkit-scrollbar-thumb {
+            background: #667eea;
+            border-radius: 4px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb:hover,
+        .video-grid::-webkit-scrollbar-thumb:hover {
+            background: #764ba2;
+        }
+    </style>
+</head>
+<body>
+    <div class="videocall-room-container">
+        <!-- Header de la sala -->
+        <div class="room-header">
+            <div class="room-info">
+                <i class="fas fa-video"></i>
+                <h2>Sala: <span class="room-name">{{ room.name }}</span></h2>
+                <span class="room-type-badge" id="room-type-badge" style="margin-left: var(--spacing-md); padding: var(--spacing-xs) var(--spacing-sm); background: rgba(102, 126, 234, 0.2); border-radius: var(--radius-md); font-size: var(--font-sm); color: #667eea;">
+                    {% if room.room_type == 'group' %}
+                        🌐 Evento Grupal
+                    {% elif room.is_couple_therapy %}
+                        💑 Terapia de Pareja
+                    {% else %}
+                        🔒 Sesión Privada
+                    {% endif %}
+                </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: var(--spacing-lg);">
+                <div style="color: rgba(255, 255, 255, 0.7); font-size: var(--font-sm);">
+                    <i class="fas fa-users"></i> 
+                    <span id="member-count">{{ room.get_member_count }}</span> / {{ room.max_participants }}
+                </div>
+                <div class="room-timer">
+                    <i class="fas fa-clock"></i>
+                    <span id="room-timer">00:00:00</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Contenedor principal -->
+        <div class="room-main-content">
+            <!-- Área de video -->
+            <div class="video-container-area">
+                <div class="video-grid" id="video-grid">
+                    <!-- Los videos se agregarán dinámicamente aquí -->
+                </div>
+                <!-- Contenedor alternativo para compatibilidad -->
+                <div id="video-streams" style="display: none;"></div>
+            </div>
+            
+        <!-- Overlay para video expandido -->
+        <div class="video-expanded-overlay" id="video-expanded-overlay">
+            <div class="video-expanded-container" id="video-expanded-container">
+                <div class="video-expanded-name" id="video-expanded-name"></div>
+            </div>
+        </div>
+            
+            <!-- Elementos de audio para notificaciones (ocultos) -->
+            <audio id="audio" preload="auto">
+                <source src="{% static 'videocall/music/mixkit-positive-notification-951.wav' %}" type="audio/wav">
+            </audio>
+            <audio id="audio2" preload="auto">
+                <source src="{% static 'videocall/music/mixkit-light-button-2580.wav' %}" type="audio/wav">
+            </audio>
+            <audio id="audio3" preload="auto">
+                <source src="{% static 'videocall/music/mixkit-sci-fi-reject-notification-896.mp3' %}" type="audio/mpeg">
+            </audio>
+            <audio id="audio7" preload="auto">
+                <source src="{% static 'videocall/music/pause record.wav' %}" type="audio/wav">
+            </audio>
+            <audio id="audio8" preload="auto">
+                <source src="{% static 'videocall/music/start record.wav' %}" type="audio/wav">
+            </audio>
+            <audio id="audio5" preload="auto">
+                <source src="{% static 'videocall/music/mixkit-software-interface-remove-2576.mp3' %}" type="audio/mpeg">
+            </audio>
+            <audio id="audio6" preload="auto">
+                <source src="{% static 'videocall/music/mixkit-software-interface-back-2575.mp3' %}" type="audio/mpeg">
+            </audio>
+            
+            <!-- Panel lateral: usuarios O chat (alternativo) -->
+            <div class="side-panel" id="side-panel">
+                <!-- Panel de usuarios -->
+                <div class="users-panel" id="users-panel">
+                    <div class="users-header">
+                        <h3><i class="fas fa-users"></i> Participantes</h3>
+                        <span class="users-count" id="users-count">0</span>
+                    </div>
+                    <div class="users-list" id="users-list">
+                        <!-- Los usuarios se cargarán aquí -->
+                    </div>
+                </div>
+                
+                <!-- Panel de chat -->
+                <div class="chat-panel hidden" id="chat-panel">
+                    <div class="chat-header">
+                        <h3><i class="fas fa-comments"></i> Chat</h3>
+                    </div>
+                    <div class="chat-messages" id="chat-messages">
+                        <!-- Los mensajes se cargarán aquí -->
+                    </div>
+                    <div class="chat-input-container">
+                        <input 
+                            type="text" 
+                            id="chat-input-field" 
+                            class="chat-input" 
+                            placeholder="Escribe un mensaje..."
+                            maxlength="5000"
+                        />
+                        <button id="chat-send-btn" class="chat-send-btn">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Controles de video -->
+        <div class="video-controls">
+            <button id="mic-btn" class="control-btn active" title="Micrófono">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button id="camera-btn" class="control-btn active" title="Cámara">
+                <i class="fas fa-video"></i>
+            </button>
+            <button id="screen-share-btn" class="control-btn" title="Compartir pantalla">
+                <i class="fas fa-desktop"></i>
+            </button>
+            <button id="users-toggle-control" class="control-btn" title="Ver participantes">
+                <i class="fas fa-users"></i>
+            </button>
+            <button id="chat-toggle-control" class="control-btn" title="Ver chat">
+                <i class="fas fa-comments"></i>
+            </button>
+            <button id="panel-close-btn" class="control-btn hidden" title="Cerrar panel">
+                <i class="fas fa-times"></i>
+            </button>
+            <button id="leave-btn" class="control-btn leave-btn" title="Salir">
+                <i class="fas fa-phone-slash"></i>
+            </button>
+        </div>
+    </div>
+    
+    <!-- Configuración de la sala (oculta, para evitar problemas con etiquetas Django en JS) -->
+    <div id="room-config" 
+         data-room-name="{{ room.name }}"
+         data-user-name="{{ persona.nombre }} {{ persona.apellido }}"
+         data-room-type="{{ room.room_type|default:'private' }}"
+         data-is-couple-therapy="{% if room.is_couple_therapy %}true{% else %}false{% endif %}"
+         data-user-role="{{ user_role|default:'paciente' }}"
+         style="display: none;"></div>
+    
+    <!-- Scripts -->
+    <script src="{% static 'videocall/js/streams_integrated.js' %}"></script>
+    <script src="{% static 'videocall/js/videocall_chat.js' %}"></script>
+    
+    <!-- Script para panel de usuarios -->
+    <script>
+        // Variables globales
+        let canKickUsers = false;
+        let participantsInterval = null;
+        
+        // Función para obtener el token CSRF
+        function getCSRFToken() {
+            const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ||
+                         document.querySelector('[name=csrfmiddlewaretoken]')?.value ||
+                         (document.cookie.match(/csrftoken=([^;]+)/) || [])[1];
+            return token || '';
+        }
+        
+        // Función para escapar HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        
+        // Función para obtener iniciales del nombre
+        function getInitials(name) {
+            if (!name) return '?';
+            const parts = name.trim().split(' ');
+            if (parts.length >= 2) {
+                return (parts[0][0] + parts[1][0]).toUpperCase();
+            }
+            return name[0].toUpperCase();
+        }
+        
+        // Función para cargar participantes
+        function loadParticipants() {
+            const roomName = window.VIDEOCALL_ROOM || sessionStorage.getItem('room') || '';
+            if (!roomName) {
+                console.warn('No hay nombre de sala disponible');
+                return;
+            }
+            
+            fetch(`/videocall/get_participants/${roomName}/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Error al cargar participantes');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        console.error('Error:', data.error);
+                        return;
+                    }
+                    
+                    canKickUsers = data.can_kick || false;
+                    const usersList = document.getElementById('users-list');
+                    const usersCount = document.getElementById('users-count');
+                    
+                    if (!usersList || !usersCount) {
+                        console.warn('Elementos del panel de usuarios no encontrados');
+                        return;
+                    }
+                    
+                    // Actualizar contador
+                    usersCount.textContent = `${data.total} ${data.total === 1 ? 'participante' : 'participantes'}`;
+                    
+                    // Limpiar lista
+                    usersList.innerHTML = '';
+                    
+                    if (data.participants.length === 0) {
+                        usersList.innerHTML = '<div style="color: #a0aec0; text-align: center; padding: var(--spacing-md); font-size: 0.9em;">No hay participantes</div>';
+                        return;
+                    }
+                    
+                    // Agregar cada participante
+                    data.participants.forEach(participant => {
+                        const userItem = document.createElement('div');
+                        userItem.className = 'user-item' + (participant.is_current_user ? ' current-user' : '');
+                        userItem.setAttribute('data-participant-id', participant.id);
+                        
+                        const initials = getInitials(participant.name);
+                        const roleLabel = participant.role === 'psicologo' ? 'Psicólogo' :
+                                         participant.role === 'practicante' ? 'Practicante' :
+                                         participant.role === 'paciente' ? 'Paciente' :
+                                         participant.role === 'audience' ? 'Audiencia' : participant.role;
+                        
+                        userItem.innerHTML = `
+                            <div class="user-info">
+                                <div class="user-avatar">${escapeHtml(initials)}</div>
+                                <div class="user-details">
+                                    <div class="user-name">${escapeHtml(participant.name)}</div>
+                                    <div class="user-role">${escapeHtml(roleLabel)}</div>
+                                </div>
+                            </div>
+                            <div class="user-actions">
+                                ${canKickUsers && !participant.is_current_user ? 
+                                    `<button class="kick-btn" onclick="kickUser(${participant.id}, ${JSON.stringify(participant.name)})" title="Expulsar usuario">
+                                        <i class="fas fa-user-times"></i>
+                                    </button>` : ''}
+                            </div>
+                        `;
+                        
+                        usersList.appendChild(userItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Error cargando participantes:', error);
+                });
+        }
+        
+        // Función para expulsar usuario (disponible globalmente)
+        window.kickUser = function(participantId, userName) {
+            if (!confirm(`¿Estás seguro de que deseas expulsar a ${userName} de la reunión?`)) {
+                return;
+            }
+            
+            const roomName = window.VIDEOCALL_ROOM || sessionStorage.getItem('room') || '';
+            if (!roomName) {
+                console.error('No hay nombre de sala disponible');
+                return;
+            }
+            
+            const csrfToken = getCSRFToken();
+            if (!csrfToken) {
+                console.error('Token CSRF no encontrado');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo obtener el token de seguridad'
+                });
+                return;
+            }
+            
+            fetch('/videocall/kick_participant/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    room_name: roomName,
+                    participant_id: participantId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Usuario expulsado',
+                        text: data.message || 'El usuario ha sido expulsado de la reunión',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                    // Recargar lista de participantes
+                    setTimeout(loadParticipants, 500);
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error || 'No se pudo expulsar al usuario'
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('Error expulsando usuario:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Error al expulsar al usuario'
+                });
+            });
+        };
+        
+        // Inicializar panel de usuarios cuando el DOM esté listo
+        document.addEventListener('DOMContentLoaded', function() {
+            // Cargar participantes inicialmente
+            loadParticipants();
+            
+            // Actualizar lista cada 3 segundos
+            participantsInterval = setInterval(loadParticipants, 3000);
+        });
+        
+        // Limpiar intervalo al salir
+        window.addEventListener('beforeunload', function() {
+            if (participantsInterval) {
+                clearInterval(participantsInterval);
+            }
+        });
+    </script>
+    
+    <script>
+        // Leer configuración desde atributo data
+        const roomConfigElement = document.getElementById('room-config');
+        const roomName = roomConfigElement ? roomConfigElement.getAttribute('data-room-name') : '';
+        const userName = roomConfigElement ? roomConfigElement.getAttribute('data-user-name') : '';
+        const roomType = roomConfigElement ? roomConfigElement.getAttribute('data-room-type') : 'private';
+        const isCoupleTherapy = roomConfigElement ? roomConfigElement.getAttribute('data-is-couple-therapy') === 'true' : false;
+        const userRole = roomConfigElement ? roomConfigElement.getAttribute('data-user-role') : 'paciente';
+        
+        // Inicializar datos de sesión si no existen
+        if (!sessionStorage.getItem('room') || sessionStorage.getItem('room') !== roomName) {
+            sessionStorage.setItem('room', roomName);
+            console.log('Sala guardada en sessionStorage:', roomName);
+        }
+        if (!sessionStorage.getItem('name') || sessionStorage.getItem('name') !== userName) {
+            sessionStorage.setItem('name', userName);
+            console.log('Nombre guardado en sessionStorage:', userName);
+        }
+        
+        // También guardar en variables globales para acceso inmediato
+        window.VIDEOCALL_ROOM = roomName;
+        window.VIDEOCALL_USER = userName;
+        
+        if (!sessionStorage.getItem('roomType')) {
+            sessionStorage.setItem('roomType', roomType);
+        }
+        if (!sessionStorage.getItem('isCoupleTherapy')) {
+            sessionStorage.setItem('isCoupleTherapy', isCoupleTherapy);
+        }
+        if (!sessionStorage.getItem('userRole')) {
+            sessionStorage.setItem('userRole', userRole);
+        }
+        
+        // Mostrar información del tipo de sala (usar variables ya definidas arriba)
+        
+        // Actualizar badge de tipo de sala
+        const roomTypeBadge = document.getElementById('room-type-badge');
+        if (roomTypeBadge) {
+            if (roomType === 'group') {
+                roomTypeBadge.innerHTML = '🌐 Evento Grupal';
+                roomTypeBadge.style.background = 'rgba(16, 185, 129, 0.2)';
+                roomTypeBadge.style.color = '#10b981';
+            } else if (isCoupleTherapy) {
+                roomTypeBadge.innerHTML = '💑 Terapia de Pareja';
+                roomTypeBadge.style.background = 'rgba(236, 72, 153, 0.2)';
+                roomTypeBadge.style.color = '#ec4899';
+            } else {
+                roomTypeBadge.innerHTML = '🔒 Sesión Privada';
+                roomTypeBadge.style.background = 'rgba(102, 126, 234, 0.2)';
+                roomTypeBadge.style.color = '#667eea';
+            }
+        }
+        
+        // Timer de la sala
+        let startTime = Date.now();
+        function updateTimer() {
+            const elapsed = Date.now() - startTime;
+            const hours = Math.floor(elapsed / 3600000);
+            const minutes = Math.floor((elapsed % 3600000) / 60000);
+            const seconds = Math.floor((elapsed % 60000) / 1000);
+            
+            const timerElement = document.getElementById('room-timer');
+            if (timerElement) {
+                timerElement.textContent = 
+                    String(hours).padStart(2, '0') + ':' +
+                    String(minutes).padStart(2, '0') + ':' +
+                    String(seconds).padStart(2, '0');
+            }
+        }
+        setInterval(updateTimer, 1000);
+        
+        // Inicializar Agora cuando la página esté lista
+        function initializeVideoCall() {
+            // Esperar a que Agora SDK esté cargado
+            if (typeof AgoraRTC === 'undefined') {
+                console.warn('Agora SDK aún no está cargado, esperando...');
+                setTimeout(initializeVideoCall, 200);
+                return;
+            }
+            
+            if (typeof joinAndDisplayLocalStream === 'undefined') {
+                console.warn('Funciones de Agora aún no están disponibles, esperando...');
+                setTimeout(initializeVideoCall, 200);
+                return;
+            }
+            
+            // Asegurar que los datos estén en sessionStorage
+            if (window.VIDEOCALL_ROOM) {
+                sessionStorage.setItem('room', window.VIDEOCALL_ROOM);
+            }
+            if (window.VIDEOCALL_USER) {
+                sessionStorage.setItem('name', window.VIDEOCALL_USER);
+            }
+            
+            // Pequeño delay para asegurar que todo esté listo
+            setTimeout(() => {
+                console.log('Inicializando videollamada...');
+                console.log('Datos disponibles:', {
+                    room: window.VIDEOCALL_ROOM || sessionStorage.getItem('room'),
+                    name: window.VIDEOCALL_USER || sessionStorage.getItem('name')
+                });
+                
+                // Solo inicializar una vez
+                if (typeof window.VIDEOCALL_INITIALIZED === 'undefined') {
+                    window.VIDEOCALL_INITIALIZED = true;
+                    
+                    joinAndDisplayLocalStream().then(() => {
+                        // Actualizar contador después de unirse
+                        setTimeout(() => {
+                            if (typeof updateMemberCount === 'function') {
+                                updateMemberCount();
+                            }
+                        }, 1000);
+                    }).catch(error => {
+                        console.error('Error inicializando videollamada:', error);
+                        console.error('Stack trace:', error.stack);
+                        
+                        let errorMessage = 'No se pudo conectar a la videollamada.';
+                        if (error.message) {
+                            errorMessage += '\n\n' + error.message;
+                        }
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error de conexión',
+                            html: errorMessage.replace(/\n/g, '<br>'),
+                            confirmButtonText: 'Recargar',
+                            allowOutsideClick: false,
+                            footer: '<small>Si el problema persiste, verifica que las credenciales de Agora estén configuradas en el archivo .env</small>'
+                        }).then(() => {
+                            window.location.reload();
+                        });
+                    });
+                } else {
+                    console.log('Videollamada ya inicializada, omitiendo...');
+                }
+            }, 1000);
+        }
+        
+        // Ejecutar cuando la página esté lista
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeVideoCall);
+        } else {
+            // DOM ya está listo
+            initializeVideoCall();
+        }
+        
+        // Toggle entre participantes y chat
+        const sidePanel = document.getElementById('side-panel');
+        const usersPanel = document.getElementById('users-panel');
+        const chatPanel = document.getElementById('chat-panel');
+        const usersToggleControl = document.getElementById('users-toggle-control');
+        const chatToggleControl = document.getElementById('chat-toggle-control');
+        const panelCloseBtn = document.getElementById('panel-close-btn');
+        const roomMainContent = document.querySelector('.room-main-content');
+        
+        let currentView = 'users'; // 'users' o 'chat'
+        
+        function showUsersPanel() {
+            if (!sidePanel || !usersPanel || !chatPanel) return;
+            
+            sidePanel.classList.remove('hidden');
+            usersPanel.classList.remove('hidden');
+            chatPanel.classList.add('hidden');
+            currentView = 'users';
+            
+            // Actualizar botones
+            if (usersToggleControl) {
+                usersToggleControl.classList.add('active');
+            }
+            if (chatToggleControl) {
+                chatToggleControl.classList.remove('active');
+            }
+            if (panelCloseBtn) {
+                panelCloseBtn.classList.remove('hidden');
+            }
+            
+            // Remover clase del contenedor principal
+            if (roomMainContent) {
+                roomMainContent.classList.remove('chat-hidden');
+            }
+        }
+        
+        function showChatPanel() {
+            if (!sidePanel || !usersPanel || !chatPanel) return;
+            
+            sidePanel.classList.remove('hidden');
+            usersPanel.classList.add('hidden');
+            chatPanel.classList.remove('hidden');
+            currentView = 'chat';
+            
+            // Actualizar botones
+            if (usersToggleControl) {
+                usersToggleControl.classList.remove('active');
+            }
+            if (chatToggleControl) {
+                chatToggleControl.classList.add('active');
+            }
+            if (panelCloseBtn) {
+                panelCloseBtn.classList.remove('hidden');
+            }
+            
+            // Remover clase del contenedor principal
+            if (roomMainContent) {
+                roomMainContent.classList.remove('chat-hidden');
+            }
+            
+            // Asegurar que el chat se inicialice
+            setTimeout(() => {
+                if (typeof initializeChat === 'function') {
+                    initializeChat();
+                } else if (typeof window.videocallChat !== 'undefined' && window.videocallChat.initializeChat) {
+                    window.videocallChat.initializeChat();
+                } else if (typeof loadChatMessages === 'function') {
+                    loadChatMessages();
+                }
+            }, 100);
+        }
+        
+        function hidePanel() {
+            if (!sidePanel) return;
+            
+            sidePanel.classList.add('hidden');
+            currentView = null;
+            
+            // Actualizar botones
+            if (usersToggleControl) {
+                usersToggleControl.classList.remove('active');
+            }
+            if (chatToggleControl) {
+                chatToggleControl.classList.remove('active');
+            }
+            if (panelCloseBtn) {
+                panelCloseBtn.classList.add('hidden');
+            }
+            
+            // Agregar clase al contenedor principal para expandir video
+            if (roomMainContent) {
+                roomMainContent.classList.add('chat-hidden');
+            }
+        }
+        
+        function toggleUsersPanel() {
+            if (currentView === 'users') {
+                hidePanel();
+            } else {
+                showUsersPanel();
+            }
+        }
+        
+        function toggleChatPanel() {
+            if (currentView === 'chat') {
+                hidePanel();
+            } else {
+                showChatPanel();
+            }
+        }
+        
+        // Conectar botones
+        if (usersToggleControl) {
+            usersToggleControl.addEventListener('click', toggleUsersPanel);
+        }
+        if (chatToggleControl) {
+            chatToggleControl.addEventListener('click', toggleChatPanel);
+        }
+        if (panelCloseBtn) {
+            panelCloseBtn.addEventListener('click', hidePanel);
+        }
+        
+        // Inicializar con panel oculto por defecto
+        document.addEventListener('DOMContentLoaded', function() {
+            hidePanel();
+        });
+        
+        // Los botones están conectados en streams_integrated.js
+        // Solo asegurarnos de que todo esté listo después de que se cargue el script
+        window.addEventListener('load', function() {
+            // Asegurar que los datos estén en sessionStorage
+            if (window.VIDEOCALL_ROOM) {
+                sessionStorage.setItem('room', window.VIDEOCALL_ROOM);
+            }
+            if (window.VIDEOCALL_USER) {
+                sessionStorage.setItem('name', window.VIDEOCALL_USER);
+            }
+            
+            // Reconectar botones después de que todo esté cargado
+            if (typeof connectControlButtons === 'function') {
+                setTimeout(connectControlButtons, 500);
+            }
+            
+            // Cargar mensajes iniciales del chat con retry
+            // Inicializar chat después de que todo esté listo
+            if (typeof window.videocallChat !== 'undefined' && typeof window.videocallChat.loadMessages === 'function') {
+                setTimeout(() => {
+                    window.videocallChat.loadMessages();
+                }, 1000);
+            } else if (typeof loadChatMessages === 'function') {
+                setTimeout(() => {
+                    loadChatMessages();
+                }, 1000);
+            }
+            
+            // Actualizar contador inicial
+            if (typeof updateMemberCount === 'function') {
+                setTimeout(() => {
+                    updateMemberCount();
+                }, 1500);
+            }
+            
+            // Actualizar contador periódicamente (cada 2 segundos) para mantener sincronización
+            setInterval(() => {
+                if (typeof updateMemberCount === 'function') {
+                    updateMemberCount();
+                }
+            }, 2000);
+            
+            // Inicializar funcionalidad de expandir videos
+            initializeVideoExpand();
+        });
+        
+        // Funcionalidad de expandir/zoom de videos
+        let expandedVideoTrack = null;
+        let expandedVideoUid = null;
+        
+        // Definir función expandVideo INMEDIATAMENTE (fuera de listeners)
+        async function expandVideo(container) {
+            console.log('expandVideo llamado con contenedor:', container);
+            
+            if (!container) {
+                console.error('Contenedor no proporcionado');
+                return;
+            }
+            
+            const userName = container.querySelector('.user-name');
+            const overlay = document.getElementById('video-expanded-overlay');
+            const expandedName = document.getElementById('video-expanded-name');
+            
+            console.log('Elementos encontrados:', {
+                container: !!container,
+                userName: !!userName,
+                overlay: !!overlay,
+                expandedName: !!expandedName
+            });
+            
+            if (!overlay) {
+                console.error('Overlay no encontrado');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se encontró el overlay para expandir el video',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                return;
+            }
+            
+            // Obtener el UID del contenedor
+            const containerId = container.id;
+            console.log('Container ID:', containerId);
+            const uidMatch = containerId.match(/user-container-(.+)/);
+            if (!uidMatch) {
+                console.error('No se pudo obtener UID del contenedor');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo identificar el video',
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+                return;
+            }
+            
+            const uid = uidMatch[1];
+            console.log('UID extraído:', uid);
+            expandedVideoUid = uid;
+            
+            // Guardar referencia al contenedor original
+            const originalContainer = container;
+            
+            // Mostrar overlay
+            overlay.classList.add('active');
+            console.log('Overlay activado');
+            
+            // Actualizar nombre
+            if (expandedName && userName) {
+                expandedName.textContent = userName.textContent || 'Usuario';
+            }
+            
+            // Hacer zoom CSS del contenedor original
+            // Esto evita problemas con Agora al reproducir el mismo track en múltiples lugares
+            try {
+                // Agregar clase de expansión al contenedor original
+                originalContainer.classList.add('video-container-expanded');
+                
+                // Asegurar que el contenedor esté visible sobre el overlay
+                originalContainer.style.zIndex = '10001';
+                
+                console.log('Video expandido usando zoom CSS');
+            } catch (error) {
+                console.error('Error al expandir video:', error);
+                console.error('Stack trace:', error.stack);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error al expandir video',
+                    text: error.message || 'No se pudo expandir el video',
+                    timer: 3000,
+                    showConfirmButton: false
+                });
+                closeExpandedVideo();
+            }
+        }
+        
+        function closeExpandedVideo() {
+            console.log('Cerrando video expandido...');
+            const overlay = document.getElementById('video-expanded-overlay');
+            
+            if (overlay) {
+                overlay.classList.remove('active');
+            }
+            
+            // Remover la clase de expansión del contenedor original
+            if (expandedVideoUid) {
+                const originalContainer = document.getElementById(`user-container-${expandedVideoUid}`);
+                if (originalContainer) {
+                    // Remover clase de expansión
+                    originalContainer.classList.remove('video-container-expanded');
+                    
+                    // Restaurar z-index
+                    originalContainer.style.zIndex = '';
+                    
+                    // Asegurar que el video esté visible y funcionando
+                    const originalVideoPlayer = originalContainer.querySelector(`#user-${expandedVideoUid}`);
+                    if (originalVideoPlayer) {
+                        const originalVideo = originalVideoPlayer.querySelector('video');
+                        if (originalVideo) {
+                            // Asegurar que el video esté reproduciéndose
+                            if (originalVideo.paused) {
+                                originalVideo.play().catch(e => {
+                                    console.warn('No se pudo reproducir video original:', e);
+                                });
+                            }
+                        }
+                    }
+                    
+                    console.log('Contenedor original restaurado a su estado normal');
+                }
+            }
+            
+            // Limpiar referencias
+            expandedVideoTrack = null;
+            expandedVideoUid = null;
+            
+            console.log('Video expandido cerrado, video original restaurado');
+        }
+        
+        // Exponer funciones globalmente INMEDIATAMENTE
+        window.expandVideo = expandVideo;
+        window.closeExpandedVideo = closeExpandedVideo;
+        console.log('expandVideo y closeExpandedVideo expuestas globalmente INMEDIATAMENTE');
+        
+        function initializeVideoExpand() {
+            const overlay = document.getElementById('video-expanded-overlay');
+            
+            if (overlay) {
+                // Cerrar al hacer clic fuera del video
+                overlay.addEventListener('click', function(e) {
+                    if (e.target === overlay) {
+                        closeExpandedVideo();
+                    }
+                });
+                
+                // Cerrar con tecla ESC
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && overlay.classList.contains('active')) {
+                        closeExpandedVideo();
+                    }
+                });
+            }
+            
+            // Observar cuando se agregan nuevos videos al grid
+            const videoGrid = document.getElementById('video-grid');
+            if (videoGrid) {
+                const observer = new MutationObserver(function(mutations) {
+                    mutations.forEach(function(mutation) {
+                        mutation.addedNodes.forEach(function(node) {
+                            if (node.nodeType === 1 && node.id && node.id.startsWith('user-container-')) {
+                                addExpandButtonToVideo(node);
+                            }
+                        });
+                    });
+                });
+                
+                observer.observe(videoGrid, { childList: true, subtree: true });
+                
+                // Agregar botones a videos existentes
+                const existingVideos = videoGrid.querySelectorAll('[id^="user-container-"]');
+                existingVideos.forEach(addExpandButtonToVideo);
+            }
+        }
+        
+        function addExpandButtonToVideo(container) {
+            // Verificar si ya tiene el botón de expandir
+            if (!container.querySelector('.expand-video-btn')) {
+                console.log('Agregando botón de expandir a:', container.id);
+                
+                // Crear botón de expandir/comprimir
+                const expandBtn = document.createElement('button');
+                expandBtn.className = 'expand-video-btn';
+                expandBtn.title = 'Expandir video (o doble clic)';
+                expandBtn.innerHTML = '<i class="fas fa-expand"></i><i class="fas fa-compress"></i>';
+                expandBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    console.log('Botón de expandir/comprimir clickeado');
+                    // Verificar si el contenedor está expandido
+                    if (container.classList.contains('video-container-expanded')) {
+                        closeExpandedVideo();
+                    } else {
+                        expandVideo(container);
+                    }
+                });
+                
+                container.appendChild(expandBtn);
+                console.log('Botón de expandir agregado');
+                
+                // También permitir expandir al hacer doble clic en el contenedor
+                container.addEventListener('dblclick', function(e) {
+                    e.stopPropagation();
+                    console.log('Doble clic en contenedor de video');
+                    expandVideo(container);
+                });
+                
+                // Agregar cursor pointer para indicar que es clickeable
+                container.style.cursor = 'pointer';
+            }
+            
+            // Agregar botón de mute solo para usuarios remotos (no para el video local)
+            const containerId = container.id;
+            const uidMatch = containerId.match(/user-container-(.+)/);
+            if (uidMatch) {
+                const uid = uidMatch[1];
+                const currentUID = sessionStorage.getItem('UID') || (window.AgoraVideoCall ? window.AgoraVideoCall.UID() : null);
+                
+                // Solo agregar botón de mute si NO es el video local
+                if (uid !== currentUID && uid !== String(currentUID)) {
+                    if (!container.querySelector('.mute-remote-btn')) {
+                        console.log('Agregando botón de mute a:', container.id);
+                        
+                        const muteBtn = document.createElement('button');
+                        muteBtn.className = 'mute-remote-btn';
+                        muteBtn.title = 'Mutear/Desmutear audio';
+                        muteBtn.setAttribute('data-uid', uid);
+                        muteBtn.innerHTML = '<i class="fas fa-volume-up"></i>';
+                        muteBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            e.preventDefault();
+                            console.log('Botón mute clickeado para usuario:', uid);
+                            if (window.AgoraVideoCall && window.AgoraVideoCall.toggleRemoteMute) {
+                                window.AgoraVideoCall.toggleRemoteMute(uid, muteBtn);
+                            } else {
+                                console.error('toggleRemoteMute no está disponible');
+                            }
+                        });
+                        
+                        container.appendChild(muteBtn);
+                        console.log('Botón de mute agregado');
+                    }
+                }
+            }
+        }
+    </script>
+</body>
+</html>
+

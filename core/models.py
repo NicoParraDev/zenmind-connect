@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
+from django.utils import timezone
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .AI import predecir_sentimiento
@@ -443,5 +444,132 @@ def procesar_comentario_signal(sender, instance, created, **kwargs):
         logger.error(f"ERROR CRITICO en señal procesar_comentario: {e}", exc_info=True)
         import traceback
         logger.error(f"Traceback completo: {traceback.format_exc()}")       
+
+
+# ============================================
+# MODELOS DE VIDEOCALL Y CHAT
+# ============================================
+
+class VideoCallRoom(models.Model):
+    """
+    Sala de videollamada integrada con sistema de reservas.
+    """
+    ROOM_TYPE_CHOICES = [
+        ('private', 'Sesión Privada'),
+        ('group', 'Evento Grupal'),
+    ]
+    
+    name = models.CharField(max_length=200, unique=True, db_index=True, verbose_name='Nombre de sala')
+    created_by = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name='salas_creadas', verbose_name='Creado por')
+    agenda = models.ForeignKey(Agenda, on_delete=models.SET_NULL, null=True, blank=True, related_name='salas_videocall', verbose_name='Agenda asociada')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Fecha de creación')
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name='Activa')
+    room_type = models.CharField(
+        max_length=20, 
+        choices=ROOM_TYPE_CHOICES, 
+        default='private',
+        db_index=True,
+        verbose_name='Tipo de sala',
+        help_text='Sesión Privada: psicólogo + practicante + paciente(s). Evento Grupal: psicólogo + muchos usuarios'
+    )
+    is_couple_therapy = models.BooleanField(
+        default=False,
+        db_index=True,
+        verbose_name='Terapia de pareja',
+        help_text='Si está activado, permite hasta 5 participantes (psicólogo + practicante + pareja)'
+    )
+    max_participants = models.IntegerField(
+        default=3,
+        verbose_name='Máximo de participantes',
+        help_text='Sesión privada: 3-5 participantes. Evento grupal: hasta 50 participantes'
+    )
+    
+    class Meta:
+        verbose_name = 'Sala de Videollamada'
+        verbose_name_plural = 'Salas de Videollamada'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['name', 'is_active']),
+            models.Index(fields=['created_by', '-created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.name} - {self.created_by}"
+    
+    def get_member_count(self):
+        """Retorna el número de miembros activos en la sala."""
+        return self.members.filter(insession=True).count()
+
+
+class RoomMember(models.Model):
+    """
+    Miembro en una sala de videollamada.
+    """
+    ROLE_CHOICES = [
+        ('psicologo', 'Psicólogo'),
+        ('practicante', 'Practicante'),
+        ('paciente', 'Paciente'),
+        ('audience', 'Audiencia'),
+    ]
+    
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name='miembros_salas', verbose_name='Persona')
+    room = models.ForeignKey(VideoCallRoom, on_delete=models.CASCADE, related_name='members', verbose_name='Sala')
+    uid = models.CharField(max_length=1000, verbose_name='UID de Agora')
+    role = models.CharField(
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default='paciente',
+        db_index=True,
+        verbose_name='Rol',
+        help_text='Rol del participante en la sala'
+    )
+    joined_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Fecha de ingreso')
+    left_at = models.DateTimeField(null=True, blank=True, verbose_name='Fecha de salida')
+    insession = models.BooleanField(default=True, db_index=True, verbose_name='En sesión')
+    
+    class Meta:
+        verbose_name = 'Miembro de Sala'
+        verbose_name_plural = 'Miembros de Sala'
+        ordering = ['-joined_at']
+        unique_together = ('room', 'uid')
+        indexes = [
+            models.Index(fields=['room', 'insession']),
+            models.Index(fields=['persona', '-joined_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.persona} en {self.room.name}"
+    
+    def leave_session(self):
+        """Marca al miembro como fuera de sesión."""
+        self.insession = False
+        self.left_at = timezone.now()
+        self.save()
+
+
+class ChatMessage(models.Model):
+    """
+    Mensaje de chat en una sala de videollamada.
+    """
+    room = models.ForeignKey(VideoCallRoom, on_delete=models.CASCADE, related_name='chat_messages', verbose_name='Sala')
+    author = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name='mensajes_chat', verbose_name='Autor')
+    message = models.TextField(max_length=5000, verbose_name='Mensaje')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Fecha de creación')
+    
+    class Meta:
+        verbose_name = 'Mensaje de Chat'
+        verbose_name_plural = 'Mensajes de Chat'
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['room', 'created_at']),
+            models.Index(fields=['author', 'created_at']),
+        ]
+    
+    def __str__(self):
+        return f"{self.author} en {self.room.name}: {self.message[:50]}"
+    
+    def get_author_name(self):
+        """Retorna el nombre completo del autor."""
+        return f"{self.author.nombre} {self.author.apellido}"
 
 

@@ -46,12 +46,18 @@
                 {% block content %}
                 {% if reservas %}
                 <ul class="consultas-list">
-                    {% for reserva in reservas %}
+                    {% for item in reservas %}
+                        {% with reserva=item.reserva sala_activa=item.sala_activa %}
                     <li class="consulta-item">
                         <div class="consulta-info">
                             <div class="consulta-header">
                                 <strong><i class="fas fa-user-md"></i> Psicólogo:</strong>
                                 <span>{{ reserva.agenda.psicologo.nombre }}</span>
+                                {% if sala_activa %}
+                                <span style="margin-left: var(--spacing-sm); padding: 4px 8px; background: rgba(16, 185, 129, 0.2); color: #10b981; border-radius: var(--radius-sm); font-size: var(--font-xs); font-weight: 600;">
+                                    <i class="fas fa-video"></i> Sala Activa
+                                </span>
+                                {% endif %}
                             </div>
                             <div class="consulta-details">
                                 <div class="consulta-detail-item">
@@ -71,6 +77,15 @@
                                 <a href="{% url 'comprobante_reserva' id=reserva.agenda.id %}" class="btn-consulta btn-ver" title="Ver comprobante">
                                     <i class="fas fa-eye"></i> Ver
                                 </a>
+                                {% if sala_activa %}
+                                <a href="{% url 'videocall_room' room_name=sala_activa.name %}" class="btn-consulta btn-videocall" title="Unirse a la videollamada" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none;">
+                                    <i class="fas fa-video"></i> Unirse
+                                </a>
+                                {% else %}
+                                <a href="{% url 'crear_sala_desde_cita' horario_agenda_id=reserva.id %}" class="btn-consulta btn-videocall" title="Iniciar videollamada" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                                    <i class="fas fa-video"></i> Iniciar
+                                </a>
+                                {% endif %}
                                 <a href="{% url 'modificar_cita' id=reserva.id %}" class="btn-consulta btn-modificar" title="Modificar horario">
                                     <i class="fas fa-edit"></i> Modificar
                                 </a>
@@ -80,6 +95,7 @@
                             </div>
                         </div>
                     </li>
+                        {% endwith %}
                     {% endfor %}
                 </ul>
                 
@@ -162,6 +178,9 @@
                     </a>
                     <a href="{% url 'autenticar_persona' %}" class="btn btn-secondary">
                         <i class="fas fa-calendar-plus"></i> Nueva Reserva
+                    </a>
+                    <a href="{% url 'videocall_lobby' %}" class="btn" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none;">
+                        <i class="fas fa-video"></i> Iniciar Videollamada
                     </a>
                     <a href="{% url 'form_mod_persona' %}" class="btn btn-outline">
                         <i class="fas fa-user-edit"></i> Editar Perfil

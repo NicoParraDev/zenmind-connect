@@ -21,7 +21,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Image
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
-from core.models import Especialidad, Psicologo, Horarios, Agenda, HorarioAgenda, Persona
+from core.models import Especialidad, Psicologo, Horarios, Agenda, HorarioAgenda, Persona, VideoCallRoom
 from core.forms import PsicologoForm, EspecialidadForm, HorariosForm, AgendaForm
 from core.decorators import rate_limit, rate_limit_by_username
 from core.security import ip_esta_bloqueada, validar_tipo_archivo, registrar_intento_sospechoso
@@ -773,17 +773,39 @@ def area_de_persona(request, id):
     page = request.GET.get('page', 1)
     
     try:
-        reservas = paginator.page(page)
+        reservas_page = paginator.page(page)
     except PageNotAnInteger:
-        reservas = paginator.page(1)
+        reservas_page = paginator.page(1)
     except EmptyPage:
-        reservas = paginator.page(paginator.num_pages)
+        reservas_page = paginator.page(paginator.num_pages)
+    
+    # Obtener salas activas para cada reserva en la página actual
+    reservas_con_salas = []
+    for reserva in reservas_page:
+        # Buscar si hay una sala activa para esta agenda/horario
+        sala_activa = None
+        if reserva.agenda:
+            salas = VideoCallRoom.objects.filter(
+                agenda=reserva.agenda,
+                is_active=True
+            ).order_by('-created_at')
+            
+            # Buscar sala que coincida con este horario específico
+            for sala in salas:
+                if str(reserva.id) in sala.name:
+                    sala_activa = sala
+                    break
+        
+        reservas_con_salas.append({
+            'reserva': reserva,
+            'sala_activa': sala_activa
+        })
     
     return render(request, 'core/area_de_persona.html', {
         'persona': persona,
-        'reservas': reservas,
+        'reservas': reservas_con_salas,
         'paginator': paginator,
-        'page_obj': reservas
+        'page_obj': reservas_page
     })
 
 @login_required

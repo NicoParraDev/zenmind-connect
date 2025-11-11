@@ -52,3 +52,6 @@ pywin32==306
 
 # Testing
 coverage==7.3.2
+
+# Videollamadas (Agora)
+agora-token-builder==1.0.0

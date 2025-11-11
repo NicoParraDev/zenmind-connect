@@ -16,6 +16,7 @@ from .views import (
     detectar_sentimiento, marcar_notificacion_superusuario, comprobante_registro
 )
 from .reserva import adm, comprobante_reserva, descargar_comprobante_pdf, cancelar_cita, modificar_cita
+from . import videocall
 
 urlpatterns = [
     # Páginas principales
@@ -85,6 +86,22 @@ urlpatterns = [
     path('descargar_comprobante_pdf/<int:id>/', descargar_comprobante_pdf, name='descargar_comprobante_pdf'),
     path('cancelar_cita/<int:id>/', cancelar_cita, name='cancelar_cita'),
     path('modificar_cita/<int:id>/', modificar_cita, name='modificar_cita'),
+    
+    # Videollamadas y Chat
+    path('videocall/lobby/', videocall.videocall_lobby, name='videocall_lobby'),
+    path('videocall/room/<str:room_name>/', videocall.videocall_room, name='videocall_room'),
+    path('videocall/get_token/', videocall.get_agora_token, name='get_agora_token'),
+    path('videocall/create_room/', videocall.create_room, name='create_room'),
+    path('videocall/create_member/', videocall.create_room_member, name='create_room_member'),
+    path('videocall/get_member/', videocall.get_room_member, name='get_room_member'),
+    path('videocall/delete_member/', videocall.delete_room_member, name='delete_room_member'),
+    path('videocall/send_message/', videocall.send_chat_message, name='send_chat_message'),
+    path('videocall/get_messages/<str:room_name>/', videocall.get_chat_messages, name='get_chat_messages'),
+    path('videocall/set_typing/', videocall.set_typing_status, name='set_typing_status'),
+    path('videocall/get_typing/<str:room_name>/', videocall.get_typing_status, name='get_typing_status'),
+    path('videocall/get_participants/<str:room_name>/', videocall.get_room_participants, name='get_room_participants'),
+    path('videocall/kick_participant/', videocall.kick_participant, name='kick_participant'),
+    path('videocall/crear_sala/<int:horario_agenda_id>/', videocall.crear_sala_desde_cita, name='crear_sala_desde_cita'),
     
     # Ruta genérica de posts (DEBE IR AL FINAL para no capturar otras rutas)
     path('<slug:slug>/', views.post_detail, name='post_detail'),
