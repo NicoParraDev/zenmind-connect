@@ -222,6 +222,8 @@ else:
             'NAME': config('DB_NAME', default='127.0.0.1:1521/xe'),
             'USER': config('DB_USER', default='ZenMindConnect_mente'),
             'PASSWORD': config('DB_PASSWORD', default='db_mente'),
+            'HOST': config('DB_HOST', default=''),
+            'PORT': config('DB_PORT', default=''),
             'TEST': {
                 'USER': 'default_test',
                 'TBLSPACE': 'default_test_tbls',
@@ -229,6 +231,12 @@ else:
             },
         },
     }
+    # Para PostgreSQL, si HOST está vacío, usar localhost
+    if DB_ENGINE == 'django.db.backends.postgresql' and not DATABASES['default']['HOST']:
+        DATABASES['default']['HOST'] = 'localhost'
+    # Para PostgreSQL, si PORT está vacío, usar 5432
+    if DB_ENGINE == 'django.db.backends.postgresql' and not DATABASES['default']['PORT']:
+        DATABASES['default']['PORT'] = '5432'
 
 
 # Password validation
