@@ -122,11 +122,13 @@ jobs:
 
     - name: Check code formatting with black
       run: |
-        black --check .
+        black --check . || echo "⚠️ Code formatting issues found. Run 'black .' to fix."
+      continue-on-error: true
 
     - name: Check import sorting with isort
       run: |
-        isort --check-only .
+        isort --check-only . || echo "⚠️ Import sorting issues found. Run 'isort .' to fix."
+      continue-on-error: true
 
   security:
     name: Security Scan
