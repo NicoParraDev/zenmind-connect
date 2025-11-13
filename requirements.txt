@@ -11,6 +11,7 @@ djangorestframework==3.14.0
 djangorestframework-jsonapi==6.0.0
 
 # Database
+psycopg2-binary==2.9.9  # PostgreSQL adapter (necesario para CI/testing)
 cx-Oracle==8.3.0
 
 # Security & Validation
