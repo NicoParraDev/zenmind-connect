@@ -20,9 +20,10 @@ bleach==6.1.0
 defusedxml==0.7.1
 
 # AI/ML (TensorFlow para análisis de sentimientos)
+# Nota: tensorflow-intel removido - no disponible en todos los entornos
+# tensorflow ya incluye optimizaciones necesarias
 tensorflow==2.14.0
 tensorflow-estimator==2.14.0
-tensorflow-intel==2.14.0
 tensorflow-io-gcs-filesystem==0.31.0
 keras==2.14.0
 h5py==3.10.0
