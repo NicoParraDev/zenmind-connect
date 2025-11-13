@@ -1004,17 +1004,39 @@ def autenticar_persona(request):
             page = request.GET.get('page', 1)
             
             try:
-                reservas = paginator.page(page)
+                reservas_page = paginator.page(page)
             except PageNotAnInteger:
-                reservas = paginator.page(1)
+                reservas_page = paginator.page(1)
             except EmptyPage:
-                reservas = paginator.page(paginator.num_pages)
+                reservas_page = paginator.page(paginator.num_pages)
+            
+            # Obtener salas activas para cada reserva en la página actual
+            reservas_con_salas = []
+            for reserva in reservas_page:
+                # Buscar si hay una sala activa para esta agenda/horario
+                sala_activa = None
+                if reserva.agenda:
+                    salas = VideoCallRoom.objects.filter(
+                        agenda=reserva.agenda,
+                        is_active=True
+                    ).order_by('-created_at')
+                    
+                    # Buscar sala que coincida con este horario específico
+                    for sala in salas:
+                        if str(reserva.id) in sala.name:
+                            sala_activa = sala
+                            break
+                
+                reservas_con_salas.append({
+                    'reserva': reserva,
+                    'sala_activa': sala_activa
+                })
             
             return render(request, 'core/area_de_persona.html', {
                 'persona': persona,
-                'reservas': reservas,
+                'reservas': reservas_con_salas,
                 'paginator': paginator,
-                'page_obj': reservas
+                'page_obj': reservas_page
             })
         except Persona.DoesNotExist:
             messages.error(request, "Tu perfil de usuario no está completo. Por favor, completa tu perfil.")
@@ -1047,17 +1069,39 @@ def autenticar_persona(request):
                         page = request.GET.get('page', 1)
                         
                         try:
-                            reservas = paginator.page(page)
+                            reservas_page = paginator.page(page)
                         except PageNotAnInteger:
-                            reservas = paginator.page(1)
+                            reservas_page = paginator.page(1)
                         except EmptyPage:
-                            reservas = paginator.page(paginator.num_pages)
+                            reservas_page = paginator.page(paginator.num_pages)
+                        
+                        # Obtener salas activas para cada reserva en la página actual
+                        reservas_con_salas = []
+                        for reserva in reservas_page:
+                            # Buscar si hay una sala activa para esta agenda/horario
+                            sala_activa = None
+                            if reserva.agenda:
+                                salas = VideoCallRoom.objects.filter(
+                                    agenda=reserva.agenda,
+                                    is_active=True
+                                ).order_by('-created_at')
+                                
+                                # Buscar sala que coincida con este horario específico
+                                for sala in salas:
+                                    if str(reserva.id) in sala.name:
+                                        sala_activa = sala
+                                        break
+                            
+                            reservas_con_salas.append({
+                                'reserva': reserva,
+                                'sala_activa': sala_activa
+                            })
                         
                         return render(request, 'core/area_de_persona.html', {
                             'persona': persona,
-                            'reservas': reservas,
+                            'reservas': reservas_con_salas,
                             'paginator': paginator,
-                            'page_obj': reservas
+                            'page_obj': reservas_page
                         })
                     except Persona.DoesNotExist:
                         messages.error(request, "Tu perfil de usuario no está completo. Por favor, completa tu perfil.")

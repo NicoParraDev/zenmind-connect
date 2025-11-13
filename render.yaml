@@ -1,0 +1,75 @@
+services:
+  - type: web
+    name: zenmindconnect
+    env: python
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    startCommand: daphne -b 0.0.0.0 -p $PORT ZenMindConnect.asgi:application
+    # Ejecutar migraciones antes de iniciar el servicio
+    plan: starter  # Puedes cambiar a 'standard' o 'pro' según necesites
+    envVars:
+      # Django Core Settings
+      - key: SECRET_KEY
+        sync: false  # Debe configurarse manualmente en Render Dashboard
+      - key: DEBUG
+        value: False
+      - key: ALLOWED_HOSTS
+        sync: false  # Render proporcionará el dominio automáticamente, puedes agregar más
+      - key: DB_ENGINE
+        value: django.db.backends.postgresql
+      
+      # Database Configuration (automático desde la BD de Render)
+      - key: DB_NAME
+        fromDatabase:
+          name: zenmindconnect-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: zenmindconnect-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: zenmindconnect-db
+          property: password
+      - key: DB_HOST
+        fromDatabase:
+          name: zenmindconnect-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: zenmindconnect-db
+          property: port
+      
+      # Email Configuration (debe configurarse manualmente en Render Dashboard)
+      - key: EMAIL_HOST
+        value: smtp-mail.outlook.com
+      - key: EMAIL_PORT
+        value: 587
+      - key: EMAIL_USE_TLS
+        value: True
+      - key: EMAIL_HOST_USER
+        sync: false  # Configurar en Render Dashboard
+      - key: EMAIL_HOST_PASSWORD
+        sync: false  # Configurar en Render Dashboard
+      
+      # Agora Video Call Configuration (debe configurarse manualmente)
+      - key: AGORA_APP_ID
+        sync: false  # Obtener en https://console.agora.io/
+      - key: AGORA_APP_CERTIFICATE
+        sync: false  # Obtener en https://console.agora.io/
+      
+      # OpenAI API Configuration (debe configurarse manualmente)
+      - key: OPENAI_API_KEY
+        sync: false  # Obtener en https://platform.openai.com/api-keys
+      - key: OPENAI_MODEL
+        value: gpt-3.5-turbo
+      
+      # CSRF Configuration (Render proporcionará el dominio)
+      - key: CSRF_TRUSTED_ORIGINS
+        sync: false  # Formato: https://tu-dominio.onrender.com,https://www.tu-dominio.com
+
+databases:
+  - name: zenmindconnect-db
+    databaseName: zenmindconnect
+    user: zenmindconnect
+    plan: starter  # Puedes cambiar a 'standard' o 'pro' según necesites
+

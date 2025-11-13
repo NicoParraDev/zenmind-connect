@@ -1,0 +1,194 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grupos de Apoyo - ZenMindConnect</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS -->
+    {% load static compress %}
+    {% compress css file zenmind_css %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    {% endcompress %}
+    
+    <style>
+        .grupos-container {
+            max-width: 1200px;
+            margin: var(--spacing-xl) auto;
+            padding: var(--spacing-lg);
+        }
+        
+        .grupos-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .grupos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-lg);
+            margin-bottom: var(--spacing-xl);
+        }
+        
+        .grupo-card {
+            background: white;
+            border-radius: var(--radius-lg);
+            padding: var(--spacing-lg);
+            box-shadow: var(--shadow-md);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .grupo-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .grupo-tema {
+            display: inline-block;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: var(--radius-sm);
+            font-size: var(--font-sm);
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .grupo-nombre {
+            font-size: var(--font-xl);
+            font-weight: 600;
+            color: var(--color-text);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .grupo-descripcion {
+            color: var(--color-text-secondary);
+            margin-bottom: var(--spacing-md);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        
+        .grupo-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid #e5e7eb;
+        }
+        
+        .grupo-miembros {
+            color: var(--color-text-secondary);
+            font-size: var(--font-sm);
+        }
+    </style>
+</head>
+<body>
+    {% include 'core/navbar.html' %}
+    
+    <div class="grupos-container">
+        <div class="grupos-header">
+            <div>
+                <h1><i class="fas fa-users"></i> Grupos de Apoyo</h1>
+                <p>Únete a grupos temáticos y conecta con personas que comparten experiencias similares</p>
+            </div>
+            <a href="{% url 'crear_grupo' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Crear Grupo
+            </a>
+        </div>
+        
+        {% if grupos_miembro %}
+        <section>
+            <h2>Mis Grupos</h2>
+            <div class="grupos-grid">
+                {% for grupo in grupos_miembro %}
+                <div class="grupo-card">
+                    <span class="grupo-tema">{{ grupo.get_tema_display }}</span>
+                    <h3 class="grupo-nombre">{{ grupo.nombre }}</h3>
+                    <p class="grupo-descripcion">{{ grupo.descripcion|truncatewords:20 }}</p>
+                    <div class="grupo-info">
+                        <span class="grupo-miembros">
+                            <i class="fas fa-users"></i> {{ grupo.get_miembro_count }} miembros
+                        </span>
+                        <a href="{% url 'detalle_grupo' grupo.id %}" class="btn btn-sm btn-primary">Ver Grupo</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+        
+        <section>
+            <h2>Grupos Disponibles</h2>
+            
+            <!-- Filtro por tema -->
+            <div style="margin-bottom: var(--spacing-lg);">
+                <form method="get" style="display: flex; gap: var(--spacing-md); align-items: center;">
+                    <select name="tema" class="form-control" style="max-width: 300px;">
+                        <option value="">Todos los temas</option>
+                        {% for value, label in temas_disponibles %}
+                        <option value="{{ value }}" {% if tema_filtro == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn btn-secondary">Filtrar</button>
+                </form>
+            </div>
+            
+            {% if grupos_disponibles %}
+            <div class="grupos-grid">
+                {% for grupo in grupos_disponibles %}
+                <div class="grupo-card">
+                    <span class="grupo-tema">{{ grupo.get_tema_display }}</span>
+                    <h3 class="grupo-nombre">{{ grupo.nombre }}</h3>
+                    <p class="grupo-descripcion">{{ grupo.descripcion|truncatewords:20 }}</p>
+                    <div class="grupo-info">
+                        <span class="grupo-miembros">
+                            <i class="fas fa-users"></i> {{ grupo.get_miembro_count }}/{{ grupo.max_miembros }} miembros
+                        </span>
+                        <a href="{% url 'detalle_grupo' grupo.id %}" class="btn btn-sm btn-primary">Ver Detalles</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Paginación -->
+            {% if grupos_disponibles.has_other_pages %}
+            <div class="pagination">
+                {% if grupos_disponibles.has_previous %}
+                <a href="?page={{ grupos_disponibles.previous_page_number }}{% if tema_filtro %}&tema={{ tema_filtro }}{% endif %}" class="btn btn-secondary">Anterior</a>
+                {% endif %}
+                
+                <span>Página {{ grupos_disponibles.number }} de {{ grupos_disponibles.paginator.num_pages }}</span>
+                
+                {% if grupos_disponibles.has_next %}
+                <a href="?page={{ grupos_disponibles.next_page_number }}{% if tema_filtro %}&tema={{ tema_filtro }}{% endif %}" class="btn btn-secondary">Siguiente</a>
+                {% endif %}
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="alert alert-info">
+                <p>No hay grupos disponibles en este momento.</p>
+                <a href="{% url 'crear_grupo' %}" class="btn btn-primary">Crear el Primer Grupo</a>
+            </div>
+            {% endif %}
+        </section>
+    </div>
+    
+    {% include 'core/footer.html' %}
+</body>
+</html>
+

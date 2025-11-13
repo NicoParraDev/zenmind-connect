@@ -9,6 +9,12 @@ let CHAT_USER = sessionStorage.getItem('name');
 // Variable para rastrear los IDs de mensajes ya mostrados (evita parpadeo)
 let loadedMessageIds = new Set();
 
+// Variable para rastrear los IDs de mensajes de pizarra ya procesados (evita bucles infinitos)
+let processedWhiteboardMessageIds = new Set();
+
+// Variable para rastrear cuándo se cargó la página (para evitar mostrar animaciones de reacciones antiguas)
+let pageLoadTime = Date.now();
+
 // Variables para el indicador de escritura
 let typingTimeout = null;
 let isTyping = false;
@@ -109,14 +115,27 @@ function loadChatMessages() {
         return;
     }
 
-    fetch(`/videocall/get_messages/${CHAT_ROOM}/`)
+    // Log eliminado para reducir spam en consola (polling constante)
+    // IMPORTANTE: Agregar cache: 'no-cache' para asegurar que siempre obtengamos mensajes nuevos
+    fetch(`/videocall/get_messages/${CHAT_ROOM}/`, {
+        method: 'GET',
+        cache: 'no-cache',
+        headers: {
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
+        }
+    })
         .then(response => {
             if (!response.ok) {
+                console.error('[Chat] ❌ Error al cargar mensajes:', response.status, response.statusText);
                 throw new Error('Error al cargar mensajes');
             }
             return response.json();
         })
         .then(data => {
+            // Logs eliminados para mejorar rendimiento - demasiado overhead en polling cada 300ms
+            // Solo procesar mensajes sin logs innecesarios
+            
             const messagesContainer = document.getElementById('chat-messages');
             if (!messagesContainer) {
                 console.error('Contenedor de mensajes no encontrado');
@@ -144,10 +163,120 @@ function loadChatMessages() {
             }
             
             // Agregar solo mensajes nuevos (evita parpadeo)
+            // OPTIMIZACIÓN: Acumular acciones de pizarra y procesarlas en batch para reducir lag
+            const whiteboardActionsBatch = [];
+            
             data.messages.forEach((msg) => {
+                // IMPORTANTE: Los mensajes de pizarra solo deben procesarse UNA VEZ
+                // para evitar bucles infinitos y acciones duplicadas
+                const isWhiteboardMessage = msg.message && msg.message.startsWith('WHITEBOARD:');
+                
+                // PROCESAR MENSAJES DE PIZARRA PRIMERO (solo si no han sido procesados antes)
+                if (isWhiteboardMessage) {
+                    // Verificar si este mensaje de pizarra ya fue procesado
+                    if (processedWhiteboardMessageIds.has(msg.id)) {
+                        // Ya procesado, saltar
+                        return;
+                    }
+                    
+                    // Marcar como procesado ANTES de procesarlo para evitar condiciones de carrera
+                    processedWhiteboardMessageIds.add(msg.id);
+                    
+                    // También marcar como mensaje cargado para el chat
+                    if (!loadedMessageIds.has(msg.id)) {
+                        loadedMessageIds.add(msg.id);
+                    }
+                    
+                    // Extraer la acción de dibujo
+                    const whiteboardData = msg.message.substring('WHITEBOARD:'.length);
+                    
+                    try {
+                        const action = JSON.parse(whiteboardData);
+                        
+                        // Agregar el ID del mensaje a la acción para mejor tracking
+                        if (!action.messageId) {
+                            action.messageId = msg.id;
+                        }
+                        
+                        // CRÍTICO: Agregar timestamp cronológico del mensaje para ordenamiento correcto
+                        // Esto es esencial para que las acciones se apliquen en el orden cronológico correcto
+                        if (msg.created_at && !action.created_at) {
+                            // Convertir created_at a timestamp numérico para comparación
+                            action.created_at = new Date(msg.created_at).getTime();
+                            action.created_at_iso = msg.created_at; // Guardar también el formato ISO para logs
+                        }
+                        
+                        // LOG ESPECÍFICO cuando se detecta una acción de borrado al parsear
+                        if (action.tool === 'eraser' || action.type === 'clear' || action.type === 'postit_delete') {
+                            console.log('[Whiteboard] 🔍 ACCIÓN DE BORRADO DETECTADA al parsear mensaje:', {
+                                messageId: msg.id,
+                                actionId: action.id,
+                                type: action.type,
+                                tool: action.tool,
+                                originalId: action.originalId, // Para postit_delete
+                                timestamp: action.id ? action.id.split('_')[1] : 'unknown',
+                                created_at: msg.created_at,
+                                created_at_timestamp: action.created_at
+                            });
+                        }
+                        
+                        // Agregar a batch para procesamiento optimizado (en lugar de procesar individualmente)
+                        whiteboardActionsBatch.push(action);
+                    } catch (e) {
+                        console.error('[Whiteboard] ❌ Error parseando acción de pizarra:', e, {
+                            message: msg.message,
+                            messageId: msg.id
+                        });
+                        // Si hay error, remover del Set para permitir reintento
+                        processedWhiteboardMessageIds.delete(msg.id);
+                    }
+                    
+                    // No mostrar mensajes de pizarra en el chat
+                    return;
+                }
+                
+                // Procesar mensajes nuevos (no de pizarra)
                 if (!loadedMessageIds.has(msg.id)) {
                     hasNewMessages = true;
                     loadedMessageIds.add(msg.id);
+                    
+                    // Detectar y procesar reacciones y manos levantadas
+                    if (msg.message && (msg.message.startsWith('REACTION:') || msg.message.startsWith('RAISE_HAND:'))) {
+                        // Solo procesar reacciones nuevas (después de que se cargó la página)
+                        // Esto evita que se muestren animaciones de reacciones antiguas al recargar
+                        const messageTime = new Date(msg.created_at).getTime();
+                        const isNewReaction = messageTime >= pageLoadTime;
+                        
+                        if (isNewReaction) {
+                            // Llamar a handleReactionMessage solo para reacciones nuevas
+                            if (typeof window.handleReactionMessage === 'function') {
+                                window.handleReactionMessage(msg);
+                            }
+                        } else {
+                            // Para reacciones antiguas, solo actualizar el estado sin mostrar animación
+                            if (msg.message.startsWith('RAISE_HAND:') && typeof window.handleRaiseHandMessage === 'function') {
+                                // Actualizar el estado de manos levantadas sin mostrar animación
+                                const parts = msg.message.split(':');
+                                if (parts.length >= 3) {
+                                    const state = parts[1]; // 'UP' o 'DOWN'
+                                    const userName = parts[2];
+                                    const isRaised = state === 'UP';
+                                    const actualUserName = msg.author || userName;
+                                    
+                                    // Actualizar el mapa de manos levantadas sin mostrar indicador
+                                    if (typeof window.raisedHands !== 'undefined' && window.raisedHands) {
+                                        if (isRaised) {
+                                            window.raisedHands.set(actualUserName, true);
+                                        } else {
+                                            window.raisedHands.delete(actualUserName);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        // No mostrar reacciones/manos levantadas en el chat (solo indicadores visuales)
+                        return;
+                    }
                     
                     const messageDiv = document.createElement('div');
                     messageDiv.setAttribute('data-message-id', msg.id);
@@ -186,6 +315,109 @@ function loadChatMessages() {
                     });
                 }
             });
+            
+            // OPTIMIZACIÓN: Procesar todas las acciones de pizarra en batch en un solo frame
+            // IMPORTANTE: Ordenar las acciones por timestamp para asegurar orden cronológico correcto
+            // Esto es crítico para la sincronización del borrado
+            if (whiteboardActionsBatch.length > 0 && typeof window.applyDrawingAction === 'function') {
+                // Ordenar acciones por timestamp (más antiguas primero)
+                // CRÍTICO: Usar created_at del mensaje como fuente principal de ordenamiento cronológico
+                whiteboardActionsBatch.sort((a, b) => {
+                    // Función auxiliar para extraer timestamp cronológico
+                    const getTimestamp = (action) => {
+                        // Prioridad 1: created_at del mensaje (más confiable para orden cronológico)
+                        if (action.created_at) {
+                            const ts = typeof action.created_at === 'number' 
+                                ? action.created_at 
+                                : new Date(action.created_at).getTime();
+                            if (!isNaN(ts)) return ts;
+                        }
+                        
+                        // Prioridad 2: messageId (puede no ser cronológico, pero es mejor que nada)
+                        if (action.messageId) {
+                            const ts = parseInt(action.messageId);
+                            if (!isNaN(ts)) return ts;
+                        }
+                        
+                        // Prioridad 3: ID de acción (formato: action_timestamp_counter)
+                        if (action.id) {
+                            const parts = action.id.split('_');
+                            if (parts.length >= 2) {
+                                const ts = parseInt(parts[1]);
+                                if (!isNaN(ts)) return ts;
+                            }
+                        }
+                        
+                        return 0; // Fallback
+                    };
+                    
+                    const tsA = getTimestamp(a);
+                    const tsB = getTimestamp(b);
+                    
+                    // Si tienen el mismo timestamp, mantener orden estable
+                    if (tsA === tsB) return 0;
+                    
+                    return tsA - tsB; // Orden ascendente (más antiguas primero)
+                });
+                
+                // Contar acciones de borrado para logging (incluyendo borrado de post-its)
+                const eraserActions = whiteboardActionsBatch.filter(a => a.tool === 'eraser' || a.type === 'clear' || a.type === 'postit_delete');
+                
+                // LOG DETALLADO: Mostrar información sobre todas las acciones antes de procesar
+                if (eraserActions.length > 0) {
+                    console.log(`[Whiteboard] 🧹 DETECTADAS ${eraserActions.length} ACCIONES DE BORRADO en batch de ${whiteboardActionsBatch.length} acciones:`, {
+                        totalActions: whiteboardActionsBatch.length,
+                        eraserCount: eraserActions.length,
+                        clearCount: whiteboardActionsBatch.filter(a => a.type === 'clear').length,
+                        eraserDetails: eraserActions.map(a => ({
+                            id: a.id,
+                            type: a.type,
+                            tool: a.tool,
+                            timestamp: a.id ? a.id.split('_')[1] : 'unknown',
+                            messageId: a.messageId
+                        }))
+                    });
+                }
+                
+                // Procesar todas las acciones en un solo requestAnimationFrame para mejor rendimiento
+                requestAnimationFrame(() => {
+                    let eraserProcessedCount = 0;
+                    whiteboardActionsBatch.forEach((action, index) => {
+                        // LOG ESPECÍFICO para acciones de borrado durante procesamiento en batch
+                        if (action.tool === 'eraser' || action.type === 'clear' || action.type === 'postit_delete') {
+                            eraserProcessedCount++;
+                            const actionTimestamp = action.id ? action.id.split('_')[1] : 'unknown';
+                            console.log(`[Whiteboard] 🧹 [${eraserProcessedCount}/${eraserActions.length}] Procesando borrado en posición ${index + 1}/${whiteboardActionsBatch.length}:`, {
+                                actionId: action.id,
+                                timestamp: actionTimestamp,
+                                type: action.type,
+                                tool: action.tool,
+                                messageId: action.messageId,
+                                fromX: action.fromX,
+                                fromY: action.fromY,
+                                toX: action.toX,
+                                toY: action.toY,
+                                lineWidth: action.lineWidth
+                            });
+                        }
+                        
+                        // Aplicar cada acción
+                        window.applyDrawingAction(action);
+                    });
+                    
+                    // LOG FINAL si hubo borrados
+                    if (eraserActions.length > 0) {
+                        console.log(`[Whiteboard] ✅ Procesamiento de borrados completado: ${eraserProcessedCount}/${eraserActions.length} borrados aplicados`);
+                    }
+                    
+                    // Log solo cuando hay muchas acciones (más de 20) para evitar spam en consola
+                    if (whiteboardActionsBatch.length > 20) {
+                        console.log(`[Whiteboard] ✅ Procesadas ${whiteboardActionsBatch.length} acciones en batch (ordenadas cronológicamente)`);
+                    }
+                });
+            } else if (whiteboardActionsBatch.length > 0) {
+                console.error('[Whiteboard] ❌ applyDrawingAction no está disponible');
+            }
             
             // Scroll al final solo si estaba al final antes o si hay mensajes nuevos
             if ((wasAtBottom || hasNewMessages) && messagesContainer.children.length > 0) {
@@ -550,10 +782,10 @@ function initializeChat() {
         console.log('Inicializando chat - CHAT_ROOM:', CHAT_ROOM, 'CHAT_USER:', CHAT_USER);
         loadChatMessages();
         
-        // Polling para nuevos mensajes (cada 2 segundos)
+        // Polling para nuevos mensajes (cada 300ms para pizarra en tiempo real con mínimo lag)
         setInterval(() => {
             loadChatMessages();
-        }, 2000);
+        }, 300);
         
         // Polling para indicador de escritura (cada 1 segundo)
         typingCheckInterval = setInterval(() => {

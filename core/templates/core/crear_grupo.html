@@ -1,0 +1,90 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crear Grupo de Apoyo - ZenMindConnect</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS -->
+    {% load static compress %}
+    {% compress css file zenmind_css %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_forms.css' %}">
+    {% endcompress %}
+</head>
+<body>
+    {% include 'core/navbar.html' %}
+    
+    <div class="container" style="max-width: 800px; margin: var(--spacing-xl) auto; padding: var(--spacing-lg);">
+        <div class="card">
+            <h1><i class="fas fa-users"></i> Crear Grupo de Apoyo</h1>
+            
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="nombre">Nombre del Grupo *</label>
+                    <input type="text" id="nombre" name="nombre" class="form-control" required maxlength="200">
+                </div>
+                
+                <div class="form-group">
+                    <label for="descripcion">Descripción *</label>
+                    <textarea id="descripcion" name="descripcion" class="form-control" rows="5" required></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label for="tema">Tema *</label>
+                    <select id="tema" name="tema" class="form-control" required>
+                        <option value="">Selecciona un tema</option>
+                        {% for value, label in temas %}
+                        <option value="{{ value }}">{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="max_miembros">Máximo de Miembros</label>
+                    <input type="number" id="max_miembros" name="max_miembros" class="form-control" value="20" min="5" max="50">
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" name="is_publico" checked>
+                        Grupo Público (visible para todos)
+                    </label>
+                </div>
+                
+                <div class="form-group">
+                    <label for="psicologo_moderador">Psicólogo Moderador (Opcional)</label>
+                    <select id="psicologo_moderador" name="psicologo_moderador" class="form-control">
+                        <option value="">Ninguno</option>
+                        {% for psicologo in psicologos %}
+                        <option value="{{ psicologo.id }}">{{ psicologo.nombre }} - {{ psicologo.especialidad.nombre }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div style="display: flex; gap: var(--spacing-md); margin-top: var(--spacing-lg);">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check"></i> Crear Grupo
+                    </button>
+                    <a href="{% url 'listar_grupos' %}" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    {% include 'core/footer.html' %}
+</body>
+</html>
+

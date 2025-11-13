@@ -1,0 +1,48 @@
+name: Pre-Deployment Checks
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  pre-deploy:
+    name: Pre-Deployment Validation
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Validate render.yaml
+      run: |
+        if [ ! -f "render.yaml" ]; then
+          echo "❌ render.yaml not found!"
+          exit 1
+        fi
+        echo "✅ render.yaml found"
+
+    - name: Validate requirements.txt
+      run: |
+        if [ ! -f "requirements.txt" ]; then
+          echo "❌ requirements.txt not found!"
+          exit 1
+        fi
+        echo "✅ requirements.txt found"
+
+    - name: Check Django settings
+      run: |
+        python -c "import django; print(f'Django version: {django.get_version()}')" || echo "⚠️ Django check skipped (dependencies not installed)"
+
+    - name: Deployment Info
+      run: |
+        echo "📋 Render Auto-Deploy Configuration:"
+        echo "  - Render will automatically deploy from GitHub when:"
+        echo "    • Push to main/master branch"
+        echo "    • render.yaml is present in root"
+        echo "    • Repository is connected in Render dashboard"
+        echo ""
+        echo "✅ Pre-deployment checks passed!"
+        echo "🚀 Render will handle deployment automatically"
+

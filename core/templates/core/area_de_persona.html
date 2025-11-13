@@ -74,9 +74,11 @@
                                 </div>
                             </div>
                             <div class="consulta-actions">
+                                {% if reserva.agenda and reserva.agenda.id %}
                                 <a href="{% url 'comprobante_reserva' id=reserva.agenda.id %}" class="btn-consulta btn-ver" title="Ver comprobante">
                                     <i class="fas fa-eye"></i> Ver
                                 </a>
+                                {% endif %}
                                 {% if sala_activa %}
                                 <a href="{% url 'videocall_room' room_name=sala_activa.name %}" class="btn-consulta btn-videocall" title="Unirse a la videollamada" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none;">
                                     <i class="fas fa-video"></i> Unirse

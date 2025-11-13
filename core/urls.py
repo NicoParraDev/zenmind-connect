@@ -17,6 +17,7 @@ from .views import (
 )
 from .reserva import adm, comprobante_reserva, descargar_comprobante_pdf, cancelar_cita, modificar_cita
 from . import videocall
+from . import views_chatbot, views_grupos
 
 urlpatterns = [
     # Páginas principales
@@ -102,6 +103,20 @@ urlpatterns = [
     path('videocall/get_participants/<str:room_name>/', videocall.get_room_participants, name='get_room_participants'),
     path('videocall/kick_participant/', videocall.kick_participant, name='kick_participant'),
     path('videocall/crear_sala/<int:horario_agenda_id>/', videocall.crear_sala_desde_cita, name='crear_sala_desde_cita'),
+    
+    # Chatbot con OpenAI
+    path('chatbot/', views_chatbot.chatbot_view, name='chatbot'),
+    path('chatbot/send/', views_chatbot.chatbot_send_message, name='chatbot_send_message'),
+    path('chatbot/history/<int:conversacion_id>/', views_chatbot.chatbot_get_history, name='chatbot_get_history'),
+    path('chatbot/new/', views_chatbot.chatbot_new_conversation, name='chatbot_new_conversation'),
+    
+    # Grupos de Apoyo
+    path('grupos/', views_grupos.listar_grupos, name='listar_grupos'),
+    path('grupos/crear/', views_grupos.crear_grupo, name='crear_grupo'),
+    path('grupos/<int:grupo_id>/', views_grupos.detalle_grupo, name='detalle_grupo'),
+    path('grupos/<int:grupo_id>/unirse/', views_grupos.unirse_grupo_view, name='unirse_grupo'),
+    path('grupos/<int:grupo_id>/salir/', views_grupos.salir_grupo_view, name='salir_grupo'),
+    path('grupos/<int:grupo_id>/sala/', views_grupos.sala_grupo, name='sala_grupo'),
     
     # Ruta genérica de posts (DEBE IR AL FINAL para no capturar otras rutas)
     path('<slug:slug>/', views.post_detail, name='post_detail'),

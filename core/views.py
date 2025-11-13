@@ -1205,6 +1205,8 @@ def csrf_failure(request: HttpRequest, reason: str = "") -> HttpResponseForbidde
         HttpResponseForbidden: Página de error personalizada
     """
     logger.warning(f"Error CSRF detectado - IP: {get_client_ip(request)}, Reason: {reason}")
+    messages.error(request, 'Error de seguridad: Token CSRF inválido o expirado. Por favor, recarga la página e intenta nuevamente.')
+    return redirect('log')
 
 
 # ============================================

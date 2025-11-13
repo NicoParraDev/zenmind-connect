@@ -22,6 +22,25 @@
     <!-- Agora RTC SDK -->
     <script src="{% static 'videocall/assets/AgoraRTC_N-4.8.0.js' %}"></script>
     
+    <!-- Suprimir error conocido de AgoraRTC getStats -->
+    <script>
+        // Interceptar errores de Promise no capturados para filtrar el error conocido de AgoraRTC
+        window.addEventListener('unhandledrejection', function(event) {
+            const error = event.reason;
+            // Filtrar el error específico de getStats de AgoraRTC
+            if (error && (
+                (error.message && error.message.includes("Failed to execute 'getStats' on 'RTCPeerConnection'")) ||
+                (error.toString && error.toString().includes("Failed to execute 'getStats' on 'RTCPeerConnection'")) ||
+                (typeof error === 'string' && error.includes("Failed to execute 'getStats' on 'RTCPeerConnection'"))
+            )) {
+                // Suprimir este error específico (es un bug conocido del SDK v4.8.0)
+                event.preventDefault();
+                return;
+            }
+            // Permitir que otros errores se muestren normalmente
+        });
+    </script>
+    
     <!-- CSS ZenMind 2.0 -->
     <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
     <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
@@ -705,6 +724,16 @@
             gap: var(--spacing-sm);
         }
         
+        .no-messages {
+            text-align: center;
+            padding: var(--spacing-xl) var(--spacing-md);
+            color: #a0aec0;
+            font-size: 0.95em;
+            font-style: italic;
+            opacity: 0.8;
+            margin: auto;
+        }
+        
         .chat-message {
             padding: var(--spacing-sm) var(--spacing-md);
             border-radius: var(--radius-md);
@@ -912,10 +941,257 @@
             display: none;
         }
         
+        .control-btn.reactions-btn {
+            background: #3b82f6;
+        }
+        
+        .control-btn.reactions-btn:hover,
+        .control-btn.reactions-btn.active {
+            background: #2563eb;
+        }
+        
+        .control-btn.raise-hand-btn {
+            background: #10b981;
+        }
+        
+        .control-btn.raise-hand-btn:hover {
+            background: #059669;
+        }
+        
+        .control-btn.raise-hand-btn.active {
+            background: #059669;
+            animation: handRaisedPulse 1.5s ease-in-out infinite;
+        }
+        
+        @keyframes handRaisedPulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+            }
+            50% {
+                box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+            }
+        }
+        
+        /* Indicador de mano levantada en la esquina superior izquierda */
+        .raised-hand-indicator {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            background: rgba(16, 185, 129, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px 16px;
+            display: none;
+            align-items: center;
+            gap: 12px;
+            z-index: 2000;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            border: 2px solid rgba(16, 185, 129, 0.5);
+            animation: slideInLeft 0.3s ease-out;
+        }
+        
+        .raised-hand-indicator.show {
+            display: flex;
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        .raised-hand-indicator .hand-icon {
+            font-size: 1.5em;
+            color: white;
+            animation: handWave 1s ease-in-out infinite;
+        }
+        
+        @keyframes handWave {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            25% {
+                transform: rotate(-20deg);
+            }
+            75% {
+                transform: rotate(20deg);
+            }
+        }
+        
+        .raised-hand-indicator .user-name {
+            color: white;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+        
+        /* Indicador en lista de participantes */
+        .user-item.hand-raised {
+            border-left: 4px solid #10b981;
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .user-item.hand-raised .hand-raised-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            color: #10b981;
+            font-size: 0.85em;
+            margin-left: 8px;
+        }
+        
+        .hand-raised-badge {
+            display: none;
+        }
+        
+        /* Panel de reacciones */
+        .reactions-panel {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(26, 31, 58, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            border: 2px solid rgba(102, 126, 234, 0.5);
+        }
+        
+        .reactions-panel.show {
+            display: flex;
+        }
+        
+        /* Selector de tono de piel */
+        .skin-tone-selector {
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            justify-content: center;
+        }
+        
+        .skin-tone-option {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .skin-tone-option:hover {
+            transform: scale(1.2);
+        }
+        
+        .skin-tone-option.selected {
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.5);
+        }
+        
+        /* Colores de tonos de piel */
+        .skin-tone-1 { background: #ffdbac; } /* Amarillo claro */
+        .skin-tone-2 { background: #f1c27d; } /* Beige claro */
+        .skin-tone-3 { background: #e0ac69; } /* Beige medio */
+        .skin-tone-4 { background: #c68642; } /* Beige oscuro */
+        .skin-tone-5 { background: #8d5524; } /* Marrón claro */
+        .skin-tone-6 { background: #654321; } /* Marrón oscuro */
+        
+        /* Barra de emojis */
+        .emoji-reactions-bar {
+            display: flex;
+            gap: 8px;
+            padding: 8px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 400px;
+        }
+        
+        .emoji-reaction-btn {
+            width: 44px;
+            height: 44px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+        
+        .emoji-reaction-btn:hover {
+            background: rgba(102, 126, 234, 0.3);
+            transform: scale(1.2);
+        }
+        
+        .emoji-reaction-btn:active {
+            transform: scale(0.9);
+        }
+        
+        /* Animación de reacción en pantalla */
+        .reaction-animation {
+            position: fixed;
+            pointer-events: none;
+            z-index: 3000;
+            font-size: 64px;
+            animation: reactionFloat 3s ease-out forwards;
+            user-select: none;
+        }
+        
+        @keyframes reactionFloat {
+            0% {
+                opacity: 0;
+                transform: translateY(0) scale(0.5);
+            }
+            10% {
+                opacity: 1;
+                transform: translateY(-20px) scale(1);
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-200px) scale(1.5);
+            }
+        }
+        
         /* Responsive */
         @media screen and (max-width: 768px) {
+            .reactions-panel {
+                bottom: 100px;
+                left: 50%;
+                transform: translateX(-50%);
+                max-width: 90vw;
+            }
+            
+            .emoji-reactions-bar {
+                max-width: 100%;
+            }
+            
+            .emoji-reaction-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 24px;
+            }
+            
             .room-main-content {
                 flex-direction: column;
+                padding-bottom: 90px; /* Espacio para la botonera fija */
             }
             
             .side-panel {
@@ -947,6 +1223,56 @@
                 gap: var(--spacing-sm);
                 align-items: flex-start;
             }
+            
+            /* Botonera optimizada para móviles */
+            .video-controls {
+                padding: var(--spacing-md) var(--spacing-sm);
+                gap: var(--spacing-sm);
+                flex-wrap: wrap;
+                justify-content: space-around;
+                position: fixed;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                width: 100%;
+                box-sizing: border-box;
+                border-top: 2px solid rgba(102, 126, 234, 0.5);
+                backdrop-filter: blur(10px);
+            }
+            
+            .control-btn {
+                width: 48px;
+                height: 48px;
+                font-size: 1.1em;
+                min-width: 48px;
+                flex-shrink: 0;
+            }
+            
+            .control-btn.leave-btn {
+                width: 56px;
+                height: 56px;
+                font-size: 1.2em;
+            }
+        }
+        
+        /* Móviles pequeños (menos de 480px) */
+        @media screen and (max-width: 480px) {
+            .video-controls {
+                padding: var(--spacing-sm);
+                gap: 8px;
+            }
+            
+            .control-btn {
+                width: 44px;
+                height: 44px;
+                font-size: 1em;
+            }
+            
+            .control-btn.leave-btn {
+                width: 52px;
+                height: 52px;
+                font-size: 1.1em;
+            }
         }
         
         /* Scrollbar personalizado */
@@ -969,6 +1295,322 @@
         .chat-messages::-webkit-scrollbar-thumb:hover,
         .video-grid::-webkit-scrollbar-thumb:hover {
             background: #764ba2;
+        }
+        
+        /* Pizarra colaborativa */
+        .whiteboard-panel {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100vh;
+            background: #ffffff;
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(-100%);
+            transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .whiteboard-panel.open {
+            transform: translateY(0);
+        }
+        
+        .whiteboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: var(--spacing-md) var(--spacing-lg);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+        }
+        
+        .whiteboard-header h3 {
+            margin: 0;
+            font-size: var(--font-lg);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .whiteboard-header-controls {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .whiteboard-mode-selector {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: var(--spacing-xs) var(--spacing-sm);
+            border-radius: 8px;
+            font-size: var(--font-sm);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .whiteboard-mode-selector:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .whiteboard-mode-selector option {
+            background: #1a1f3a;
+            color: white;
+        }
+        
+        .whiteboard-drawing-indicator {
+            background: rgba(102, 126, 234, 0.95);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 14px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            animation: slideDownFade 0.3s ease-out;
+            margin-right: var(--spacing-sm);
+            position: relative !important;
+            z-index: 1 !important;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .whiteboard-drawing-indicator.show {
+            display: flex;
+        }
+        
+        .whiteboard-drawing-indicator i {
+            animation: pulse 1.5s ease-in-out infinite;
+            font-size: 0.8rem;
+        }
+        
+        @keyframes slideDownFade {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.2);
+            }
+        }
+        
+        .whiteboard-close-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s ease;
+            font-size: 1.2em;
+        }
+        
+        .whiteboard-close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        .whiteboard-toolbar {
+            background: #f5f5f5;
+            padding: var(--spacing-md);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-lg);
+            flex-wrap: wrap;
+            border-bottom: 2px solid #e0e0e0;
+        }
+        
+        .whiteboard-tools-group,
+        .whiteboard-colors-group,
+        .whiteboard-width-group,
+        .whiteboard-text-group,
+        .whiteboard-actions-group {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+        }
+        
+        .whiteboard-tool-btn,
+        .whiteboard-color-btn,
+        .whiteboard-width-btn,
+        .whiteboard-action-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: var(--spacing-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            position: relative !important;
+            z-index: 10 !important;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1em;
+        }
+        
+        .whiteboard-tool-btn {
+            width: 44px;
+            height: 44px;
+        }
+        
+        .whiteboard-tool-btn:hover,
+        .whiteboard-tool-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+            transform: scale(1.05);
+        }
+        
+        .whiteboard-color-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+        }
+        
+        .whiteboard-color-btn:hover,
+        .whiteboard-color-btn.active {
+            border-color: #333;
+            transform: scale(1.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .whiteboard-custom-color {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid transparent;
+            cursor: pointer;
+            padding: 0;
+            background: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+        }
+        
+        .whiteboard-custom-color::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        
+        .whiteboard-custom-color::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
+        }
+        
+        .whiteboard-custom-color::-moz-color-swatch {
+            border: none;
+            border-radius: 50%;
+        }
+        
+        .whiteboard-custom-color:hover {
+            border-color: #333;
+            transform: scale(1.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .whiteboard-width-btn {
+            min-width: 40px;
+            height: 36px;
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+        
+        .whiteboard-width-btn:hover,
+        .whiteboard-width-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .whiteboard-action-btn {
+            padding: var(--spacing-sm) var(--spacing-md);
+            gap: var(--spacing-xs);
+            font-size: 0.95em;
+        }
+        
+        .whiteboard-action-btn:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        .whiteboard-canvas-container {
+            flex: 1;
+            overflow: hidden;
+            background: #ffffff;
+            position: relative;
+        }
+        
+        #whiteboard-canvas {
+            width: 100%;
+            height: 100%;
+            cursor: crosshair;
+            touch-action: none;
+        }
+        
+        .control-btn.whiteboard-btn {
+            position: relative;
+        }
+        
+        .control-btn.whiteboard-btn.active {
+            background: #667eea;
+            color: white;
+        }
+        
+        /* Responsive para pizarra */
+        @media screen and (max-width: 768px) {
+            .whiteboard-toolbar {
+                padding: var(--spacing-sm);
+                gap: var(--spacing-sm);
+            }
+            
+            .whiteboard-tool-btn {
+                width: 40px;
+                height: 40px;
+                font-size: 1em;
+            }
+            
+            .whiteboard-color-btn {
+                width: 32px;
+                height: 32px;
+            }
+            
+            .whiteboard-width-btn {
+                min-width: 36px;
+                height: 32px;
+                font-size: 1em;
+            }
+            
+            .whiteboard-action-btn {
+                padding: var(--spacing-xs) var(--spacing-sm);
+                font-size: 0.85em;
+            }
         }
     </style>
 </head>
@@ -1096,12 +1738,145 @@
             <button id="chat-toggle-control" class="control-btn" title="Ver chat">
                 <i class="fas fa-comments"></i>
             </button>
-            <button id="panel-close-btn" class="control-btn hidden" title="Cerrar panel">
-                <i class="fas fa-times"></i>
+            <button id="reactions-btn" class="control-btn reactions-btn" title="Reacciones">
+                <i class="fas fa-smile"></i>
             </button>
+            <button id="raise-hand-btn" class="control-btn raise-hand-btn" title="Levantar la mano">
+                <i class="fas fa-hand-paper"></i>
+            </button>
+            <button id="whiteboard-btn" class="control-btn whiteboard-btn" title="Pizarra colaborativa">
+                <i class="fas fa-paint-brush"></i>
+            </button>
+            <!-- Botón de cerrar panel removido - los botones de toggle ya cumplen esa función -->
             <button id="leave-btn" class="control-btn leave-btn" title="Salir">
                 <i class="fas fa-phone-slash"></i>
             </button>
+        </div>
+        
+        <!-- Indicador de mano levantada -->
+        <div id="raised-hand-indicator" class="raised-hand-indicator">
+            <i class="fas fa-hand-paper hand-icon"></i>
+            <span class="user-name" id="raised-hand-user-name"></span>
+        </div>
+        
+        <!-- Panel de reacciones -->
+        <div id="reactions-panel" class="reactions-panel">
+            <div class="skin-tone-selector" id="skin-tone-selector">
+                <div class="skin-tone-option skin-tone-1 selected" data-tone="1" title="Tono de piel 1"></div>
+                <div class="skin-tone-option skin-tone-2" data-tone="2" title="Tono de piel 2"></div>
+                <div class="skin-tone-option skin-tone-3" data-tone="3" title="Tono de piel 3"></div>
+                <div class="skin-tone-option skin-tone-4" data-tone="4" title="Tono de piel 4"></div>
+                <div class="skin-tone-option skin-tone-5" data-tone="5" title="Tono de piel 5"></div>
+                <div class="skin-tone-option skin-tone-6" data-tone="6" title="Tono de piel 6"></div>
+            </div>
+            <div class="emoji-reactions-bar" id="emoji-reactions-bar">
+                <!-- Los emojis se agregarán dinámicamente -->
+            </div>
+        </div>
+        
+        <!-- Pizarra colaborativa -->
+        <div id="whiteboard-panel" class="whiteboard-panel">
+            <div class="whiteboard-header">
+                <h3><i class="fas fa-paint-brush"></i> Pizarra Colaborativa</h3>
+                <div class="whiteboard-header-controls">
+                    <div id="whiteboard-drawing-indicator" class="whiteboard-drawing-indicator">
+                        <i class="fas fa-pencil-alt"></i>
+                        <span class="drawing-user-name"></span> está dibujando...
+                    </div>
+                    <select id="whiteboard-mode-selector" class="whiteboard-mode-selector" onchange="handleWhiteboardModeChange()">
+                        <option value="general">📋 Pizarra General</option>
+                    </select>
+                    <button id="whiteboard-close-btn" class="whiteboard-close-btn" title="Cerrar pizarra">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="whiteboard-toolbar">
+                <div class="whiteboard-tools-group">
+                    <button class="whiteboard-tool-btn active" data-tool="pen" title="Lápiz" onclick="setTool('pen')">
+                        <i class="fas fa-pencil-alt"></i>
+                    </button>
+                    <button class="whiteboard-tool-btn" data-tool="eraser" title="Borrador (también borra post-its)" onclick="setTool('eraser')">
+                        <i class="fas fa-eraser"></i>
+                    </button>
+                    <button class="whiteboard-tool-btn" data-tool="line" title="Línea" onclick="setTool('line')">
+                        <i class="fas fa-minus"></i>
+                    </button>
+                    <button class="whiteboard-tool-btn" data-tool="rectangle" title="Rectángulo" onclick="setTool('rectangle')">
+                        <i class="fas fa-square"></i>
+                    </button>
+                    <button class="whiteboard-tool-btn" data-tool="circle" title="Círculo" onclick="setTool('circle')">
+                        <i class="fas fa-circle"></i>
+                    </button>
+                    <button class="whiteboard-tool-btn" data-tool="text" title="Texto" onclick="setTool('text')">
+                        <i class="fas fa-font"></i>
+                    </button>
+                    <button class="whiteboard-tool-btn" data-tool="move" title="Mover Texto/Post-its (Delete para borrar)" onclick="setTool('move')">
+                        <i class="fas fa-arrows-alt"></i>
+                    </button>
+                    <button class="whiteboard-tool-btn" data-tool="postit" title="Post-it" onclick="setTool('postit')">
+                        <i class="fas fa-sticky-note"></i>
+                    </button>
+                </div>
+                <div class="whiteboard-postit-colors-group" id="whiteboard-postit-color-group" style="display: none; align-items: center; gap: 8px; padding: 4px 8px; background: rgba(255, 255, 255, 0.8); border-radius: 8px; opacity: 0.5; pointer-events: none;">
+                    <label style="font-size: 0.85em; font-weight: 500; color: #333; white-space: nowrap;">Color fondo:</label>
+                    <button class="whiteboard-postit-color-btn active" data-postit-color="#FFEB3B" style="background: #FFEB3B; width: 30px; height: 30px; border: 2px solid #333; border-radius: 4px; cursor: pointer;" title="Amarillo" onclick="setPostItColor('#FFEB3B')"></button>
+                    <button class="whiteboard-postit-color-btn" data-postit-color="#FFC107" style="background: #FFC107; width: 30px; height: 30px; border: 2px solid #333; border-radius: 4px; cursor: pointer;" title="Ámbar" onclick="setPostItColor('#FFC107')"></button>
+                    <button class="whiteboard-postit-color-btn" data-postit-color="#FF9800" style="background: #FF9800; width: 30px; height: 30px; border: 2px solid #333; border-radius: 4px; cursor: pointer;" title="Naranja" onclick="setPostItColor('#FF9800')"></button>
+                    <button class="whiteboard-postit-color-btn" data-postit-color="#4CAF50" style="background: #4CAF50; width: 30px; height: 30px; border: 2px solid #333; border-radius: 4px; cursor: pointer;" title="Verde" onclick="setPostItColor('#4CAF50')"></button>
+                    <button class="whiteboard-postit-color-btn" data-postit-color="#2196F3" style="background: #2196F3; width: 30px; height: 30px; border: 2px solid #333; border-radius: 4px; cursor: pointer;" title="Azul" onclick="setPostItColor('#2196F3')"></button>
+                    <button class="whiteboard-postit-color-btn" data-postit-color="#9C27B0" style="background: #9C27B0; width: 30px; height: 30px; border: 2px solid #333; border-radius: 4px; cursor: pointer;" title="Púrpura" onclick="setPostItColor('#9C27B0')"></button>
+                    <button class="whiteboard-postit-color-btn" data-postit-color="#F44336" style="background: #F44336; width: 30px; height: 30px; border: 2px solid #333; border-radius: 4px; cursor: pointer;" title="Rojo" onclick="setPostItColor('#F44336')"></button>
+                    <button class="whiteboard-postit-color-btn" data-postit-color="#E91E63" style="background: #E91E63; width: 30px; height: 30px; border: 2px solid #333; border-radius: 4px; cursor: pointer;" title="Rosa" onclick="setPostItColor('#E91E63')"></button>
+                    <input type="color" id="whiteboard-custom-postit-color" class="whiteboard-custom-color" value="#FFEB3B" title="Color personalizado" onchange="setPostItColor(this.value)" style="width: 40px; height: 30px; border: 2px solid #333; border-radius: 4px; cursor: pointer;">
+                </div>
+                <div class="whiteboard-colors-group">
+                    <button class="whiteboard-color-btn active" data-color="#000000" style="background: #000000;" title="Negro" onclick="setColor('#000000')"></button>
+                    <button class="whiteboard-color-btn" data-color="#FF0000" style="background: #FF0000;" title="Rojo" onclick="setColor('#FF0000')"></button>
+                    <button class="whiteboard-color-btn" data-color="#0000FF" style="background: #0000FF;" title="Azul" onclick="setColor('#0000FF')"></button>
+                    <button class="whiteboard-color-btn" data-color="#00FF00" style="background: #00FF00;" title="Verde" onclick="setColor('#00FF00')"></button>
+                    <button class="whiteboard-color-btn" data-color="#FFFF00" style="background: #FFFF00;" title="Amarillo" onclick="setColor('#FFFF00')"></button>
+                    <button class="whiteboard-color-btn" data-color="#FF00FF" style="background: #FF00FF;" title="Magenta" onclick="setColor('#FF00FF')"></button>
+                    <button class="whiteboard-color-btn" data-color="#FFA500" style="background: #FFA500;" title="Naranja" onclick="setColor('#FFA500')"></button>
+                    <button class="whiteboard-color-btn" data-color="#800080" style="background: #800080;" title="Púrpura" onclick="setColor('#800080')"></button>
+                    <input type="color" id="whiteboard-custom-color" class="whiteboard-custom-color" value="#000000" title="Color personalizado" onchange="setColor(this.value)">
+                </div>
+                <div class="whiteboard-width-group">
+                    <button class="whiteboard-width-btn" data-width="2" title="Fino" onclick="setLineWidth(2)">─</button>
+                    <button class="whiteboard-width-btn active" data-width="3" title="Mediano" onclick="setLineWidth(3)">━</button>
+                    <button class="whiteboard-width-btn" data-width="5" title="Grueso" onclick="setLineWidth(5)">━</button>
+                    <button class="whiteboard-width-btn" data-width="8" title="Muy grueso" onclick="setLineWidth(8)">━</button>
+                </div>
+                <div class="whiteboard-text-group" id="whiteboard-text-group" style="display: flex; align-items: center; gap: 8px; padding: 4px 8px; background: rgba(255, 255, 255, 0.8); border-radius: 8px; opacity: 0.5; pointer-events: none;">
+                    <label for="whiteboard-font-size" style="font-size: 0.85em; font-weight: 500; color: #333; white-space: nowrap;">Tamaño:</label>
+                    <input type="range" id="whiteboard-font-size" min="8" max="72" value="16" step="1" 
+                           oninput="setFontSize(this.value)" style="width: 100px; margin: 0 5px; cursor: pointer;">
+                    <span id="whiteboard-font-size-display" style="font-size: 0.85em; font-weight: 600; color: #333; min-width: 45px; display: inline-block; text-align: center;">16px</span>
+                    <label for="whiteboard-font-family" style="font-size: 0.85em; font-weight: 500; color: #333; margin-left: 8px; white-space: nowrap;">Fuente:</label>
+                    <select id="whiteboard-font-family" onchange="setFontFamily(this.value)" 
+                            style="padding: 6px 10px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 0.9em; background: white; cursor: pointer; min-width: 140px;">
+                        <option value="Arial">Arial</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Verdana">Verdana</option>
+                        <option value="Comic Sans MS">Comic Sans MS</option>
+                        <option value="Impact">Impact</option>
+                        <option value="Trebuchet MS">Trebuchet MS</option>
+                    </select>
+                </div>
+                <div class="whiteboard-actions-group">
+                    <button class="whiteboard-action-btn" title="Limpiar pizarra" onclick="clearWhiteboard()">
+                        <i class="fas fa-trash-alt"></i> Limpiar
+                    </button>
+                    <button class="whiteboard-action-btn" title="Guardar dibujo" onclick="saveDrawing()">
+                        <i class="fas fa-download"></i> Guardar
+                    </button>
+                </div>
+            </div>
+            <div class="whiteboard-canvas-container">
+                <canvas id="whiteboard-canvas"></canvas>
+            </div>
         </div>
     </div>
     
@@ -1117,6 +1892,7 @@
     <!-- Scripts -->
     <script src="{% static 'videocall/js/streams_integrated.js' %}"></script>
     <script src="{% static 'videocall/js/videocall_chat.js' %}"></script>
+    <script src="{% static 'videocall/js/whiteboard.js' %}"></script>
     
     <!-- Script para panel de usuarios -->
     <script>
@@ -1195,6 +1971,10 @@
                         const userItem = document.createElement('div');
                         userItem.className = 'user-item' + (participant.is_current_user ? ' current-user' : '');
                         userItem.setAttribute('data-participant-id', participant.id);
+                        // IMPORTANTE: Agregar data-uid para que el selector de pizarras pueda identificarlo
+                        if (participant.uid) {
+                            userItem.setAttribute('data-uid', String(participant.uid));
+                        }
                         
                         const initials = getInitials(participant.name);
                         const roleLabel = participant.role === 'psicologo' ? 'Psicólogo' :
@@ -1202,23 +1982,50 @@
                                          participant.role === 'paciente' ? 'Paciente' :
                                          participant.role === 'audience' ? 'Audiencia' : participant.role;
                         
+                        // Verificar si tiene la mano levantada
+                        const isHandRaised = typeof window.raisedHands !== 'undefined' && window.raisedHands && window.raisedHands.has(participant.name);
+                        const handRaisedClass = isHandRaised ? ' hand-raised' : '';
+                        const handRaisedBadge = isHandRaised ? '<span class="hand-raised-badge"><i class="fas fa-hand-paper"></i> Mano levantada</span>' : '';
+                        
                         userItem.innerHTML = `
                             <div class="user-info">
                                 <div class="user-avatar">${escapeHtml(initials)}</div>
                                 <div class="user-details">
-                                    <div class="user-name">${escapeHtml(participant.name)}</div>
+                                    <div class="user-name">${escapeHtml(participant.name)}${handRaisedBadge}</div>
                                     <div class="user-role">${escapeHtml(roleLabel)}</div>
                                 </div>
                             </div>
                             <div class="user-actions">
                                 ${canKickUsers && !participant.is_current_user ? 
-                                    `<button class="kick-btn" onclick="kickUser(${participant.id}, ${JSON.stringify(participant.name)})" title="Expulsar usuario">
+                                    `<button class="kick-btn" data-participant-id="${participant.id}" data-participant-name="${escapeHtml(participant.name)}" title="Expulsar usuario">
                                         <i class="fas fa-user-times"></i>
                                     </button>` : ''}
                             </div>
                         `;
                         
+                        // Agregar clase si tiene la mano levantada
+                        if (isHandRaised) {
+                            userItem.classList.add('hand-raised');
+                        }
+                        
                         usersList.appendChild(userItem);
+                        
+                        // Agregar event listener al botón de expulsar si existe
+                        if (canKickUsers && !participant.is_current_user) {
+                            const kickBtn = userItem.querySelector('.kick-btn');
+                            if (kickBtn) {
+                                kickBtn.addEventListener('click', function(e) {
+                                    e.stopPropagation();
+                                    const participantId = parseInt(this.getAttribute('data-participant-id'));
+                                    const participantName = this.getAttribute('data-participant-name');
+                                    if (window.kickUser) {
+                                        window.kickUser(participantId, participantName);
+                                    } else {
+                                        console.error('Función kickUser no está disponible');
+                                    }
+                                });
+                            }
+                        }
                     });
                 })
                 .catch(error => {
@@ -1228,19 +2035,36 @@
         
         // Función para expulsar usuario (disponible globalmente)
         window.kickUser = function(participantId, userName) {
+            console.log('[kickUser] Intentando expulsar usuario:', participantId, userName);
+            
+            if (!participantId || !userName) {
+                console.error('[kickUser] Datos inválidos:', { participantId, userName });
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Datos inválidos para expulsar usuario'
+                });
+                return;
+            }
+            
             if (!confirm(`¿Estás seguro de que deseas expulsar a ${userName} de la reunión?`)) {
                 return;
             }
             
             const roomName = window.VIDEOCALL_ROOM || sessionStorage.getItem('room') || '';
             if (!roomName) {
-                console.error('No hay nombre de sala disponible');
+                console.error('[kickUser] No hay nombre de sala disponible');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'No se pudo identificar la sala'
+                });
                 return;
             }
             
             const csrfToken = getCSRFToken();
             if (!csrfToken) {
-                console.error('Token CSRF no encontrado');
+                console.error('[kickUser] Token CSRF no encontrado');
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
@@ -1248,6 +2072,8 @@
                 });
                 return;
             }
+            
+            console.log('[kickUser] Enviando petición:', { room_name: roomName, participant_id: participantId });
             
             fetch('/videocall/kick_participant/', {
                 method: 'POST',
@@ -1260,9 +2086,48 @@
                     participant_id: participantId
                 })
             })
-            .then(response => response.json())
+            .then(response => {
+                console.log('[kickUser] Respuesta recibida:', response.status);
+                if (!response.ok) {
+                    return response.json().then(data => {
+                        throw new Error(data.error || `Error ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
             .then(data => {
+                console.log('[kickUser] Datos recibidos:', data);
                 if (data.success) {
+                    // Remover el video del usuario expulsado
+                    if (data.uid) {
+                        console.log('[kickUser] Removiendo video del usuario expulsado, UID:', data.uid);
+                        const userContainer = document.getElementById(`user-container-${data.uid}`);
+                        if (userContainer) {
+                            console.log('[kickUser] Contenedor encontrado, removiendo...');
+                            userContainer.remove();
+                            
+                            // También remover de remoteUsers si existe (a través de AgoraVideoCall o directamente)
+                            try {
+                                if (window.AgoraVideoCall && typeof window.AgoraVideoCall.remoteUsers === 'function') {
+                                    const remoteUsers = window.AgoraVideoCall.remoteUsers();
+                                    if (remoteUsers && remoteUsers[data.uid]) {
+                                        delete remoteUsers[data.uid];
+                                        console.log('[kickUser] Usuario removido de remoteUsers');
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn('[kickUser] No se pudo acceder a remoteUsers:', e);
+                            }
+                            
+                            // Actualizar contador de participantes
+                            if (typeof updateMemberCount === 'function') {
+                                updateMemberCount();
+                            }
+                        } else {
+                            console.warn('[kickUser] No se encontró el contenedor de video para UID:', data.uid);
+                        }
+                    }
+                    
                     Swal.fire({
                         icon: 'success',
                         title: 'Usuario expulsado',
@@ -1270,8 +2135,13 @@
                         timer: 2000,
                         showConfirmButton: false
                     });
+                    
                     // Recargar lista de participantes
-                    setTimeout(loadParticipants, 500);
+                    setTimeout(() => {
+                        if (typeof loadParticipants === 'function') {
+                            loadParticipants();
+                        }
+                    }, 500);
                 } else {
                     Swal.fire({
                         icon: 'error',
@@ -1281,11 +2151,11 @@
                 }
             })
             .catch(error => {
-                console.error('Error expulsando usuario:', error);
+                console.error('[kickUser] Error expulsando usuario:', error);
                 Swal.fire({
                     icon: 'error',
                     title: 'Error',
-                    text: 'Error al expulsar al usuario'
+                    text: error.message || 'Error al expulsar al usuario'
                 });
             });
         };
@@ -1454,13 +2324,417 @@
             initializeVideoCall();
         }
         
+        // ============================================
+        // SISTEMA DE REACCIONES
+        // ============================================
+        
+        let selectedSkinTone = 1; // Tono de piel por defecto (amarillo)
+        const reactionsPanel = document.getElementById('reactions-panel');
+        const reactionsBtn = document.getElementById('reactions-btn');
+        const emojiReactionsBar = document.getElementById('emoji-reactions-bar');
+        const skinToneSelector = document.getElementById('skin-tone-selector');
+        
+        // Emojis disponibles con sus variantes de tono de piel
+        const emojiReactions = [
+            { base: '👍', name: 'thumbs_up', variants: ['👍', '👍🏻', '👍🏼', '👍🏽', '👍🏾', '👍🏿'] },
+            { base: '👏', name: 'clap', variants: ['👏', '👏🏻', '👏🏼', '👏🏽', '👏🏾', '👏🏿'] },
+            { base: '❤️', name: 'heart', variants: ['❤️'] },
+            { base: '🎉', name: 'party', variants: ['🎉'] },
+            { base: '😂', name: 'laugh', variants: ['😂'] },
+            { base: '😮', name: 'surprised', variants: ['😮'] },
+            { base: '😢', name: 'sad', variants: ['😢'] },
+            { base: '🤔', name: 'thinking', variants: ['🤔'] },
+            { base: '👎', name: 'thumbs_down', variants: ['👎', '👎🏻', '👎🏼', '👎🏽', '👎🏾', '👎🏿'] },
+            { base: '🔥', name: 'fire', variants: ['🔥'] },
+            { base: '⭐', name: 'star', variants: ['⭐'] },
+            { base: '💯', name: '100', variants: ['💯'] }
+        ];
+        
+        // Inicializar panel de reacciones
+        function initializeReactionsPanel() {
+            if (!emojiReactionsBar) return;
+            
+            // Limpiar barra
+            emojiReactionsBar.innerHTML = '';
+            
+            // Agregar cada emoji
+            emojiReactions.forEach(emoji => {
+                const btn = document.createElement('button');
+                btn.className = 'emoji-reaction-btn';
+                btn.setAttribute('data-emoji', emoji.name);
+                btn.setAttribute('data-base', emoji.base);
+                btn.textContent = emoji.variants[selectedSkinTone - 1] || emoji.base;
+                btn.title = emoji.name;
+                btn.addEventListener('click', () => sendReaction(emoji.name, emoji.variants[selectedSkinTone - 1] || emoji.base));
+                emojiReactionsBar.appendChild(btn);
+            });
+        }
+        
+        // Manejar selección de tono de piel
+        if (skinToneSelector) {
+            skinToneSelector.addEventListener('click', (e) => {
+                const toneOption = e.target.closest('.skin-tone-option');
+                if (!toneOption) return;
+                
+                // Remover selección anterior
+                skinToneSelector.querySelectorAll('.skin-tone-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // Agregar selección nueva
+                toneOption.classList.add('selected');
+                selectedSkinTone = parseInt(toneOption.getAttribute('data-tone'));
+                
+                // Actualizar emojis con el nuevo tono
+                initializeReactionsPanel();
+            });
+        }
+        
+        // Toggle panel de reacciones
+        if (reactionsBtn && reactionsPanel) {
+            reactionsBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                reactionsPanel.classList.toggle('show');
+                reactionsBtn.classList.toggle('active');
+            });
+            
+            // Cerrar panel al hacer clic fuera
+            document.addEventListener('click', (e) => {
+                if (reactionsPanel && reactionsPanel.classList.contains('show')) {
+                    if (!reactionsPanel.contains(e.target) && !reactionsBtn.contains(e.target)) {
+                        reactionsPanel.classList.remove('show');
+                        reactionsBtn.classList.remove('active');
+                    }
+                }
+            });
+        }
+        
+        // Enviar reacción
+        function sendReaction(emojiName, emoji) {
+            console.log('[Reacciones] Enviando reacción:', emojiName, emoji);
+            
+            // Cerrar panel
+            if (reactionsPanel) {
+                reactionsPanel.classList.remove('show');
+            }
+            if (reactionsBtn) {
+                reactionsBtn.classList.remove('active');
+            }
+            
+            // Mostrar animación local
+            showReactionAnimation(emoji, true);
+            
+            // Enviar reacción a través del chat
+            const roomName = window.VIDEOCALL_ROOM || sessionStorage.getItem('room') || '';
+            const userName = window.VIDEOCALL_USER || sessionStorage.getItem('name') || 'Usuario';
+            
+            if (!roomName) {
+                console.error('[Reacciones] No hay nombre de sala disponible');
+                return;
+            }
+            
+            const csrfToken = getCSRFToken();
+            if (!csrfToken) {
+                console.error('[Reacciones] Token CSRF no encontrado');
+                return;
+            }
+            
+            // Enviar como mensaje especial de reacción
+            fetch('/videocall/send_message/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    room_name: roomName,
+                    message: `REACTION:${emoji}:${emojiName}`,
+                    is_reaction: true
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('[Reacciones] Reacción enviada exitosamente');
+                } else {
+                    console.error('[Reacciones] Error enviando reacción:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('[Reacciones] Error enviando reacción:', error);
+            });
+        }
+        
+        // Mostrar animación de reacción
+        function showReactionAnimation(emoji, isLocal = false) {
+            const reactionEl = document.createElement('div');
+            reactionEl.className = 'reaction-animation';
+            reactionEl.textContent = emoji;
+            
+            // Posición aleatoria en la pantalla
+            const x = isLocal ? 
+                window.innerWidth / 2 + (Math.random() * 200 - 100) : 
+                Math.random() * (window.innerWidth - 100) + 50;
+            const y = isLocal ? 
+                window.innerHeight / 2 + (Math.random() * 200 - 100) : 
+                Math.random() * (window.innerHeight - 300) + 100;
+            
+            reactionEl.style.left = x + 'px';
+            reactionEl.style.top = y + 'px';
+            
+            document.body.appendChild(reactionEl);
+            
+            // Remover después de la animación
+            setTimeout(() => {
+                if (reactionEl.parentNode) {
+                    reactionEl.parentNode.removeChild(reactionEl);
+                }
+            }, 3000);
+        }
+        
+        // Escuchar reacciones del chat (función global)
+        window.handleReactionMessage = function(message) {
+            if (!message || !message.message) return;
+            
+            if (message.message.startsWith('REACTION:')) {
+                const parts = message.message.split(':');
+                if (parts.length >= 3) {
+                    const emoji = parts[1];
+                    const emojiName = parts[2];
+                    console.log('[Reacciones] Reacción recibida:', emoji, emojiName, 'de', message.author || 'desconocido');
+                    
+                    // Mostrar animación
+                    if (typeof showReactionAnimation === 'function') {
+                        showReactionAnimation(emoji, false);
+                    }
+                }
+            } else if (message.message.startsWith('RAISE_HAND:')) {
+                // Manejar mensajes de mano levantada
+                console.log('[Reacciones] Mensaje de mano levantada detectado:', message.message);
+                if (typeof window.handleRaiseHandMessage === 'function') {
+                    window.handleRaiseHandMessage(message);
+                } else {
+                    console.warn('[Reacciones] handleRaiseHandMessage no está disponible');
+                }
+            }
+        };
+        
+        // Inicializar panel cuando la página esté lista
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeReactionsPanel);
+        } else {
+            initializeReactionsPanel();
+        }
+        
+        // ============================================
+        // SISTEMA DE LEVANTAR LA MANO
+        // ============================================
+        
+        let isHandRaised = false;
+        const raiseHandBtn = document.getElementById('raise-hand-btn');
+        const raisedHandIndicator = document.getElementById('raised-hand-indicator');
+        const raisedHandUserName = document.getElementById('raised-hand-user-name');
+        // Variable global para almacenar quién tiene la mano levantada
+        window.raisedHands = window.raisedHands || new Map();
+        const raisedHands = window.raisedHands;
+        
+        // Toggle levantar la mano
+        if (raiseHandBtn) {
+            raiseHandBtn.addEventListener('click', () => {
+                isHandRaised = !isHandRaised;
+                updateRaiseHandState();
+                sendRaiseHandState(isHandRaised);
+            });
+        }
+        
+        // Actualizar estado visual del botón
+        function updateRaiseHandState() {
+            if (raiseHandBtn) {
+                if (isHandRaised) {
+                    raiseHandBtn.classList.add('active');
+                    raiseHandBtn.title = 'Bajar la mano';
+                } else {
+                    raiseHandBtn.classList.remove('active');
+                    raiseHandBtn.title = 'Levantar la mano';
+                }
+            }
+            
+            // Actualizar indicador local
+            const currentUserName = window.VIDEOCALL_USER || sessionStorage.getItem('name') || 'Tú';
+            updateRaisedHandIndicator(currentUserName, isHandRaised);
+        }
+        
+        // Enviar estado de mano levantada
+        function sendRaiseHandState(raised) {
+            const roomName = window.VIDEOCALL_ROOM || sessionStorage.getItem('room') || '';
+            const userName = window.VIDEOCALL_USER || sessionStorage.getItem('name') || 'Usuario';
+            
+            if (!roomName) {
+                console.error('[Raise Hand] No hay nombre de sala disponible');
+                return;
+            }
+            
+            const csrfToken = getCSRFToken();
+            if (!csrfToken) {
+                console.error('[Raise Hand] Token CSRF no encontrado');
+                return;
+            }
+            
+            // Enviar como mensaje especial
+            fetch('/videocall/send_message/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
+                },
+                body: JSON.stringify({
+                    room_name: roomName,
+                    message: `RAISE_HAND:${raised ? 'UP' : 'DOWN'}:${userName}`,
+                    is_reaction: true
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('[Raise Hand] Estado enviado exitosamente:', raised ? 'UP' : 'DOWN');
+                } else {
+                    console.error('[Raise Hand] Error enviando estado:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('[Raise Hand] Error enviando estado:', error);
+            });
+        }
+        
+        // Actualizar indicador visual
+        function updateRaisedHandIndicator(userName, raised) {
+            if (!raisedHandIndicator || !raisedHandUserName) return;
+            
+            if (raised) {
+                raisedHandUserName.textContent = userName;
+                raisedHandIndicator.classList.add('show');
+            } else {
+                raisedHandIndicator.classList.remove('show');
+            }
+        }
+        
+        // Inicializar pizarra colaborativa
+        const whiteboardBtn = document.getElementById('whiteboard-btn');
+        const whiteboardCloseBtn = document.getElementById('whiteboard-close-btn');
+        
+        if (whiteboardBtn) {
+            whiteboardBtn.addEventListener('click', () => {
+                if (typeof toggleWhiteboard === 'function') {
+                    toggleWhiteboard();
+                    whiteboardBtn.classList.toggle('active');
+                } else {
+                    console.error('toggleWhiteboard no está disponible');
+                }
+            });
+        }
+        
+        if (whiteboardCloseBtn) {
+            whiteboardCloseBtn.addEventListener('click', () => {
+                if (typeof toggleWhiteboard === 'function') {
+                    toggleWhiteboard();
+                    if (whiteboardBtn) {
+                        whiteboardBtn.classList.remove('active');
+                    }
+                }
+            });
+        }
+        
+        // Actualizar selector de pizarras cuando se cargan los participantes
+        const originalLoadParticipants = window.loadParticipants;
+        if (typeof originalLoadParticipants === 'function') {
+            window.loadParticipants = function() {
+                originalLoadParticipants();
+                // Actualizar selector de pizarras después de cargar participantes
+                if (typeof updateWhiteboardSelector === 'function') {
+                    setTimeout(() => {
+                        updateWhiteboardSelector();
+                    }, 100);
+                }
+            };
+        }
+        
+        // Manejar mensajes de mano levantada
+        window.handleRaiseHandMessage = function(message) {
+            if (!message || !message.message || !message.message.startsWith('RAISE_HAND:')) {
+                return;
+            }
+            
+            const parts = message.message.split(':');
+            if (parts.length < 3) {
+                console.warn('[Raise Hand] Formato de mensaje inválido:', message.message);
+                return;
+            }
+            
+            const state = parts[1]; // 'UP' o 'DOWN'
+            const userName = parts[2];
+            const isRaised = state === 'UP';
+            
+            console.log('[Raise Hand] Estado recibido:', state, 'de', userName, '(autor del mensaje:', message.author || 'desconocido', ')');
+            
+            // Usar el nombre del autor del mensaje si está disponible, de lo contrario usar el del mensaje
+            const actualUserName = message.author || userName;
+            
+            // Actualizar mapa de manos levantadas
+            if (isRaised) {
+                raisedHands.set(actualUserName, true);
+                console.log('[Raise Hand] Mano levantada agregada para:', actualUserName, 'Total:', raisedHands.size);
+            } else {
+                raisedHands.delete(actualUserName);
+                console.log('[Raise Hand] Mano bajada removida para:', actualUserName, 'Total:', raisedHands.size);
+            }
+            
+            // Actualizar indicador si es el usuario actual
+            const currentUserName = window.VIDEOCALL_USER || sessionStorage.getItem('name') || '';
+            const currentUserNameNormalized = currentUserName.trim().toLowerCase();
+            const actualUserNameNormalized = actualUserName.trim().toLowerCase();
+            
+            console.log('[Raise Hand] Comparando nombres - Actual:', currentUserNameNormalized, 'vs Recibido:', actualUserNameNormalized);
+            
+            if (actualUserNameNormalized === currentUserNameNormalized || actualUserName === 'Tú' || actualUserName === currentUserName) {
+                console.log('[Raise Hand] Es el usuario actual, actualizando estado local');
+                isHandRaised = isRaised;
+                updateRaiseHandState();
+            } else {
+                console.log('[Raise Hand] Es otro usuario, mostrando indicador');
+                // Mostrar indicador para otros usuarios
+                if (isRaised) {
+                    updateRaisedHandIndicator(actualUserName, true);
+                    // Ocultar después de 5 segundos si no es el usuario actual
+                    setTimeout(() => {
+                        if (raisedHandIndicator && !isHandRaised) {
+                            raisedHandIndicator.classList.remove('show');
+                        }
+                    }, 5000);
+                } else {
+                    // Si no hay más manos levantadas, ocultar indicador
+                    if (raisedHands.size === 0 || (raisedHands.size === 1 && raisedHands.has(currentUserName))) {
+                        updateRaisedHandIndicator('', false);
+                    }
+                }
+            }
+            
+            // Actualizar lista de participantes
+            if (typeof loadParticipants === 'function') {
+                console.log('[Raise Hand] Actualizando lista de participantes...');
+                loadParticipants();
+            }
+        };
+        
+        // ============================================
+        // TOGGLE ENTRE PARTICIPANTES Y CHAT
+        // ============================================
+        
         // Toggle entre participantes y chat
         const sidePanel = document.getElementById('side-panel');
         const usersPanel = document.getElementById('users-panel');
         const chatPanel = document.getElementById('chat-panel');
         const usersToggleControl = document.getElementById('users-toggle-control');
         const chatToggleControl = document.getElementById('chat-toggle-control');
-        const panelCloseBtn = document.getElementById('panel-close-btn');
         const roomMainContent = document.querySelector('.room-main-content');
         
         let currentView = 'users'; // 'users' o 'chat'
@@ -1480,9 +2754,7 @@
             if (chatToggleControl) {
                 chatToggleControl.classList.remove('active');
             }
-            if (panelCloseBtn) {
-                panelCloseBtn.classList.remove('hidden');
-            }
+            // Botón de cerrar removido - los botones de toggle ya cumplen esa función
             
             // Remover clase del contenedor principal
             if (roomMainContent) {
@@ -1505,9 +2777,7 @@
             if (chatToggleControl) {
                 chatToggleControl.classList.add('active');
             }
-            if (panelCloseBtn) {
-                panelCloseBtn.classList.remove('hidden');
-            }
+            // Botón de cerrar removido - los botones de toggle ya cumplen esa función
             
             // Remover clase del contenedor principal
             if (roomMainContent) {
@@ -1524,6 +2794,11 @@
                     loadChatMessages();
                 }
             }, 100);
+            
+            // Inicializar polling de mensajes si no está activo (para detectar manos levantadas)
+            if (!window.chatPollingActive) {
+                startChatPolling();
+            }
         }
         
         function hidePanel() {
@@ -1539,9 +2814,7 @@
             if (chatToggleControl) {
                 chatToggleControl.classList.remove('active');
             }
-            if (panelCloseBtn) {
-                panelCloseBtn.classList.add('hidden');
-            }
+            // Botón de cerrar removido - los botones de toggle ya cumplen esa función
             
             // Agregar clase al contenedor principal para expandir video
             if (roomMainContent) {
@@ -1572,14 +2845,80 @@
         if (chatToggleControl) {
             chatToggleControl.addEventListener('click', toggleChatPanel);
         }
-        if (panelCloseBtn) {
-            panelCloseBtn.addEventListener('click', hidePanel);
+        // Botón de cerrar removido - los botones de toggle ya cumplen esa función
+        
+        // ============================================
+        // POLLING DE MENSAJES (para detectar manos levantadas y reacciones)
+        // ============================================
+        
+        let chatPollingInterval = null;
+        window.chatPollingActive = false;
+        
+        function startChatPolling() {
+            if (window.chatPollingActive) {
+                console.log('[Chat Polling] Ya está activo');
+                return;
+            }
+            
+            console.log('[Chat Polling] Iniciando polling de mensajes...');
+            window.chatPollingActive = true;
+            
+            // Cargar mensajes iniciales
+            if (typeof loadChatMessages === 'function') {
+                loadChatMessages();
+            }
+            
+            // Función de polling recursiva que se ajusta dinámicamente
+            const doPolling = () => {
+                if (!window.chatPollingActive) {
+                    return; // Detener si el polling fue desactivado
+                }
+                
+                if (typeof loadChatMessages === 'function') {
+                    loadChatMessages();
+                }
+                
+                // Obtener intervalo dinámico según el estado de la pizarra
+                let pollingInterval;
+                if (typeof window.isWhiteboardOpen !== 'undefined' && window.isWhiteboardOpen) {
+                    pollingInterval = 250; // 250ms = 0.25 segundos para tiempo real cuando la pizarra está abierta
+                } else {
+                    pollingInterval = 1500; // 1.5 segundos para polling normal
+                }
+                
+                // Programar siguiente polling y guardar referencia
+                chatPollingInterval = setTimeout(doPolling, pollingInterval);
+            };
+            
+            // Iniciar polling
+            const initialInterval = (typeof window.isWhiteboardOpen !== 'undefined' && window.isWhiteboardOpen) ? 250 : 1500;
+            chatPollingInterval = setTimeout(doPolling, initialInterval);
         }
         
-        // Inicializar con panel oculto por defecto
-        document.addEventListener('DOMContentLoaded', function() {
+        function stopChatPolling() {
+            if (chatPollingInterval) {
+                clearTimeout(chatPollingInterval);
+                chatPollingInterval = null;
+            }
+            window.chatPollingActive = false;
+            console.log('[Chat Polling] Detenido');
+        }
+        
+        // Inicializar polling cuando la página esté lista
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                hidePanel();
+                // Iniciar polling después de un breve delay para asegurar que todo esté cargado
+                setTimeout(() => {
+                    startChatPolling();
+                }, 2000);
+            });
+        } else {
             hidePanel();
-        });
+            setTimeout(() => {
+                startChatPolling();
+            }, 2000);
+        }
         
         // Los botones están conectados en streams_integrated.js
         // Solo asegurarnos de que todo esté listo después de que se cargue el script

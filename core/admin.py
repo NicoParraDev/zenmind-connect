@@ -5,7 +5,8 @@ from django.contrib import admin
 from django.utils.html import format_html
 from .models import (
     Tipousuario, Especialidad, Persona, Psicologo, Horarios, 
-    Agenda, HorarioAgenda, Post, Hilo, Comment, Notificacion, NotificacionSuperusuario
+    Agenda, HorarioAgenda, Post, Hilo, Comment, Notificacion, NotificacionSuperusuario,
+    ChatConversation, ChatMessageBot, GrupoApoyo, MiembroGrupo, SesionGrupo, RecursoGrupo
 )
 
 
@@ -149,3 +150,70 @@ class NotificacionSuperusuarioAdmin(admin.ModelAdmin):
         """Muestra una vista previa del contenido."""
         return obj.contenido[:50] + "..." if len(obj.contenido) > 50 else obj.contenido
     contenido_preview.short_description = 'Contenido'
+
+
+@admin.register(ChatConversation)
+class ChatConversationAdmin(admin.ModelAdmin):
+    """Administración de conversaciones del chatbot."""
+    list_display = ('id', 'persona', 'created_at', 'updated_at', 'is_active', 'message_count')
+    list_filter = ('is_active', 'created_at')
+    search_fields = ('persona__nombre', 'persona__apellido', 'persona__correo')
+    readonly_fields = ('created_at', 'updated_at')
+    date_hierarchy = 'created_at'
+    
+    def message_count(self, obj):
+        """Muestra el número de mensajes."""
+        return obj.get_message_count()
+    message_count.short_description = 'Mensajes'
+
+
+@admin.register(ChatMessageBot)
+class ChatMessageBotAdmin(admin.ModelAdmin):
+    """Administración de mensajes del chatbot."""
+    list_display = ('id', 'conversation', 'role', 'message_preview', 'is_crisis_detected', 'created_at')
+    list_filter = ('role', 'is_crisis_detected', 'created_at')
+    search_fields = ('message', 'conversation__persona__nombre')
+    readonly_fields = ('created_at',)
+    date_hierarchy = 'created_at'
+    
+    def message_preview(self, obj):
+        """Muestra una vista previa del mensaje."""
+        return obj.message[:50] + "..." if len(obj.message) > 50 else obj.message
+    message_preview.short_description = 'Mensaje'
+
+
+@admin.register(GrupoApoyo)
+class GrupoApoyoAdmin(admin.ModelAdmin):
+    """Administración de grupos de apoyo."""
+    list_display = ('id', 'nombre', 'tema', 'creado_por', 'get_miembro_count', 'max_miembros', 'is_activo', 'created_at')
+    list_filter = ('tema', 'is_activo', 'is_publico', 'created_at')
+    search_fields = ('nombre', 'descripcion', 'creado_por__nombre')
+    readonly_fields = ('created_at',)
+    date_hierarchy = 'created_at'
+
+
+@admin.register(MiembroGrupo)
+class MiembroGrupoAdmin(admin.ModelAdmin):
+    """Administración de miembros de grupos."""
+    list_display = ('id', 'grupo', 'persona', 'fecha_union', 'is_activo', 'es_moderador')
+    list_filter = ('is_activo', 'es_moderador', 'fecha_union')
+    search_fields = ('grupo__nombre', 'persona__nombre', 'persona__apellido')
+    date_hierarchy = 'fecha_union'
+
+
+@admin.register(SesionGrupo)
+class SesionGrupoAdmin(admin.ModelAdmin):
+    """Administración de sesiones grupales."""
+    list_display = ('id', 'grupo', 'fecha_programada', 'psicologo_facilitador', 'is_activa')
+    list_filter = ('is_activa', 'fecha_programada')
+    search_fields = ('grupo__nombre', 'tema_sesion')
+    date_hierarchy = 'fecha_programada'
+
+
+@admin.register(RecursoGrupo)
+class RecursoGrupoAdmin(admin.ModelAdmin):
+    """Administración de recursos de grupos."""
+    list_display = ('id', 'titulo', 'grupo', 'tipo', 'compartido_por', 'created_at')
+    list_filter = ('tipo', 'created_at')
+    search_fields = ('titulo', 'descripcion', 'grupo__nombre')
+    date_hierarchy = 'created_at'

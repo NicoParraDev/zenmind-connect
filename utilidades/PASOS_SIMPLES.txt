@@ -1,0 +1,35 @@
+========================================
+  PASOS SIMPLES PARA INICIAR
+========================================
+
+1. ABRE CMD (no Git Bash):
+   - Presiona Win + R
+   - Escribe: cmd
+   - Presiona Enter
+
+2. NAVEGA A TU PROYECTO:
+   cd C:\Users\nicoa\Desktop\ZenMindConnect
+
+3. VERIFICA QUE DJANGO ESTE CORRIENDO:
+   python manage.py runserver
+   
+   Si ya esta corriendo, deja esa ventana abierta.
+
+4. ABRE OTRA VENTANA DE CMD y ejecuta:
+   INICIAR_NGROK_SIMPLE.bat
+
+5. NGROK MOSTRARA UNA URL HTTPS:
+   Algo como: https://abc123.ngrok.io
+   
+6. USA ESA URL EN AMBOS DISPOSITIVOS:
+   - Tu PC: https://abc123.ngrok.io
+   - Celular: https://abc123.ngrok.io
+
+========================================
+  RESUMEN
+========================================
+
+Terminal 1: python manage.py runserver
+Terminal 2: INICIAR_NGROK_SIMPLE.bat
+URL: La que ngrok te muestre (https://...)
+

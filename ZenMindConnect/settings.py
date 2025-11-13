@@ -29,7 +29,11 @@ SECRET_KEY = config('SECRET_KEY')
 # Por defecto False para seguridad. Solo True en desarrollo local.
 DEBUG = config('DEBUG', default=False, cast=bool)
 
+# Permitir todos los hosts en desarrollo para ngrok (cambiar en producción)
 ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=Csv())
+# En desarrollo, permitir cualquier host de ngrok
+if DEBUG:
+    ALLOWED_HOSTS = ['*']  # Permitir todos los hosts en desarrollo
 
 # Testing mode - detectado automáticamente
 import sys
@@ -46,6 +50,8 @@ LOGIN_URL = "log"
 # Application definition
 
 INSTALLED_APPS = [
+    'daphne',  # Servidor ASGI para WebSockets (debe ir primero)
+    'channels',  # Django Channels para WebSockets
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -320,6 +326,14 @@ CSP_FRAME_ANCESTORS = "'none'"
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SAMESITE = 'Lax'
 CSRF_FAILURE_VIEW = 'core.views.csrf_failure'
+# Permitir ngrok en desarrollo
+# Agregar dominios de ngrok a CSRF_TRUSTED_ORIGINS en .env si es necesario
+# Formato: CSRF_TRUSTED_ORIGINS=https://dominio1.ngrok-free.app,https://dominio2.ngrok-free.app
+CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='', cast=Csv())
+# En desarrollo, si no hay dominios configurados, agregar el dominio actual de ngrok
+if DEBUG and not CSRF_TRUSTED_ORIGINS:
+    # Agregar dominio común de ngrok (se puede actualizar en .env)
+    CSRF_TRUSTED_ORIGINS = ['https://miss-proadmission-overpresumptuously.ngrok-free.dev']
 
 # Protección adicional de datos
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB máximo
@@ -352,4 +366,19 @@ CACHES = {
             'MAX_ENTRIES': 1000
         }
     }
+}
+
+# Django Channels Configuration para WebSockets
+ASGI_APPLICATION = 'ZenMindConnect.asgi.application'
+
+# Channel Layers - Para desarrollo usamos in-memory, para producción usar Redis
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer',  # Para desarrollo
+        # Para producción, usar Redis:
+        # 'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        # 'CONFIG': {
+        #     "hosts": [('127.0.0.1', 6379)],
+        # },
+    },
 }

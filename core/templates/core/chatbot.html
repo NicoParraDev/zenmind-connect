@@ -1,0 +1,406 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot de Bienestar - ZenMindConnect</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    
+    <!-- CSS -->
+    {% load static compress %}
+    {% compress css file zenmind_css %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    {% endcompress %}
+    
+    <style>
+        .chatbot-container {
+            max-width: 900px;
+            margin: var(--spacing-xl) auto;
+            background: white;
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 200px);
+        }
+        
+        .chatbot-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: var(--spacing-lg);
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-md);
+        }
+        
+        .chatbot-header h1 {
+            margin: 0;
+            font-size: var(--font-2xl);
+            font-weight: 600;
+        }
+        
+        .chatbot-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: var(--spacing-lg);
+            background: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-md);
+        }
+        
+        .message {
+            display: flex;
+            gap: var(--spacing-md);
+            animation: fadeIn 0.3s ease-in;
+        }
+        
+        .message.user {
+            flex-direction: row-reverse;
+        }
+        
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--font-lg);
+            flex-shrink: 0;
+        }
+        
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+        
+        .message-content {
+            max-width: 70%;
+            padding: var(--spacing-md);
+            border-radius: var(--radius-md);
+            word-wrap: break-word;
+        }
+        
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .message.assistant .message-content {
+            background: white;
+            color: var(--color-text);
+            border: 1px solid #e5e7eb;
+        }
+        
+        .message-crisis {
+            background: #fee2e2 !important;
+            border: 2px solid #ef4444 !important;
+            color: #991b1b !important;
+        }
+        
+        .chatbot-input-container {
+            padding: var(--spacing-lg);
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            gap: var(--spacing-md);
+        }
+        
+        .chatbot-input {
+            flex: 1;
+            padding: var(--spacing-md);
+            border: 2px solid #e5e7eb;
+            border-radius: var(--radius-md);
+            font-size: var(--font-base);
+            font-family: var(--font-primary);
+        }
+        
+        .chatbot-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .chatbot-send-btn {
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            font-size: var(--font-lg);
+            transition: transform 0.2s;
+        }
+        
+        .chatbot-send-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .chatbot-send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .psicologo-recomendado {
+            margin-top: var(--spacing-md);
+            padding: var(--spacing-md);
+            background: #dbeafe;
+            border-left: 4px solid #3b82f6;
+            border-radius: var(--radius-md);
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .typing-indicator {
+            display: none;
+            padding: var(--spacing-md);
+        }
+        
+        .typing-indicator.active {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #667eea;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+            }
+            30% {
+                transform: translateY(-10px);
+            }
+        }
+    </style>
+</head>
+<body>
+    {% include 'core/navbar.html' %}
+    
+    <div class="chatbot-container">
+        <div class="chatbot-header">
+            <i class="fas fa-robot"></i>
+            <h1>Asistente Virtual de Bienestar</h1>
+        </div>
+        
+        <div class="chatbot-messages" id="chatbot-messages">
+            <div class="message assistant">
+                <div class="message-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">
+                    <p>¡Hola! Soy tu asistente virtual de bienestar. Estoy aquí para ayudarte con información general sobre salud mental y bienestar.</p>
+                    <p>Puedo responder preguntas, proporcionar recursos y recomendarte cuando es apropiado consultar con un profesional.</p>
+                    <p><strong>Importante:</strong> Si estás en crisis o necesitas ayuda urgente, por favor contacta directamente con un psicólogo o línea de emergencia.</p>
+                    <p>¿En qué puedo ayudarte hoy?</p>
+                </div>
+            </div>
+            
+            {% for mensaje in mensajes %}
+            <div class="message {{ mensaje.role }}">
+                <div class="message-avatar">
+                    {% if mensaje.role == 'user' %}
+                        <i class="fas fa-user"></i>
+                    {% else %}
+                        <i class="fas fa-robot"></i>
+                    {% endif %}
+                </div>
+                <div class="message-content {% if mensaje.is_crisis_detected %}message-crisis{% endif %}">
+                    <p>{{ mensaje.message|linebreaks }}</p>
+                    {% if mensaje.psicologo_recomendado %}
+                    <div class="psicologo-recomendado">
+                        <strong><i class="fas fa-user-md"></i> Psicólogo Recomendado:</strong>
+                        <p>{{ mensaje.psicologo_recomendado.nombre }} - {{ mensaje.psicologo_recomendado.especialidad.nombre }}</p>
+                        <a href="{% url 'listar_agendas' %}" class="btn btn-primary">Ver Disponibilidad</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+            
+            <div class="typing-indicator" id="typing-indicator">
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            </div>
+        </div>
+        
+        <div class="chatbot-input-container">
+            <input 
+                type="text" 
+                id="chatbot-input" 
+                class="chatbot-input" 
+                placeholder="Escribe tu mensaje aquí..."
+                maxlength="1000"
+            />
+            <button id="chatbot-send-btn" class="chatbot-send-btn">
+                <i class="fas fa-paper-plane"></i>
+            </button>
+        </div>
+    </div>
+    
+    <script>
+        const chatbotInput = document.getElementById('chatbot-input');
+        const chatbotSendBtn = document.getElementById('chatbot-send-btn');
+        const chatbotMessages = document.getElementById('chatbot-messages');
+        const typingIndicator = document.getElementById('typing-indicator');
+        const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+        
+        function addMessage(role, message, isCrisis = false, psicologo = null) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+            
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.innerHTML = role === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-robot"></i>';
+            
+            const content = document.createElement('div');
+            content.className = `message-content ${isCrisis ? 'message-crisis' : ''}`;
+            content.innerHTML = `<p>${message.replace(/\n/g, '<br>')}</p>`;
+            
+            if (psicologo) {
+                const psicologoDiv = document.createElement('div');
+                psicologoDiv.className = 'psicologo-recomendado';
+                psicologoDiv.innerHTML = `
+                    <strong><i class="fas fa-user-md"></i> Psicólogo Recomendado:</strong>
+                    <p>${psicologo.nombre} - ${psicologo.especialidad || ''}</p>
+                    <a href="/listar_agendas/" class="btn btn-primary">Ver Disponibilidad</a>
+                `;
+                content.appendChild(psicologoDiv);
+            }
+            
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(content);
+            chatbotMessages.insertBefore(messageDiv, typingIndicator);
+            chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+        }
+        
+        function sendMessage() {
+            const message = chatbotInput.value.trim();
+            if (!message) return;
+            
+            // Agregar mensaje del usuario
+            addMessage('user', message);
+            chatbotInput.value = '';
+            chatbotSendBtn.disabled = true;
+            typingIndicator.classList.add('active');
+            
+            // Enviar a servidor
+            const formData = new FormData();
+            formData.append('mensaje', message);
+            formData.append('csrfmiddlewaretoken', csrfToken);
+            
+            fetch('/chatbot/send/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': csrfToken
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                typingIndicator.classList.remove('active');
+                chatbotSendBtn.disabled = false;
+                
+                if (data.error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: data.error
+                    });
+                    return;
+                }
+                
+                // Agregar respuesta del asistente
+                addMessage('assistant', data.respuesta, data.es_crisis, data.psicologo);
+                
+                // Si hay crisis, mostrar alerta
+                if (data.es_crisis) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Crisis Detectada',
+                        html: `
+                            <p>Hemos detectado que podrías estar en una situación de crisis.</p>
+                            <p><strong>Por favor, contacta inmediatamente con un profesional o línea de emergencia:</strong></p>
+                            <ul style="text-align: left;">
+                                <li>Línea de Prevención del Suicidio: 600 360 7777</li>
+                                <li>Salud Responde: 600 360 7777</li>
+                                <li>Emergencias: 133</li>
+                            </ul>
+                            ${data.psicologo ? `<p>También te recomendamos contactar con: <strong>${data.psicologo.nombre}</strong></p>` : ''}
+                        `,
+                        confirmButtonText: 'Entendido',
+                        confirmButtonColor: '#667eea'
+                    });
+                }
+            })
+            .catch(error => {
+                typingIndicator.classList.remove('active');
+                chatbotSendBtn.disabled = false;
+                console.error('Error:', error);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Ocurrió un error al enviar el mensaje. Por favor, intenta nuevamente.'
+                });
+            });
+        }
+        
+        chatbotSendBtn.addEventListener('click', sendMessage);
+        chatbotInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // Auto-scroll al final
+        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    </script>
+    
+    {% include 'core/footer.html' %}
+</body>
+</html>
+

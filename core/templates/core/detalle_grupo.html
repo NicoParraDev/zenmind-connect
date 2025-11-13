@@ -1,0 +1,119 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ grupo.nombre }} - ZenMindConnect</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS -->
+    {% load static compress %}
+    {% compress css file zenmind_css %}
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_base.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_navbar.css' %}">
+    <link rel="stylesheet" href="{% static 'CSS/zenmind_2.0_components.css' %}">
+    {% endcompress %}
+</head>
+<body>
+    {% include 'core/navbar.html' %}
+    
+    <div class="container" style="max-width: 1200px; margin: var(--spacing-xl) auto; padding: var(--spacing-lg);">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: var(--spacing-lg);">
+                <div>
+                    <span class="badge badge-primary">{{ grupo.get_tema_display }}</span>
+                    <h1>{{ grupo.nombre }}</h1>
+                    <p style="color: var(--color-text-secondary);">{{ grupo.descripcion }}</p>
+                </div>
+                <div style="display: flex; gap: var(--spacing-md);">
+                    {% if es_miembro %}
+                    <a href="{% url 'sala_grupo' grupo.id %}" class="btn btn-primary">
+                        <i class="fas fa-video"></i> Entrar a Sala
+                    </a>
+                    <form method="post" action="{% url 'salir_grupo' grupo.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-secondary">Salir del Grupo</button>
+                    </form>
+                    {% else %}
+                    {% if grupo.tiene_espacio %}
+                    <form method="post" action="{% url 'unirse_grupo' grupo.id %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-user-plus"></i> Unirse al Grupo
+                        </button>
+                    </form>
+                    {% else %}
+                    <span class="badge badge-warning">Grupo Lleno</span>
+                    {% endif %}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: var(--spacing-lg);">
+                <!-- Miembros -->
+                <div>
+                    <h3><i class="fas fa-users"></i> Miembros ({{ grupo.get_miembro_count }}/{{ grupo.max_miembros }})</h3>
+                    <div class="list-group">
+                        {% for miembro in miembros %}
+                        <div class="list-group-item">
+                            {{ miembro.persona.nombre }} {{ miembro.persona.apellido }}
+                            {% if miembro.es_moderador %}
+                            <span class="badge badge-primary">Moderador</span>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <!-- Sesiones Próximas -->
+                <div>
+                    <h3><i class="fas fa-calendar"></i> Próximas Sesiones</h3>
+                    {% if sesiones %}
+                    <div class="list-group">
+                        {% for sesion in sesiones %}
+                        <div class="list-group-item">
+                            <strong>{{ sesion.fecha_programada|date:"d/m/Y H:i" }}</strong>
+                            {% if sesion.tema_sesion %}
+                            <p>{{ sesion.tema_sesion }}</p>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p>No hay sesiones programadas.</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Recursos -->
+            {% if recursos %}
+            <div style="margin-top: var(--spacing-xl);">
+                <h3><i class="fas fa-book"></i> Recursos Compartidos</h3>
+                <div class="list-group">
+                    {% for recurso in recursos %}
+                    <div class="list-group-item">
+                        <strong>{{ recurso.titulo }}</strong>
+                        <p>{{ recurso.descripcion|truncatewords:15 }}</p>
+                        {% if recurso.url %}
+                        <a href="{{ recurso.url }}" target="_blank" class="btn btn-sm btn-secondary">Ver Recurso</a>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    {% include 'core/footer.html' %}
+</body>
+</html>
+

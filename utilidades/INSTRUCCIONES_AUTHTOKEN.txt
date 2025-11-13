@@ -1,0 +1,44 @@
+========================================
+  CONFIGURAR NGROK - PASO A PASO
+========================================
+
+ERROR: ngrok requiere autenticación
+
+SOLUCION:
+
+1. CREAR CUENTA (GRATIS):
+   https://dashboard.ngrok.com/signup
+   
+   - Registrate con tu email
+   - Verifica tu email
+
+2. OBTENER AUTHTOKEN:
+   https://dashboard.ngrok.com/get-started/your-authtoken
+   
+   - Copia tu authtoken
+   - Es una cadena larga de letras y numeros
+
+3. CONFIGURAR AUTHTOKEN:
+   
+   Opcion A: Usar el script
+   Ejecuta: CONFIGURAR_AUTHTOKEN.bat
+   Pega tu authtoken cuando te lo pida
+   
+   Opcion B: Manualmente
+   C:\ngrok\ngrok.exe config add-authtoken TU_AUTHTOKEN
+   
+   (Reemplaza TU_AUTHTOKEN con el que copiaste)
+
+4. LISTO:
+   Despues de configurar, puedes usar ngrok:
+   C:\ngrok\ngrok.exe http 8000
+
+========================================
+  RESUMEN RAPIDO
+========================================
+
+1. https://dashboard.ngrok.com/signup (registrate)
+2. https://dashboard.ngrok.com/get-started/your-authtoken (copia token)
+3. CONFIGURAR_AUTHTOKEN.bat (pega token)
+4. INICIAR_NGROK_SIMPLE.bat (usa ngrok)
+

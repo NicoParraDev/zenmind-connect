@@ -55,3 +55,11 @@ coverage==7.3.2
 
 # Videollamadas (Agora)
 agora-token-builder==1.0.0
+
+# WebSockets (Django Channels)
+channels==4.0.0
+channels-redis==4.1.0
+daphne==4.0.0
+
+# OpenAI API (Chatbot)
+openai==1.3.0

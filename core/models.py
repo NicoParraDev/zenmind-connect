@@ -573,3 +573,197 @@ class ChatMessage(models.Model):
         return f"{self.author.nombre} {self.author.apellido}"
 
 
+# ============================================
+# MODELOS DE CHATBOT Y GRUPOS DE APOYO
+# ============================================
+
+class ChatConversation(models.Model):
+    """
+    Conversación del usuario con el chatbot de IA.
+    """
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name='conversaciones_chatbot', verbose_name='Usuario')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Fecha de creación')
+    updated_at = models.DateTimeField(auto_now=True, db_index=True, verbose_name='Última actualización')
+    is_active = models.BooleanField(default=True, db_index=True, verbose_name='Activa')
+    
+    class Meta:
+        verbose_name = 'Conversación Chatbot'
+        verbose_name_plural = 'Conversaciones Chatbot'
+        ordering = ['-updated_at']
+        indexes = [
+            models.Index(fields=['persona', '-updated_at']),
+            models.Index(fields=['is_active', '-updated_at']),
+        ]
+    
+    def __str__(self):
+        return f"Conversación de {self.persona} - {self.created_at.strftime('%Y-%m-%d %H:%M')}"
+    
+    def get_message_count(self):
+        """Retorna el número de mensajes en la conversación."""
+        return self.mensajes.count()
+
+
+class ChatMessageBot(models.Model):
+    """
+    Mensaje individual en una conversación con el chatbot.
+    """
+    ROLE_CHOICES = [
+        ('user', 'Usuario'),
+        ('assistant', 'Asistente IA'),
+        ('system', 'Sistema'),
+    ]
+    
+    conversation = models.ForeignKey(ChatConversation, on_delete=models.CASCADE, related_name='mensajes', verbose_name='Conversación')
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user', db_index=True, verbose_name='Rol')
+    message = models.TextField(verbose_name='Mensaje')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Fecha de creación')
+    is_crisis_detected = models.BooleanField(default=False, db_index=True, verbose_name='Crisis detectada')
+    psicologo_recomendado = models.ForeignKey('Psicologo', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Psicólogo recomendado')
+    
+    class Meta:
+        verbose_name = 'Mensaje Chatbot'
+        verbose_name_plural = 'Mensajes Chatbot'
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['conversation', 'created_at']),
+            models.Index(fields=['is_crisis_detected']),
+        ]
+    
+    def __str__(self):
+        return f"{self.role}: {self.message[:50]}..."
+
+
+class GrupoApoyo(models.Model):
+    """
+    Grupo de apoyo temático para usuarios.
+    """
+    TEMA_CHOICES = [
+        ('ansiedad', 'Ansiedad'),
+        ('depresion', 'Depresión'),
+        ('duelo', 'Duelo y Pérdida'),
+        ('estres', 'Estrés'),
+        ('autoestima', 'Autoestima'),
+        ('relaciones', 'Relaciones'),
+        ('adicciones', 'Adicciones'),
+        ('trauma', 'Trauma'),
+        ('otro', 'Otro'),
+    ]
+    
+    nombre = models.CharField(max_length=200, verbose_name='Nombre del grupo')
+    descripcion = models.TextField(verbose_name='Descripción')
+    tema = models.CharField(max_length=50, choices=TEMA_CHOICES, db_index=True, verbose_name='Tema')
+    creado_por = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name='grupos_creados', verbose_name='Creado por')
+    psicologo_moderador = models.ForeignKey('Psicologo', on_delete=models.SET_NULL, null=True, blank=True, related_name='grupos_moderados', verbose_name='Psicólogo moderador')
+    max_miembros = models.IntegerField(default=20, verbose_name='Máximo de miembros')
+    is_activo = models.BooleanField(default=True, db_index=True, verbose_name='Activo')
+    is_publico = models.BooleanField(default=True, db_index=True, verbose_name='Público')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Fecha de creación')
+    sala_videocall = models.ForeignKey(VideoCallRoom, on_delete=models.SET_NULL, null=True, blank=True, related_name='grupo_apoyo', verbose_name='Sala de videollamada')
+    
+    class Meta:
+        verbose_name = 'Grupo de Apoyo'
+        verbose_name_plural = 'Grupos de Apoyo'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['tema', 'is_activo']),
+            models.Index(fields=['is_publico', 'is_activo']),
+        ]
+    
+    def __str__(self):
+        return self.nombre
+    
+    def get_miembro_count(self):
+        """Retorna el número de miembros activos."""
+        return self.miembros.filter(is_activo=True).count()
+    
+    def tiene_espacio(self):
+        """Retorna True si el grupo tiene espacio para más miembros."""
+        return self.get_miembro_count() < self.max_miembros
+
+
+class MiembroGrupo(models.Model):
+    """
+    Miembro de un grupo de apoyo.
+    """
+    grupo = models.ForeignKey(GrupoApoyo, on_delete=models.CASCADE, related_name='miembros', verbose_name='Grupo')
+    persona = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name='grupos_miembro', verbose_name='Persona')
+    fecha_union = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Fecha de unión')
+    is_activo = models.BooleanField(default=True, db_index=True, verbose_name='Activo')
+    es_moderador = models.BooleanField(default=False, verbose_name='Es moderador')
+    
+    class Meta:
+        verbose_name = 'Miembro de Grupo'
+        verbose_name_plural = 'Miembros de Grupo'
+        unique_together = ('grupo', 'persona')
+        ordering = ['-fecha_union']
+        indexes = [
+            models.Index(fields=['grupo', 'is_activo']),
+            models.Index(fields=['persona', 'is_activo']),
+        ]
+    
+    def __str__(self):
+        return f"{self.persona} en {self.grupo.nombre}"
+
+
+class SesionGrupo(models.Model):
+    """
+    Sesión grupal de videollamada en un grupo de apoyo.
+    """
+    grupo = models.ForeignKey(GrupoApoyo, on_delete=models.CASCADE, related_name='sesiones', verbose_name='Grupo')
+    sala_videocall = models.ForeignKey(VideoCallRoom, on_delete=models.SET_NULL, null=True, blank=True, related_name='sesion_grupo', verbose_name='Sala de videollamada')
+    fecha_programada = models.DateTimeField(db_index=True, verbose_name='Fecha programada')
+    fecha_inicio = models.DateTimeField(null=True, blank=True, verbose_name='Fecha de inicio')
+    fecha_fin = models.DateTimeField(null=True, blank=True, verbose_name='Fecha de fin')
+    psicologo_facilitador = models.ForeignKey('Psicologo', on_delete=models.SET_NULL, null=True, blank=True, verbose_name='Psicólogo facilitador')
+    tema_sesion = models.CharField(max_length=200, blank=True, verbose_name='Tema de la sesión')
+    notas = models.TextField(blank=True, verbose_name='Notas de la sesión')
+    is_activa = models.BooleanField(default=False, db_index=True, verbose_name='Sesión activa')
+    
+    class Meta:
+        verbose_name = 'Sesión de Grupo'
+        verbose_name_plural = 'Sesiones de Grupo'
+        ordering = ['-fecha_programada']
+        indexes = [
+            models.Index(fields=['grupo', '-fecha_programada']),
+            models.Index(fields=['is_activa']),
+        ]
+    
+    def __str__(self):
+        return f"Sesión de {self.grupo.nombre} - {self.fecha_programada.strftime('%Y-%m-%d %H:%M')}"
+
+
+class RecursoGrupo(models.Model):
+    """
+    Recurso compartido en un grupo de apoyo (artículos, videos, etc.).
+    """
+    TIPO_CHOICES = [
+        ('articulo', 'Artículo'),
+        ('video', 'Video'),
+        ('audio', 'Audio'),
+        ('pdf', 'PDF'),
+        ('enlace', 'Enlace'),
+        ('otro', 'Otro'),
+    ]
+    
+    grupo = models.ForeignKey(GrupoApoyo, on_delete=models.CASCADE, related_name='recursos', verbose_name='Grupo')
+    titulo = models.CharField(max_length=200, verbose_name='Título')
+    descripcion = models.TextField(blank=True, verbose_name='Descripción')
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, db_index=True, verbose_name='Tipo')
+    url = models.URLField(blank=True, null=True, max_length=500, verbose_name='URL')
+    archivo = models.FileField(upload_to='recursos_grupos/', blank=True, null=True, verbose_name='Archivo')
+    compartido_por = models.ForeignKey(Persona, on_delete=models.CASCADE, related_name='recursos_compartidos', verbose_name='Compartido por')
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True, verbose_name='Fecha de creación')
+    
+    class Meta:
+        verbose_name = 'Recurso de Grupo'
+        verbose_name_plural = 'Recursos de Grupo'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['grupo', '-created_at']),
+            models.Index(fields=['tipo']),
+        ]
+    
+    def __str__(self):
+        return f"{self.titulo} - {self.grupo.nombre}"
+
+

@@ -31,11 +31,30 @@
                 </li>
                 
                 {% if user.persona %}
-                <li class="nav-item">
-                    <a href="{% url 'autenticar_persona' %}" class="nav-link">
-                        <i class="fas fa-calendar-check"></i> Reservar Cita
+                <!-- Menú desplegable de Servicios -->
+                <li class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle">
+                        <i class="fas fa-heart"></i> Servicios
                     </a>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a href="{% url 'chatbot' %}" class="nav-link">
+                                <i class="fas fa-robot"></i> Chatbot IA
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'listar_grupos' %}" class="nav-link">
+                                <i class="fas fa-users"></i> Grupos de Apoyo
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'autenticar_persona' %}" class="nav-link">
+                                <i class="fas fa-calendar-check"></i> Reservar Cita
+                            </a>
+                        </li>
+                    </ul>
                 </li>
+                
                 <li class="nav-item">
                     <a href="{% url 'videocall_lobby' %}" class="nav-link nav-link-videocall">
                         <i class="fas fa-video"></i> Videollamada
@@ -161,6 +180,43 @@
         const nav = document.getElementById('navbarNav');
         nav.classList.toggle('active');
     }
+    
+    // Manejar dropdowns
+    document.addEventListener('DOMContentLoaded', function() {
+        const dropdowns = document.querySelectorAll('.dropdown');
+        
+        dropdowns.forEach(dropdown => {
+            const toggle = dropdown.querySelector('.dropdown-toggle');
+            const menu = dropdown.querySelector('.dropdown-menu');
+            
+            if (toggle && menu) {
+                // Cerrar otros dropdowns al abrir uno
+                toggle.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Cerrar otros dropdowns
+                    dropdowns.forEach(other => {
+                        if (other !== dropdown) {
+                            other.classList.remove('active');
+                        }
+                    });
+                    
+                    // Toggle del dropdown actual
+                    dropdown.classList.toggle('active');
+                });
+            }
+        });
+        
+        // Cerrar dropdowns al hacer click fuera
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.dropdown')) {
+                dropdowns.forEach(dropdown => {
+                    dropdown.classList.remove('active');
+                });
+            }
+        });
+    });
     
     function toggleNotificaciones() {
         const lista = document.getElementById('lista-notificaciones');

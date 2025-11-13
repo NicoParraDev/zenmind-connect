@@ -20,6 +20,9 @@ urlpatterns = [
     path('robots.txt', robots_txt, name='robots_txt'),
 ]
 
-# Servir archivos media en desarrollo
+# Servir archivos media y estáticos en desarrollo
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+    # Servir archivos estáticos desde STATICFILES_DIRS y directorios static/ de apps
+    from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+    urlpatterns += staticfiles_urlpatterns()

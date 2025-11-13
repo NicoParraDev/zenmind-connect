@@ -415,24 +415,71 @@ def create_room_member(request):
 def get_room_member(request):
     """
     Obtiene información de un miembro en una sala.
+    Si el UID corresponde al usuario actual, verifica si sigue siendo miembro activo.
+    Si el UID corresponde a otro usuario, solo verifica que exista en la sala.
     """
     try:
         uid = request.GET.get('UID')
         room_name = request.GET.get('room_name')
         
         if not uid or not room_name:
-            return JsonResponse({'error': 'Parámetros incompletos'}, status=400)
+            return JsonResponse({'error': 'Parámetros incompletos', 'is_active': False}, status=400)
         
         room = get_object_or_404(VideoCallRoom, name=room_name)
-        member = get_object_or_404(RoomMember, room=room, uid=uid, insession=True)
         
-        return JsonResponse({
-            'name': f"{member.persona.nombre} {member.persona.apellido}"
-        }, safe=False)
+        try:
+            persona = Persona.objects.get(user=request.user)
+        except Persona.DoesNotExist:
+            return JsonResponse({'error': 'Perfil no encontrado', 'is_active': False}, status=400)
+        
+        # IMPORTANTE: Verificar SOLO por UID, NO por persona
+        # Esto evita problemas cuando múltiples navegadores comparten la misma sesión
+        # El UID es único por navegador/sesión de Agora, así que es la forma más precisa
+        
+        # Buscar el miembro SOLO por UID (ignorar persona completamente)
+        try:
+            # Primero intentar con insession=True (miembro activo)
+            member = RoomMember.objects.get(room=room, uid=str(uid), insession=True)
+            return JsonResponse({
+                'name': f"{member.persona.nombre} {member.persona.apellido}",
+                'is_active': True
+            }, safe=False)
+        except RoomMember.DoesNotExist:
+            # Si no está activo, buscar sin restricción de insession
+            try:
+                member = RoomMember.objects.get(room=room, uid=str(uid))
+                # Si existe pero insession=False, fue expulsado o salió
+                return JsonResponse({
+                    'name': f"{member.persona.nombre} {member.persona.apellido}",
+                    'is_active': member.insession  # False si fue expulsado
+                }, safe=False)
+            except RoomMember.DoesNotExist:
+                # El miembro con este UID no existe en la sala
+                # Esto puede ocurrir si:
+                # 1. El usuario se unió a Agora pero aún no se creó su registro en BD
+                # 2. El UID es incorrecto
+                # En este caso, NO devolver is_active=False porque causaría expulsión incorrecta
+                # En su lugar, devolver is_active=True para permitir que el usuario continúe
+                logger.info(f"Miembro con UID {uid} no encontrado en sala {room_name} - permitiendo continuar (puede estar en proceso de unirse)")
+                return JsonResponse({
+                    'name': f"Usuario {uid}",
+                    'is_active': True  # Permitir que continúe si no existe registro aún
+                }, safe=False)
+        except Exception as e:
+            logger.error(f"Error buscando miembro con UID {uid}: {e}", exc_info=True)
+            # En caso de error, devolver nombre genérico
+            return JsonResponse({
+                'name': f"Usuario {uid}",
+                'is_active': False
+            }, safe=False)
         
     except Exception as e:
         logger.error(f"Error obteniendo miembro: {e}", exc_info=True)
-        return JsonResponse({'error': str(e)}, status=500)
+        # En caso de error general, devolver nombre genérico en lugar de error 500
+        return JsonResponse({
+            'name': f"Usuario {uid if uid else 'desconocido'}",
+            'is_active': False
+        }, safe=False)
 
 
 @login_required
@@ -515,11 +562,16 @@ def send_chat_message(request):
                 author=persona,
                 message=message_text
             )
+            
+            # Log para debugging de pizarra
+            is_whiteboard = message_text.startswith('WHITEBOARD:')
+            if is_whiteboard:
+                logger.info(f"[send_chat_message] ✅ Mensaje de PIZARRA guardado: ID={message.id}, Autor={persona}, Longitud={len(message_text)}")
+            else:
+                logger.info(f"Mensaje enviado por {persona} en sala {room_name}")
         except Exception as create_error:
             logger.error(f"Error creando mensaje: {create_error}", exc_info=True)
             return JsonResponse({'error': f'Error al crear mensaje: {str(create_error)}'}, status=500)
-        
-        logger.info(f"Mensaje enviado por {persona} en sala {room_name}")
         
         # Obtener nombre del autor de forma segura
         try:
@@ -655,8 +707,25 @@ def get_chat_messages(request, room_name):
         except VideoCallRoom.DoesNotExist:
             return JsonResponse({'error': 'Sala no encontrada o inactiva'}, status=404)
         
-        # Obtener mensajes (últimos 100)
-        messages = ChatMessage.objects.filter(room=room).order_by('created_at')[:100]
+        # Obtener mensajes (últimos 100, más recientes primero)
+        messages = ChatMessage.objects.filter(room=room).order_by('-created_at')[:100]
+        
+        # Log para debugging con detalles de borrado
+        whiteboard_count = sum(1 for msg in messages if msg.message and msg.message.startswith('WHITEBOARD:'))
+        eraser_count = 0
+        clear_count = 0
+        for msg in messages:
+            if msg.message and msg.message.startswith('WHITEBOARD:'):
+                try:
+                    action_str = msg.message.replace('WHITEBOARD:', '')
+                    action = json.loads(action_str)
+                    if action.get('tool') == 'eraser':
+                        eraser_count += 1
+                    elif action.get('type') == 'clear':
+                        clear_count += 1
+                except:
+                    pass
+        logger.info(f"[get_chat_messages] Sala {room_name}: {len(messages)} mensajes totales, {whiteboard_count} de pizarra (🧹 {eraser_count} borrados, 🗑️ {clear_count} limpiezas)")
         
         messages_data = []
         for msg in messages:
@@ -905,14 +974,18 @@ def kick_participant(request):
         if member.persona.pk == persona.pk:
             return JsonResponse({'error': 'No puedes expulsarte a ti mismo'}, status=400)
         
+        # Guardar el UID de Agora antes de marcar como fuera de sesión
+        agora_uid = member.uid
+        
         # Marcar como fuera de sesión
         member.leave_session()
         
-        logger.info(f"Usuario {member.persona} expulsado de sala {room_name} por {persona}")
+        logger.info(f"Usuario {member.persona} (UID: {agora_uid}) expulsado de sala {room_name} por {persona}")
         
         return JsonResponse({
             'success': True,
-            'message': f'{member.persona.nombre} {member.persona.apellido} ha sido expulsado de la sala'
+            'message': f'{member.persona.nombre} {member.persona.apellido} ha sido expulsado de la sala',
+            'uid': agora_uid  # UID de Agora para remover el video
         })
         
     except json.JSONDecodeError:
