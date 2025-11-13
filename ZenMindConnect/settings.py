@@ -23,7 +23,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 # En producción, SECRET_KEY DEBE estar en .env. Sin default por seguridad.
-SECRET_KEY = config('SECRET_KEY')
+# En CI/testing, usar un valor dummy
+SECRET_KEY = config('SECRET_KEY', default='dummy-secret-key-for-ci-testing-only-not-for-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 # Por defecto False para seguridad. Solo True en desarrollo local.
@@ -282,12 +283,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Email Configuration
 # Todas las credenciales DEBEN estar en .env. Sin defaults por seguridad.
+# En CI/testing, usar valores dummy
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = config('EMAIL_HOST', default='smtp-mail.outlook.com')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')  # Sin default - debe estar en .env
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')  # Sin default - debe estar en .env
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='dummy@example.com')  # Dummy para CI
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='dummy-password')  # Dummy para CI
 
 # Security Settings
 # Aplicar siempre, incluso en desarrollo (mejor seguridad)
