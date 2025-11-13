@@ -27,9 +27,6 @@ from core.decorators import rate_limit, rate_limit_by_username
 from core.security import ip_esta_bloqueada, validar_tipo_archivo, registrar_intento_sospechoso
 from django.contrib.auth.models import User
 import os
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 def generar_pdf_comprobante(persona, agenda, horario_agenda):
@@ -514,8 +511,6 @@ def marcar_consulta(request, id):
         send_reservation_email(persona, agenda, horario_agenda)
     except Exception as e:
         # No fallar la reserva si el correo falla, solo loguear
-        import logging
-        logger = logging.getLogger(__name__)
         logger.error(f"Error al enviar correo de comprobante: {e}")
     
     messages.success(
