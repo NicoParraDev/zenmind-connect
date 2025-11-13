@@ -1,0 +1,6 @@
+# Dependencias específicas de Windows
+# Instalar con: pip install -r requirements-windows.txt
+# Solo necesario si ejecutas el proyecto en Windows
+
+pywin32==306
+

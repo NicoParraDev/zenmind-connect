@@ -49,7 +49,7 @@ MarkupSafe==2.1.3
 PyYAML==6.0.1
 
 # Windows specific (si es necesario)
-pywin32==306
+# pywin32==306  # Movido a requirements-windows.txt (solo para Windows)
 
 # Testing
 coverage==7.3.2
