@@ -46,8 +46,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Instalar dependencias excluyendo pywin32 (solo Windows, no disponible en Linux)
-        pip install $(grep -v "^#" requirements.txt | grep -v "pywin32" | grep -v "^$" | tr '\n' ' ')
+        # Crear requirements temporal sin pywin32 (solo Windows)
+        grep -v "^#" requirements.txt | grep -v "^$" | grep -v "pywin32" > /tmp/requirements-ci.txt
+        pip install -r /tmp/requirements-ci.txt
 
     - name: Run migrations
       env:
@@ -173,8 +174,9 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        # Instalar dependencias excluyendo pywin32 (solo Windows, no disponible en Linux)
-        pip install $(grep -v "^#" requirements.txt | grep -v "pywin32" | grep -v "^$" | tr '\n' ' ')
+        # Crear requirements temporal sin pywin32 (solo Windows)
+        grep -v "^#" requirements.txt | grep -v "^$" | grep -v "pywin32" > /tmp/requirements-ci.txt
+        pip install -r /tmp/requirements-ci.txt
 
     - name: Collect static files
       env:
