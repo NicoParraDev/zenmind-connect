@@ -85,23 +85,35 @@ def unirse_grupo(grupo: GrupoApoyo, persona: Persona) -> Tuple[bool, str]:
         if not grupo.tiene_espacio():
             return False, "Este grupo ha alcanzado su capacidad máxima."
         
-        # Verificar que no sea miembro ya
+        # Verificar si ya es miembro activo
         if MiembroGrupo.objects.filter(grupo=grupo, persona=persona, is_activo=True).exists():
             return False, "Ya eres miembro de este grupo."
         
-        # Agregar como miembro
-        MiembroGrupo.objects.create(
+        # Verificar si existe un registro inactivo (usuario que salió antes)
+        miembro_existente = MiembroGrupo.objects.filter(
             grupo=grupo,
             persona=persona,
-            is_activo=True
-        )
+            is_activo=False
+        ).first()
         
-        logger.info(f"{persona} se unió al grupo {grupo.nombre}")
-        
-        return True, "Te has unido al grupo exitosamente."
+        if miembro_existente:
+            # Reactivar el miembro existente
+            miembro_existente.is_activo = True
+            miembro_existente.save()
+            logger.info(f"{persona} se reincorporó al grupo {grupo.nombre}")
+            return True, "Te has reincorporado al grupo exitosamente."
+        else:
+            # Crear nuevo registro de miembro
+            MiembroGrupo.objects.create(
+                grupo=grupo,
+                persona=persona,
+                is_activo=True
+            )
+            logger.info(f"{persona} se unió al grupo {grupo.nombre}")
+            return True, "Te has unido al grupo exitosamente."
         
     except Exception as e:
-        logger.error(f"Error al unirse al grupo: {e}")
+        logger.error(f"Error al unirse al grupo: {e}", exc_info=True)
         return False, "Ocurrió un error al unirse al grupo."
 
 

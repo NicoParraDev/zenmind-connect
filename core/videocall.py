@@ -725,7 +725,7 @@ def get_chat_messages(request, room_name):
                         clear_count += 1
                 except:
                     pass
-        logger.info(f"[get_chat_messages] Sala {room_name}: {len(messages)} mensajes totales, {whiteboard_count} de pizarra (🧹 {eraser_count} borrados, 🗑️ {clear_count} limpiezas)")
+        logger.info(f"[get_chat_messages] Sala {room_name}: {len(messages)} mensajes totales, {whiteboard_count} de pizarra ({eraser_count} borrados, {clear_count} limpiezas)")
         
         messages_data = []
         for msg in messages:

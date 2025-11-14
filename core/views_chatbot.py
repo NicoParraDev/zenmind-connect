@@ -15,12 +15,15 @@ logger = logging.getLogger(__name__)
 
 
 @login_required
-def chatbot_view(request: HttpRequest) -> HttpResponse:
+def chatbot_view(request: HttpRequest, conversacion_id: int = None) -> HttpResponse:
     """
     Vista principal del chatbot.
+    Mantiene la conversación activa o carga una conversación específica.
+    Solo crea nueva conversación si no hay ninguna activa.
     
     Args:
         request: HttpRequest
+        conversacion_id: ID opcional de conversación a cargar
         
     Returns:
         HttpResponse: Renderiza la interfaz del chatbot
@@ -28,19 +31,59 @@ def chatbot_view(request: HttpRequest) -> HttpResponse:
     try:
         persona = get_object_or_404(Persona, user=request.user)
         
-        # Obtener conversación activa
-        from .chatbot import obtener_conversacion_activa
-        conversacion = obtener_conversacion_activa(persona)
+        # Si se especifica un ID de conversación, cargar esa
+        if conversacion_id:
+            conversacion = get_object_or_404(
+                ChatConversation, 
+                id=conversacion_id, 
+                persona=persona
+            )
+            # Marcar como activa
+            ChatConversation.objects.filter(
+                persona=persona,
+                is_active=True
+            ).update(is_active=False)
+            conversacion.is_active = True
+            conversacion.save()
+        else:
+            # Obtener conversación activa existente o crear una nueva
+            from .chatbot import obtener_conversacion_activa
+            conversacion = obtener_conversacion_activa(persona)
         
-        # Obtener historial de mensajes
+        # Obtener historial de mensajes de la conversación actual
         mensajes = ChatMessageBot.objects.filter(
             conversation=conversacion
         ).order_by('created_at')[:50]
+        
+        # Obtener todas las conversaciones del usuario (para el sidebar)
+        conversaciones = ChatConversation.objects.filter(
+            persona=persona
+        ).order_by('-updated_at')[:20]  # Últimas 20 conversaciones
+        
+        # Agregar título a cada conversación (primer mensaje del usuario)
+        conversaciones_con_titulo = []
+        for conv in conversaciones:
+            primer_mensaje = ChatMessageBot.objects.filter(
+                conversation=conv,
+                role='user'
+            ).order_by('created_at').first()
+            
+            titulo = "Nueva conversación"
+            if primer_mensaje:
+                titulo = primer_mensaje.message[:50]
+                if len(primer_mensaje.message) > 50:
+                    titulo += "..."
+            
+            conversaciones_con_titulo.append({
+                'conversacion': conv,
+                'titulo': titulo
+            })
         
         context = {
             'persona': persona,
             'conversacion': conversacion,
             'mensajes': mensajes,
+            'conversaciones_con_titulo': conversaciones_con_titulo,
         }
         
         return render(request, 'core/chatbot.html', context)
@@ -187,12 +230,171 @@ def chatbot_new_conversation(request: HttpRequest) -> JsonResponse:
         
         return JsonResponse({
             'conversacion_id': conversacion.id,
-            'success': True
+            'success': True,
+            'redirect_url': f'/chatbot/{conversacion.id}/'
         })
         
     except Exception as e:
         logger.error(f"Error en chatbot_new_conversation: {e}", exc_info=True)
         return JsonResponse({
             'error': 'Error al crear nueva conversación.'
+        }, status=500)
+
+
+@login_required
+def chatbot_list_conversations(request: HttpRequest) -> JsonResponse:
+    """
+    Obtiene la lista de conversaciones del usuario.
+    
+    Args:
+        request: HttpRequest
+        
+    Returns:
+        JsonResponse con la lista de conversaciones
+    """
+    try:
+        persona = get_object_or_404(Persona, user=request.user)
+        
+        conversaciones = ChatConversation.objects.filter(
+            persona=persona
+        ).order_by('-updated_at')[:50]
+        
+        conversaciones_data = []
+        for conv in conversaciones:
+            # Obtener el primer mensaje del usuario como título
+            primer_mensaje = ChatMessageBot.objects.filter(
+                conversation=conv,
+                role='user'
+            ).order_by('created_at').first()
+            
+            titulo = "Nueva conversación"
+            if primer_mensaje:
+                titulo = primer_mensaje.message[:50]
+                if len(primer_mensaje.message) > 50:
+                    titulo += "..."
+            
+            conversaciones_data.append({
+                'id': conv.id,
+                'titulo': titulo,
+                'created_at': conv.created_at.isoformat(),
+                'updated_at': conv.updated_at.isoformat(),
+                'is_active': conv.is_active,
+                'message_count': conv.get_message_count(),
+            })
+        
+        return JsonResponse({
+            'conversaciones': conversaciones_data
+        })
+        
+    except Exception as e:
+        logger.error(f"Error en chatbot_list_conversations: {e}", exc_info=True)
+        return JsonResponse({
+            'error': 'Error al obtener conversaciones.'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def chatbot_delete_conversation(request: HttpRequest, conversacion_id: int) -> JsonResponse:
+    """
+    Elimina una conversación del usuario.
+    
+    Args:
+        request: HttpRequest
+        conversacion_id: ID de la conversación a eliminar
+        
+    Returns:
+        JsonResponse con el resultado
+    """
+    try:
+        persona = get_object_or_404(Persona, user=request.user)
+        conversacion = get_object_or_404(
+            ChatConversation, 
+            id=conversacion_id, 
+            persona=persona
+        )
+        
+        # Eliminar la conversación (esto también eliminará todos los mensajes por CASCADE)
+        conversacion.delete()
+        
+        logger.info(f"Conversación {conversacion_id} eliminada por {persona}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': 'Conversación eliminada correctamente'
+        })
+        
+    except ChatConversation.DoesNotExist:
+        return JsonResponse({
+            'error': 'Conversación no encontrada.'
+        }, status=404)
+    except Exception as e:
+        logger.error(f"Error en chatbot_delete_conversation: {e}", exc_info=True)
+        return JsonResponse({
+            'error': 'Error al eliminar la conversación.'
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def chatbot_delete_multiple(request: HttpRequest) -> JsonResponse:
+    """
+    Elimina múltiples conversaciones del usuario.
+    
+    Args:
+        request: HttpRequest con JSON body: {"ids": [1, 2, 3, ...]}
+        
+    Returns:
+        JsonResponse con el resultado
+    """
+    try:
+        import json
+        persona = get_object_or_404(Persona, user=request.user)
+        
+        # Obtener los IDs del body JSON
+        data = json.loads(request.body)
+        ids = data.get('ids', [])
+        
+        if not ids or not isinstance(ids, list):
+            return JsonResponse({
+                'error': 'Se requiere una lista de IDs válidos.'
+            }, status=400)
+        
+        # Validar que todas las conversaciones pertenezcan al usuario
+        conversaciones = ChatConversation.objects.filter(
+            id__in=ids,
+            persona=persona
+        )
+        
+        # Verificar que se encontraron todas las conversaciones solicitadas
+        found_ids = set(conversaciones.values_list('id', flat=True))
+        requested_ids = set(ids)
+        
+        if found_ids != requested_ids:
+            missing_ids = requested_ids - found_ids
+            return JsonResponse({
+                'error': f'No se encontraron algunas conversaciones: {list(missing_ids)}'
+            }, status=404)
+        
+        # Eliminar las conversaciones (esto también eliminará todos los mensajes por CASCADE)
+        count = conversaciones.count()
+        conversaciones.delete()
+        
+        logger.info(f"{count} conversación(es) eliminada(s) por {persona}: {ids}")
+        
+        return JsonResponse({
+            'success': True,
+            'message': f'{count} conversación(es) eliminada(s) correctamente',
+            'count': count
+        })
+        
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'error': 'Formato JSON inválido.'
+        }, status=400)
+    except Exception as e:
+        logger.error(f"Error en chatbot_delete_multiple: {e}", exc_info=True)
+        return JsonResponse({
+            'error': 'Error al eliminar las conversaciones.'
         }, status=500)
 

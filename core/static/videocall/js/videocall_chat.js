@@ -22,22 +22,55 @@ let typingCheckInterval = null;
 
 // Función para inicializar datos de chat
 function initializeChatData() {
+    // Prioridad 1: window.VIDEOCALL_ROOM (establecido en el template)
+    if (window.VIDEOCALL_ROOM) {
+        CHAT_ROOM = window.VIDEOCALL_ROOM;
+        sessionStorage.setItem('room', CHAT_ROOM);
+    }
+    
+    // Prioridad 2: sessionStorage
     if (!CHAT_ROOM) {
-        // Intentar leer de la URL como fallback
+        CHAT_ROOM = sessionStorage.getItem('room');
+    }
+    
+    // Prioridad 3: data attribute del elemento room-config
+    if (!CHAT_ROOM) {
+        const roomConfigElement = document.getElementById('room-config');
+        if (roomConfigElement) {
+            CHAT_ROOM = roomConfigElement.getAttribute('data-room-name');
+            if (CHAT_ROOM) {
+                sessionStorage.setItem('room', CHAT_ROOM);
+            }
+        }
+    }
+    
+    // Prioridad 4: Intentar leer de la URL como fallback
+    if (!CHAT_ROOM) {
         const urlParts = window.location.pathname.split('/');
         const roomFromUrl = urlParts[urlParts.length - 1];
-        if (roomFromUrl && roomFromUrl !== 'room') {
+        if (roomFromUrl && roomFromUrl !== 'room' && !roomFromUrl.includes('?')) {
             CHAT_ROOM = roomFromUrl;
             sessionStorage.setItem('room', CHAT_ROOM);
         }
     }
     
     if (!CHAT_USER) {
-        // Intentar obtener del contexto de la página si está disponible
-        const nameElement = document.querySelector('[data-user-name]');
-        if (nameElement) {
-            CHAT_USER = nameElement.getAttribute('data-user-name');
+        // Prioridad 1: window.VIDEOCALL_USER
+        if (window.VIDEOCALL_USER) {
+            CHAT_USER = window.VIDEOCALL_USER;
             sessionStorage.setItem('name', CHAT_USER);
+        }
+        // Prioridad 2: data attribute
+        if (!CHAT_USER) {
+            const nameElement = document.querySelector('[data-user-name]');
+            if (nameElement) {
+                CHAT_USER = nameElement.getAttribute('data-user-name');
+                sessionStorage.setItem('name', CHAT_USER);
+            }
+        }
+        // Prioridad 3: sessionStorage
+        if (!CHAT_USER) {
+            CHAT_USER = sessionStorage.getItem('name');
         }
     }
     
@@ -91,28 +124,30 @@ function getCSRFToken() {
 function loadChatMessages() {
     // Inicializar datos si no están disponibles
     if (!CHAT_ROOM) {
-        if (!initializeChatData()) {
-            // Intentar leer de sessionStorage directamente
-            CHAT_ROOM = sessionStorage.getItem('room');
-            if (!CHAT_ROOM) {
-                // Intentar leer de la URL como último recurso
-                const urlParts = window.location.pathname.split('/');
-                const roomFromUrl = urlParts[urlParts.length - 1];
-                if (roomFromUrl && roomFromUrl !== 'room' && !roomFromUrl.includes('?')) {
-                    CHAT_ROOM = roomFromUrl;
-                    sessionStorage.setItem('room', CHAT_ROOM);
-                }
-            }
+        initializeChatData();
+    }
+    
+    // Verificar nuevamente después de inicializar
+    if (!CHAT_ROOM) {
+        // Intentar leer de window.VIDEOCALL_ROOM (establecido en template)
+        if (window.VIDEOCALL_ROOM) {
+            CHAT_ROOM = window.VIDEOCALL_ROOM;
+            sessionStorage.setItem('room', CHAT_ROOM);
         }
     }
     
     if (!CHAT_ROOM) {
-        console.warn('No hay sala definida, reintentando en 1 segundo...');
+        console.warn('[Chat] No hay sala definida, reintentando en 1 segundo...');
         // Reintentar después de un momento
         setTimeout(() => {
             loadChatMessages();
         }, 1000);
         return;
+    }
+    
+    // Log para debugging (solo en desarrollo)
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log('[Chat] Cargando mensajes para sala:', CHAT_ROOM);
     }
 
     // Log eliminado para reducir spam en consola (polling constante)
@@ -664,34 +699,23 @@ function hideTypingIndicator() {
 
 // Función para inicializar el chat cuando el DOM esté listo
 function initializeChat() {
-    // Inicializar datos de chat PRIMERO
+    // Inicializar datos de chat PRIMERO (usa la función mejorada)
     initializeChatData();
     
-    // Actualizar CHAT_USER desde sessionStorage o data attribute
-    if (!CHAT_USER) {
-        const nameElement = document.querySelector('[data-user-name]');
-        if (nameElement) {
-            CHAT_USER = nameElement.getAttribute('data-user-name');
-            sessionStorage.setItem('name', CHAT_USER);
-            console.log('CHAT_USER inicializado desde data-user-name:', CHAT_USER);
-        } else {
-            CHAT_USER = sessionStorage.getItem('name');
-            console.log('CHAT_USER obtenido de sessionStorage:', CHAT_USER);
-        }
+    // Asegurar que CHAT_ROOM y CHAT_USER estén actualizados
+    if (!CHAT_ROOM && window.VIDEOCALL_ROOM) {
+        CHAT_ROOM = window.VIDEOCALL_ROOM;
+        sessionStorage.setItem('room', CHAT_ROOM);
     }
     
-    // Actualizar CHAT_ROOM
-    if (!CHAT_ROOM) {
-        CHAT_ROOM = sessionStorage.getItem('room');
-        if (!CHAT_ROOM) {
-            const urlParts = window.location.pathname.split('/');
-            const roomFromUrl = urlParts[urlParts.length - 1];
-            if (roomFromUrl && roomFromUrl !== 'room' && !roomFromUrl.includes('?')) {
-                CHAT_ROOM = roomFromUrl;
-                sessionStorage.setItem('room', CHAT_ROOM);
-            }
-        }
-        console.log('CHAT_ROOM inicializado:', CHAT_ROOM);
+    if (!CHAT_USER && window.VIDEOCALL_USER) {
+        CHAT_USER = window.VIDEOCALL_USER;
+        sessionStorage.setItem('name', CHAT_USER);
+    }
+    
+    // Log para debugging (solo en desarrollo)
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        console.log('[Chat] Inicializado - Sala:', CHAT_ROOM, 'Usuario:', CHAT_USER);
     }
     
     const input = document.getElementById('chat-input-field');

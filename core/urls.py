@@ -106,9 +106,13 @@ urlpatterns = [
     
     # Chatbot con OpenAI
     path('chatbot/', views_chatbot.chatbot_view, name='chatbot'),
+    path('chatbot/<int:conversacion_id>/', views_chatbot.chatbot_view, name='chatbot_conversation'),
     path('chatbot/send/', views_chatbot.chatbot_send_message, name='chatbot_send_message'),
     path('chatbot/history/<int:conversacion_id>/', views_chatbot.chatbot_get_history, name='chatbot_get_history'),
     path('chatbot/new/', views_chatbot.chatbot_new_conversation, name='chatbot_new_conversation'),
+    path('chatbot/list/', views_chatbot.chatbot_list_conversations, name='chatbot_list_conversations'),
+    path('chatbot/delete/<int:conversacion_id>/', views_chatbot.chatbot_delete_conversation, name='chatbot_delete_conversation'),
+    path('chatbot/delete-multiple/', views_chatbot.chatbot_delete_multiple, name='chatbot_delete_multiple'),
     
     # Grupos de Apoyo
     path('grupos/', views_grupos.listar_grupos, name='listar_grupos'),

@@ -473,6 +473,61 @@
             border-color: #10b981;
         }
         
+        /* Indicador de voz - cuando alguien está hablando */
+        #video-grid > div[id^="user-container-"].user-speaking {
+            border-color: #10b981 !important;
+            border-width: 4px !important;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.9), 0 0 50px rgba(16, 185, 129, 0.5) !important;
+            transition: border-color 0.1s ease, box-shadow 0.1s ease;
+            transform: scale(1.02);
+        }
+        
+        .speaking-indicator {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 8px 12px;
+            border-radius: var(--radius-md);
+            font-size: 1em;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            z-index: 15;
+            animation: speakingPulse 1s ease-in-out infinite;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.6), 0 0 20px rgba(16, 185, 129, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .speaking-indicator i {
+            animation: microphonePulse 0.6s ease-in-out infinite;
+            font-size: 1.1em;
+        }
+        
+        @keyframes speakingPulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+                box-shadow: 0 4px 15px rgba(16, 185, 129, 0.6), 0 0 20px rgba(16, 185, 129, 0.4);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.1);
+                box-shadow: 0 6px 20px rgba(16, 185, 129, 0.9), 0 0 30px rgba(16, 185, 129, 0.6);
+            }
+        }
+        
+        @keyframes microphonePulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.3);
+            }
+        }
+        
         /* Wrapper de nombre de usuario */
         .username-wrapper {
             position: absolute;
@@ -887,6 +942,487 @@
         .chat-send-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Barra superior de dispositivos y efectos */
+        .top-controls-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: var(--spacing-md) var(--spacing-lg);
+            background: rgba(26, 31, 58, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 200;
+            gap: var(--spacing-lg);
+        }
+        
+        .device-selectors {
+            display: flex;
+            gap: var(--spacing-md);
+            align-items: center;
+        }
+        
+        .device-selector-group {
+            position: relative;
+        }
+        
+        .device-selector-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(45, 55, 72, 0.8);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: var(--radius-md);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: var(--font-sm);
+            min-width: 150px;
+        }
+        
+        .device-selector-btn:hover {
+            background: rgba(45, 55, 72, 1);
+            border-color: rgba(102, 126, 234, 0.6);
+        }
+        
+        .device-selector-btn i:first-child {
+            font-size: 1em;
+        }
+        
+        .device-selector-btn span {
+            flex: 1;
+            text-align: left;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .device-selector-btn i:last-child {
+            font-size: 0.8em;
+            opacity: 0.7;
+        }
+        
+        /* Grupo de control con dropdown (para barra inferior) */
+        .control-with-dropdown {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 0;
+            border-radius: 50px;
+            overflow: visible; /* Cambiado de hidden a visible para que el dropdown se vea */
+            background: transparent;
+        }
+        
+        .control-with-dropdown .control-btn {
+            border-radius: 50% 0 0 50%;
+            margin: 0;
+            border-right: none;
+        }
+        
+        .control-dropdown-btn {
+            width: 36px;
+            height: 50px;
+            border-radius: 0 50% 50% 0;
+            border: none;
+            border-left: 1px solid rgba(102, 126, 234, 0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            color: rgba(255, 255, 255, 0.8);
+            margin-left: -1px;
+            position: relative;
+        }
+        
+        .control-dropdown-btn::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 25%;
+            bottom: 25%;
+            width: 1.5px;
+            background: linear-gradient(to bottom, 
+                transparent 0%, 
+                rgba(102, 126, 234, 0.5) 50%, 
+                transparent 100%);
+            border-radius: 1px;
+        }
+        
+        .control-dropdown-btn:hover {
+            background: linear-gradient(135deg, #3d4758 0%, #2d3748 100%);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .control-with-dropdown.active .control-dropdown-btn {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.4) 0%, rgba(118, 75, 162, 0.4) 100%);
+            color: white;
+            box-shadow: 0 0 10px rgba(102, 126, 234, 0.5);
+        }
+        
+        /* Efecto de unión visual entre botones */
+        .control-with-dropdown:hover .control-btn {
+            transform: scale(1.02);
+        }
+        
+        .control-with-dropdown:hover .control-dropdown-btn {
+            transform: scale(1.02);
+        }
+        
+        /* Sombra compartida cuando está activo */
+        .control-with-dropdown.active {
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Indicador de nivel de audio */
+        .audio-level-indicator {
+            position: relative !important;
+            width: 8px !important;
+            height: 32px !important;
+            background: linear-gradient(180deg, rgba(20, 20, 40, 0.95) 0%, rgba(30, 30, 50, 0.95) 100%) !important;
+            border-radius: 4px !important;
+            overflow: hidden !important;
+            display: flex !important; /* Forzar display */
+            align-items: flex-end !important;
+            margin-left: auto !important; /* Empujar al lado derecho del header */
+            margin-right: 10px !important; /* Espacio desde el borde derecho */
+            border: 2px solid rgba(102, 126, 234, 0.7) !important;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(102, 126, 234, 0.2) !important;
+            transition: opacity 0.2s ease;
+            flex-shrink: 0 !important;
+            opacity: 1 !important; /* Totalmente visible por defecto */
+            visibility: visible !important;
+            z-index: 10 !important;
+            min-width: 8px !important;
+            min-height: 32px !important;
+        }
+        
+        .audio-level-bar {
+            position: absolute !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            width: 100% !important;
+            height: 0% !important;
+            background: linear-gradient(to top, 
+                #10b981 0%, 
+                #10b981 50%, 
+                #f59e0b 75%, 
+                #ef4444 100%) !important;
+            border-radius: 3px !important;
+            transition: height 0.08s linear !important; /* Transición rápida para suavidad */
+            box-shadow: 0 0 4px rgba(16, 185, 129, 0.5) !important;
+            display: block !important;
+            visibility: visible !important;
+            z-index: 2 !important;
+        }
+        
+        /* Más visible cuando hay audio */
+        .audio-level-indicator.visible {
+            opacity: 1 !important;
+            border-color: rgba(102, 126, 234, 0.8) !important;
+            box-shadow: 0 1px 8px rgba(102, 126, 234, 0.6) !important;
+        }
+        
+        /* Asegurar visibilidad cuando el dropdown está abierto */
+        .control-dropdown:not([style*="display: none"]) .audio-level-indicator {
+            display: flex !important;
+            visibility: visible !important;
+        }
+        
+        /* Versión alternativa: barras múltiples */
+        .audio-level-bars {
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 8px);
+            transform: translateX(-50%);
+            display: none;
+            align-items: flex-end;
+            gap: 2px;
+            height: 24px;
+            z-index: 10001;
+            margin-bottom: 4px;
+        }
+        
+        .control-with-dropdown:hover .audio-level-bars {
+            display: flex;
+        }
+        
+        .audio-level-bar-item {
+            width: 3px;
+            background: linear-gradient(to top, 
+                #10b981 0%, 
+                #10b981 50%, 
+                #f59e0b 75%, 
+                #ef4444 100%);
+            border-radius: 2px;
+            transition: height 0.15s ease;
+            min-height: 4px;
+        }
+        
+        .audio-level-bars.visible {
+            display: flex;
+        }
+        
+        .control-dropdown {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 0;
+            min-width: 280px;
+            max-width: 320px;
+            background: linear-gradient(135deg, rgba(26, 31, 58, 0.98) 0%, rgba(20, 25, 50, 0.98) 100%) !important;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(102, 126, 234, 0.4);
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(102, 126, 234, 0.2);
+            display: none !important;
+            z-index: 10001 !important; /* Aumentado para estar por encima de otros elementos */
+            max-height: 350px;
+            overflow-y: auto; /* Cambiado de hidden a auto para permitir scroll si es necesario */
+            overflow-x: hidden;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+            transform: translateY(10px);
+        }
+        
+        .control-with-dropdown.active .control-dropdown {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+            transform: translateY(0) !important;
+        }
+        
+        /* Asegurar que el contenedor padre no corte el dropdown */
+        .control-with-dropdown.active {
+            overflow: visible !important;
+            z-index: 10000;
+        }
+        
+        /* Dropdowns de la barra superior (mantener para compatibilidad) */
+        .device-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            min-width: 250px;
+            max-width: 300px;
+            background: rgba(26, 31, 58, 0.98) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: var(--radius-md);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            display: none;
+            z-index: 10000 !important;
+            max-height: 300px;
+            overflow-y: auto;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease, visibility 0.2s ease;
+            pointer-events: none;
+        }
+        
+        .device-selector-group.active .device-dropdown {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+        }
+        
+        .device-dropdown-header {
+            padding: 16px 18px;
+            font-weight: 600;
+            color: white;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.3);
+            font-size: 0.95em;
+            background: rgba(102, 126, 234, 0.1);
+            display: flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            gap: 12px;
+            position: relative;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .device-dropdown-header::before {
+            content: '';
+            width: 3px;
+            height: 18px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 2px;
+        }
+        
+        .device-list {
+            padding: 8px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        /* Scrollbar personalizado para device-list */
+        .device-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        .device-list::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 3px;
+        }
+        
+        .device-list::-webkit-scrollbar-thumb {
+            background: rgba(102, 126, 234, 0.5);
+            border-radius: 3px;
+        }
+        
+        .device-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(102, 126, 234, 0.7);
+        }
+        
+        .device-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            color: white;
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 4px;
+            position: relative;
+        }
+        
+        .device-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 0 2px 2px 0;
+            transition: height 0.2s ease;
+        }
+        
+        .device-item:hover {
+            background: rgba(102, 126, 234, 0.25);
+            transform: translateX(4px);
+        }
+        
+        .device-item:hover::before {
+            height: 60%;
+        }
+        
+        .device-item.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+            color: #c4b5fd;
+            font-weight: 500;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+        }
+        
+        .device-item.active::before {
+            height: 80%;
+        }
+        
+        .device-item i {
+            font-size: 1em;
+            opacity: 0.8;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .device-item.active i {
+            opacity: 1;
+            color: #a78bfa;
+        }
+        
+        .device-item span {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .device-loading {
+            padding: 24px;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9em;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .device-loading::before {
+            content: '⏳';
+            font-size: 1.2em;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .background-effects-group {
+            display: flex;
+            gap: var(--spacing-sm);
+            align-items: center;
+        }
+        
+        .background-effect-btn {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-xs);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background: rgba(45, 55, 72, 0.8);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: var(--radius-md);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: var(--font-sm);
+        }
+        
+        .background-effect-btn:hover {
+            background: rgba(45, 55, 72, 1);
+            border-color: rgba(102, 126, 234, 0.6);
+        }
+        
+        .background-effect-btn.active {
+            background: rgba(102, 126, 234, 0.4);
+            border-color: rgba(102, 126, 234, 0.8);
+        }
+        
+        .settings-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(45, 55, 72, 0.8);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .settings-btn:hover {
+            background: rgba(45, 55, 72, 1);
+            border-color: rgba(102, 126, 234, 0.6);
+            transform: rotate(90deg);
         }
         
         /* Controles de video */
@@ -1721,25 +2257,62 @@
             </div>
         </div>
         
+        <!-- Barra superior de dispositivos y efectos - OCULTA (los selectores están en la barra inferior) -->
+        <div class="top-controls-bar" id="top-controls-bar" style="display: none;">
+            <!-- Ocultada porque los selectores están ahora en la barra inferior -->
+        </div>
+        
         <!-- Controles de video -->
         <div class="video-controls">
-            <button id="mic-btn" class="control-btn active" title="Micrófono">
-                <i class="fas fa-microphone"></i>
+            <button id="more-options-btn" class="control-btn" title="Más opciones">
+                <i class="fas fa-ellipsis-h"></i>
             </button>
-            <button id="camera-btn" class="control-btn active" title="Cámara">
-                <i class="fas fa-video"></i>
-            </button>
+            
+            <!-- Grupo de micrófono con selector -->
+            <div class="control-with-dropdown">
+                <button id="mic-btn" class="control-btn active" title="Micrófono">
+                    <i class="fas fa-microphone"></i>
+                </button>
+                <button id="mic-selector-btn" class="control-dropdown-btn" title="Seleccionar micrófono">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <!-- Indicador de nivel de audio -->
+                <div class="control-dropdown" id="mic-device-dropdown">
+                    <div class="device-dropdown-header">
+                        Seleccionar micrófono
+                        <div class="audio-level-indicator" id="mic-audio-level-indicator">
+                            <div class="audio-level-bar" id="mic-audio-level-bar"></div>
+                        </div>
+                    </div>
+                    <div class="device-list" id="mic-device-list">
+                        <div class="device-loading">Cargando micrófonos...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Grupo de cámara con selector -->
+            <div class="control-with-dropdown">
+                <button id="camera-btn" class="control-btn active" title="Cámara">
+                    <i class="fas fa-video"></i>
+                </button>
+                <button id="camera-selector-btn" class="control-dropdown-btn" title="Seleccionar cámara">
+                    <i class="fas fa-chevron-down"></i>
+                </button>
+                <div class="control-dropdown" id="camera-device-dropdown">
+                    <div class="device-dropdown-header">Seleccionar cámara</div>
+                    <div class="device-list" id="camera-device-list">
+                        <div class="device-loading">Cargando cámaras...</div>
+                    </div>
+                </div>
+            </div>
             <button id="screen-share-btn" class="control-btn" title="Compartir pantalla">
                 <i class="fas fa-desktop"></i>
             </button>
-            <button id="users-toggle-control" class="control-btn" title="Ver participantes">
-                <i class="fas fa-users"></i>
-            </button>
-            <button id="chat-toggle-control" class="control-btn" title="Ver chat">
-                <i class="fas fa-comments"></i>
-            </button>
             <button id="reactions-btn" class="control-btn reactions-btn" title="Reacciones">
                 <i class="fas fa-smile"></i>
+            </button>
+            <button id="cc-btn" class="control-btn" title="Subtítulos">
+                <span style="font-weight: bold; font-size: 0.9em;">CC</span>
             </button>
             <button id="raise-hand-btn" class="control-btn raise-hand-btn" title="Levantar la mano">
                 <i class="fas fa-hand-paper"></i>
@@ -1747,7 +2320,9 @@
             <button id="whiteboard-btn" class="control-btn whiteboard-btn" title="Pizarra colaborativa">
                 <i class="fas fa-paint-brush"></i>
             </button>
-            <!-- Botón de cerrar panel removido - los botones de toggle ya cumplen esa función -->
+            <button id="more-options-right-btn" class="control-btn" title="Más opciones">
+                <i class="fas fa-ellipsis-v"></i>
+            </button>
             <button id="leave-btn" class="control-btn leave-btn" title="Salir">
                 <i class="fas fa-phone-slash"></i>
             </button>
@@ -1847,9 +2422,9 @@
                     <button class="whiteboard-width-btn" data-width="5" title="Grueso" onclick="setLineWidth(5)">━</button>
                     <button class="whiteboard-width-btn" data-width="8" title="Muy grueso" onclick="setLineWidth(8)">━</button>
                 </div>
-                <div class="whiteboard-text-group" id="whiteboard-text-group" style="display: flex; align-items: center; gap: 8px; padding: 4px 8px; background: rgba(255, 255, 255, 0.8); border-radius: 8px; opacity: 0.5; pointer-events: none;">
+                <div class="whiteboard-text-group" id="whiteboard-text-group" style="display: none; align-items: center; gap: 8px; padding: 4px 8px; background: rgba(255, 255, 255, 0.8); border-radius: 8px; opacity: 0.5; pointer-events: none;">
                     <label for="whiteboard-font-size" style="font-size: 0.85em; font-weight: 500; color: #333; white-space: nowrap;">Tamaño:</label>
-                    <input type="range" id="whiteboard-font-size" min="8" max="72" value="16" step="1" 
+                    <input type="range" id="whiteboard-font-size" min="8" max="72" value="16" step="1" style="display: none;" 
                            oninput="setFontSize(this.value)" style="width: 100px; margin: 0 5px; cursor: pointer;">
                     <span id="whiteboard-font-size-display" style="font-size: 0.85em; font-weight: 600; color: #333; min-width: 45px; display: inline-block; text-align: center;">16px</span>
                     <label for="whiteboard-font-family" style="font-size: 0.85em; font-weight: 500; color: #333; margin-left: 8px; white-space: nowrap;">Fuente:</label>
@@ -1892,6 +2467,7 @@
     <!-- Scripts -->
     <script src="{% static 'videocall/js/streams_integrated.js' %}"></script>
     <script src="{% static 'videocall/js/videocall_chat.js' %}"></script>
+    <script src="{% static 'videocall/js/device_controls.js' %}"></script>
     <script src="{% static 'videocall/js/whiteboard.js' %}"></script>
     
     <!-- Script para panel de usuarios -->

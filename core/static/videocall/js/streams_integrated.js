@@ -26,6 +26,11 @@ let memberStatusCheckInterval = null;  // Intervalo para verificar estado de mie
         isSharingScreen: () => isSharingScreen,
         UID: () => UID
     };
+    
+    // Exponer variables directamente para acceso más fácil
+    window.localTracks = localTracks;
+    window.client = client;
+    window.UID = UID;
 
 // Función auxiliar para esperar a que expandVideo esté disponible
 function waitForExpandVideo(callback, maxAttempts = 20, attempt = 0) {
@@ -110,6 +115,79 @@ function updateMemberCount() {
 function initializeAgoraClient() {
     if (!client) {
         client = AgoraRTC.createClient({ mode: 'rtc', codec: 'vp8' });
+        window.client = client; // Exponer globalmente
+        
+        // Configurar indicador de volumen para detectar cuando alguien está hablando
+        // Intervalo de 50ms para actualización más rápida (por defecto es 200ms)
+        client.enableAudioVolumeIndicator({
+            interval: 50  // Actualizar cada 50ms para respuesta más rápida
+        });
+        client.on('volume-indicator', (volumes) => {
+            // Procesar inmediatamente sin delays
+            volumes.forEach((volume) => {
+                let uid = volume.uid;
+                const level = volume.level; // Nivel de volumen (0-100)
+                
+                // Obtener UID actual de diferentes fuentes
+                const currentUID = UID || sessionStorage.getItem('UID');
+                const currentUIDNum = parseInt(currentUID);
+                const currentUIDStr = String(currentUID);
+                
+                // Log temporal para debug (cada 30 eventos)
+                if (!client._volumeDebugCount) client._volumeDebugCount = 0;
+                client._volumeDebugCount++;
+                if (client._volumeDebugCount % 30 === 0 && level > 1) {
+                    console.log('[DEBUG Volume] Evento recibido:', {
+                        volumeUID: uid,
+                        volumeUIDType: typeof uid,
+                        currentUID: currentUID,
+                        currentUIDType: typeof currentUID,
+                        currentUIDNum: currentUIDNum,
+                        level: level,
+                        comparisons: {
+                            uid_0: uid === 0,
+                            uid_undefined: uid === undefined,
+                            uid_null: uid === null,
+                            uid_currentUID: uid === currentUID,
+                            uid_currentUIDNum: uid === currentUIDNum,
+                            uid_currentUIDStr: String(uid) === currentUIDStr
+                        }
+                    });
+                }
+                
+                // Si el UID es 0, undefined, null, o coincide con el UID local, es el usuario local
+                const isLocalUser = uid === 0 || 
+                                   uid === undefined || 
+                                   uid === null || 
+                                   uid === currentUID || 
+                                   uid === currentUIDNum ||
+                                   String(uid) === currentUIDStr ||
+                                   parseInt(uid) === currentUIDNum;
+                
+                // SIEMPRE actualizar el indicador del micrófono local si es el usuario local
+                if (isLocalUser) {
+                    uid = currentUID;
+                    
+                    // Actualizar indicador de nivel de audio del micrófono local
+                    // Llamar SIEMPRE, sin importar el nivel
+                    try {
+                        if (client._volumeDebugCount % 30 === 0 && level > 1) {
+                            console.log('[DEBUG Volume] Llamando updateMicrophoneLevelIndicator con level:', level);
+                        }
+                        updateMicrophoneLevelIndicator(level);
+                    } catch (err) {
+                        console.error('[Volume Indicator] Error actualizando indicador de micrófono:', err);
+                    }
+                }
+                
+                // Umbral muy bajo para detectar más rápido (cualquier sonido)
+                const speakingThreshold = 1;
+                const isSpeaking = level > speakingThreshold;
+                
+                // Actualizar indicador visual inmediatamente (sin debounce)
+                updateSpeakingIndicator(uid, isSpeaking, level);
+            });
+        });
         
         // Configurar manejo de autoplay fallido
         AgoraRTC.onAutoplayFailed = async () => {
@@ -828,6 +906,7 @@ let joinAndDisplayLocalStream = async () => {
     try {
         // Intentar crear tracks con manejo de errores mejorado
         localTracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+        window.localTracks = localTracks; // Exponer globalmente
         console.log('Tracks de cámara y micrófono creados exitosamente');
         tracksCreated = true;
     } catch (error) {
@@ -2074,6 +2153,148 @@ function toggleRemoteMute(uid, buttonElement) {
         } catch (error) {
             console.error('Error al mutear:', error);
         }
+    }
+}
+
+// Cache para evitar actualizaciones innecesarias del DOM y reducir retraso
+const speakingStateCache = new Map();
+
+// Función para actualizar el indicador de nivel de audio del micrófono
+function updateMicrophoneLevelIndicator(level) {
+    try {
+        const indicator = document.getElementById('mic-audio-level-indicator');
+        const levelBar = document.getElementById('mic-audio-level-bar');
+        
+        if (!indicator || !levelBar) {
+            // Solo mostrar warning una vez cada 100 llamadas para no saturar la consola
+            if (!updateMicrophoneLevelIndicator._warnCount) {
+                updateMicrophoneLevelIndicator._warnCount = 0;
+            }
+            updateMicrophoneLevelIndicator._warnCount++;
+            if (updateMicrophoneLevelIndicator._warnCount === 1 || updateMicrophoneLevelIndicator._warnCount % 100 === 0) {
+                console.warn('[updateMicrophoneLevelIndicator] Elementos no encontrados:', {
+                    indicator: !!indicator,
+                    levelBar: !!levelBar,
+                    calls: updateMicrophoneLevelIndicator._warnCount,
+                    level: level
+                });
+            }
+            return;
+        }
+        
+        // Resetear contador de warnings si los elementos se encuentran
+        updateMicrophoneLevelIndicator._warnCount = 0;
+        
+        // Asegurar que el indicador sea visible
+        indicator.style.display = 'flex';
+        indicator.style.visibility = 'visible';
+        indicator.style.opacity = '1';
+        
+        // Convertir nivel (0-100) a altura (0-100%)
+        // Usar una curva más suave para mejor visualización
+        const normalizedLevel = Math.min(100, Math.max(0, level));
+        // Aumentar la sensibilidad: usar una curva menos agresiva para más movimiento visible
+        const height = Math.pow(normalizedLevel / 100, 0.4) * 100; // Curva menos agresiva (0.4) para más movimiento
+        
+        // Aplicar altura directamente - actualización inmediata
+        levelBar.style.height = height + '%';
+        
+        // Log temporal para debug (cada 20 actualizaciones cuando hay audio)
+        if (!updateMicrophoneLevelIndicator._debugCount) updateMicrophoneLevelIndicator._debugCount = 0;
+        updateMicrophoneLevelIndicator._debugCount++;
+        if (updateMicrophoneLevelIndicator._debugCount % 20 === 0 && normalizedLevel > 1) {
+            console.log('[DEBUG] Indicador actualizado:', {
+                level: normalizedLevel,
+                height: height + '%',
+                barHeight: levelBar.style.height,
+                barFound: !!levelBar,
+                indicatorFound: !!indicator,
+                computedHeight: window.getComputedStyle(levelBar).height
+            });
+        }
+        
+        // Cambiar color según el nivel
+        if (normalizedLevel > 70) {
+            levelBar.style.background = 'linear-gradient(to top, #ef4444 0%, #f59e0b 50%, #10b981 100%)';
+            levelBar.style.boxShadow = '0 0 6px rgba(239, 68, 68, 0.8)';
+        } else if (normalizedLevel > 40) {
+            levelBar.style.background = 'linear-gradient(to top, #f59e0b 0%, #10b981 50%, #10b981 100%)';
+            levelBar.style.boxShadow = '0 0 4px rgba(245, 158, 11, 0.6)';
+        } else {
+            levelBar.style.background = 'linear-gradient(to top, #10b981 0%, #10b981 100%)';
+            levelBar.style.boxShadow = '0 0 4px rgba(16, 185, 129, 0.6)';
+        }
+        
+        // Asegurar que la barra sea visible y esté posicionada correctamente
+        levelBar.style.position = 'absolute';
+        levelBar.style.bottom = '0';
+        levelBar.style.left = '0';
+        levelBar.style.width = '100%';
+        levelBar.style.display = 'block';
+        levelBar.style.visibility = 'visible';
+        
+        // Mostrar indicador si hay audio
+        if (normalizedLevel > 1) {
+            indicator.classList.add('visible');
+        } else {
+            indicator.classList.remove('visible');
+        }
+        
+        // Log cada 100 actualizaciones para debug (solo si hay audio significativo) - reducido para mejor rendimiento
+        if (normalizedLevel > 5 && (!updateMicrophoneLevelIndicator._logCount || updateMicrophoneLevelIndicator._logCount % 100 === 0)) {
+            updateMicrophoneLevelIndicator._logCount = (updateMicrophoneLevelIndicator._logCount || 0) + 1;
+            // Log deshabilitado para mejor rendimiento - descomentar si necesitas debug
+            // console.log('[updateMicrophoneLevelIndicator] Actualizando:', {
+            //     level: normalizedLevel,
+            //     height: height + '%',
+            //     indicatorFound: !!indicator,
+            //     barFound: !!levelBar
+            // });
+        }
+    } catch (error) {
+        console.warn('[updateMicrophoneLevelIndicator] Error actualizando indicador:', error);
+    }
+}
+
+// Función optimizada para actualizar el indicador de voz cuando alguien está hablando
+function updateSpeakingIndicator(uid, isSpeaking, level) {
+    try {
+        // Verificar si el estado cambió para evitar actualizaciones innecesarias del DOM
+        const cachedState = speakingStateCache.get(uid);
+        if (cachedState === isSpeaking) {
+            return; // No hacer nada si el estado no cambió (optimización)
+        }
+        
+        // Actualizar cache inmediatamente
+        speakingStateCache.set(uid, isSpeaking);
+        
+        // Obtener el contenedor del usuario
+        const container = document.getElementById(`user-container-${uid}`);
+        if (!container) {
+            return;
+        }
+        
+        // Actualizar DOM directamente sin requestAnimationFrame para menor latencia
+        if (isSpeaking) {
+            container.classList.add('user-speaking');
+            // Agregar indicador visual si no existe
+            let indicator = container.querySelector('.speaking-indicator');
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.className = 'speaking-indicator';
+                indicator.innerHTML = '<i class="fas fa-microphone"></i> <span>Hablando</span>';
+                container.appendChild(indicator);
+            }
+            indicator.style.display = 'flex';
+        } else {
+            container.classList.remove('user-speaking');
+            const indicator = container.querySelector('.speaking-indicator');
+            if (indicator) {
+                indicator.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.warn('[updateSpeakingIndicator] Error actualizando indicador:', error);
     }
 }
 
